@@ -1,0 +1,250 @@
+@{
+    ViewData["Title"] = "Privacy Policy";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy - ViaReserva</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --vr-navy: #0f2d57;
+            --vr-gold: #c5a365;
+            --vr-blue: #1e40af;
+            --vr-light: #f8fafc;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--vr-light);
+            color: #334155;
+            overflow-x: hidden;
+        }
+        /* Navbar */
+        .vr-nav {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(15, 45, 87, 0.1);
+            padding: 1rem 2rem;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+        }
+        .vr-nav-brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--vr-navy);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .vr-nav-links a {
+            color: #475569;
+            font-weight: 600;
+            text-decoration: none;
+            margin-left: 2rem;
+            transition: color 0.2s;
+        }
+        .vr-nav-links a:hover {
+            color: var(--vr-navy);
+        }
+        .vr-btn-login {
+            background: var(--vr-navy);
+            color: white !important;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .vr-btn-login:hover {
+            background: var(--vr-blue);
+        }
+        /* Header */
+        .vr-page-header {
+            padding: 160px 2rem 80px;
+            background: var(--vr-navy);
+            color: white;
+            text-align: center;
+        }
+        .vr-page-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: white;
+        }
+        .vr-page-subtitle {
+            font-size: 1.15rem;
+            color: rgba(255,255,255,0.8);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        /* Content */
+        .vr-content-wrapper {
+            max-width: 800px;
+            margin: -40px auto 100px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(15,45,87,0.08);
+            padding: 60px;
+            position: relative;
+            z-index: 10;
+        }
+        .vr-legal-section {
+            margin-bottom: 40px;
+        }
+        .vr-legal-section h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--vr-navy);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid rgba(197,163,101,0.2);
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+        .vr-legal-section p {
+            line-height: 1.7;
+            color: #475569;
+            margin-bottom: 1rem;
+        }
+        .vr-legal-section ul {
+            padding-left: 1.5rem;
+            color: #475569;
+        }
+        .vr-legal-section li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+        /* Footer */
+        .vr-footer {
+            background: var(--vr-navy);
+            color: rgba(255,255,255,0.7);
+            padding: 60px 2rem;
+            text-align: center;
+        }
+        .vr-footer-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 1rem;
+        }
+        .vr-footer-links a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            margin: 0 1rem;
+        }
+        .vr-footer-links a:hover {
+            color: white;
+        }
+        @@media (max-width: 768px) {
+            .vr-content-wrapper {
+                margin: -20px 20px 60px;
+                padding: 30px;
+            }
+            .vr-page-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="vr-nav">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="@Url.Action("Index", "Home")" class="vr-nav-brand">
+                <img src="~/img/viareserva-logo.png" alt="ViaReserva" style="height: 32px;" />
+                ViaReserva
+            </a>
+            <div class="vr-nav-links d-none d-md-flex align-items-center">
+                <a href="@Url.Action("Index", "Home")#features">Features</a>
+                <a href="@Url.Action("Index", "Home")#pricing">Pricing</a>
+                <a href="@Url.Action("Privacy", "Home")" style="color: var(--vr-navy);">Privacy</a>
+                <a href="@Url.Action("Login", "Account")" class="vr-btn-login">Sign In</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="vr-page-header">
+        <div class="container">
+            <h1 class="vr-page-title">Privacy Policy</h1>
+            <p class="vr-page-subtitle">How we collect, use, and protect customer, staff, and guest information in our hospitality ERP platform.</p>
+            <p style="color: rgba(197,163,101,0.9); margin-top: 1rem; font-weight: 600;">Last updated: @ViaReservaERP.AppTime.Now.ToString("MMMM dd, yyyy")</p>
+        </div>
+    </header>
+
+    <main class="vr-content-wrapper">
+        <div class="vr-legal-section">
+            <h2>Introduction</h2>
+            <p>VíaReserva (Project Title: Business Process and Workflow Automation System for Hospitality Operations Management) is a multi-tenant SaaS ERP platform designed for hotel businesses. We value your privacy and are committed to protecting personal, business, and guest data.</p>
+            <p>This Privacy Policy explains what information we collect, how we use it, how we protect it, and the choices available to you.</p>
+        </div>
+
+        <div class="vr-legal-section">
+            <h2>Information We Collect</h2>
+            <p>To operate VíaReserva and provide enterprise-grade features, we may collect the following categories of information:</p>
+            <ul>
+                <li><strong>Personal details:</strong> Name, email, and contact details.</li>
+                <li><strong>Hotel/company data:</strong> Company name, subscription plan, and configuration.</li>
+                <li><strong>Booking information:</strong> Reservation dates, status, and guest records.</li>
+                <li><strong>Service records:</strong> Guest requests, staff assignments, and workflow status.</li>
+                <li><strong>Financial records:</strong> Transactions and billing status.</li>
+                <li><strong>Security activity:</strong> Login attempts, session events, and approximate device/browser details.</li>
+            </ul>
+        </div>
+
+        <div class="vr-legal-section">
+            <h2>How We Use Information</h2>
+            <p>We use information for legitimate business purposes, including:</p>
+            <ul>
+                <li>Reservation processing and management.</li>
+                <li>Guest service fulfillment and staff task routing.</li>
+                <li>Subscription billing and platform accounting.</li>
+                <li>Reporting dashboards and operational analytics.</li>
+                <li>Security monitoring, fraud prevention, and abuse detection.</li>
+                <li>Service improvements and technical support.</li>
+            </ul>
+        </div>
+
+        <div class="vr-legal-section">
+            <h2>Data Protection &amp; Security</h2>
+            <p>We implement safeguards designed to protect information confidentiality, integrity, and availability. VíaReserva is a multi-tenant platform, meaning each hotel's data is logically isolated. Access is restricted through strict Role-Based Access Controls (RBAC).</p>
+        </div>
+
+        <div class="vr-legal-section">
+            <h2>Third-Party Integrations</h2>
+            <p><strong>Stripe:</strong> We use Stripe APIs for subscription and payment processing. Payment card details are processed securely by Stripe and are not stored directly in our application database.</p>
+            <p><strong>SendGrid:</strong> We use SendGrid APIs to deliver system emails such as authentication support and operational notifications. These emails may include account context necessary to provide the service.</p>
+        </div>
+
+        <div class="vr-legal-section">
+            <h2>Data Sharing &amp; Retention</h2>
+            <p>We do not sell personal or business data. We may share information only when legally required or when necessary to operate the platform (e.g., hosting providers). We retain records only as needed for legitimate business purposes, legal obligations, and system operations.</p>
+        </div>
+
+        <div class="vr-legal-section">
+            <h2>Contact Information</h2>
+            <p>If you have questions about this policy or need support, please contact your system administrator or reach out to VíaReserva support directly at <strong>support@viareservaerp.com</strong>.</p>
+        </div>
+    </main>
+
+    <footer class="vr-footer">
+        <div class="container">
+            <div class="vr-footer-logo">ViaReserva</div>
+            <div class="vr-footer-links mb-4">
+                <a href="@Url.Action("Index", "Home")#features">Features</a>
+                <a href="@Url.Action("Index", "Home")#pricing">Pricing</a>
+                <a href="@Url.Action("Privacy", "Home")">Privacy Policy</a>
+            </div>
+            <div style="font-size: 0.9rem;">
+                &copy; @ViaReservaERP.AppTime.Now.Year ViaReserva Systems. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

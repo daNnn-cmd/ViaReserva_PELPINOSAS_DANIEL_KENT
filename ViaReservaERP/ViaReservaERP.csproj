@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-ViaReservaERP-12d067c3-4176-440b-a8b4-6c97f57bfd50</UserSecretsId>
+    <SuppressBrowserRefresh>true</SuppressBrowserRefresh>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazor-ApexCharts" Version="6.1.0" />
+    <PackageReference Include="Chart.js" Version="3.7.1" />
+    <PackageReference Include="ChartJs.Blazor.Fork" Version="2.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.21" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.21" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.21" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="ClosedXML" Version="0.104.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.21" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.21" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="QuestPDF" Version="2026.2.4" />
+    <PackageReference Include="Radzen.Blazor" Version="10.3.1" />
+    <PackageReference Include="SendGrid" Version="9.29.3" />
+    <PackageReference Include="Stripe.net" Version="51.1.0" />
+    <PackageReference Include="Syncfusion.Blazor.Charts" Version="33.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Areas\Identity\**\*.cs" />
+    <Content Remove="Areas\Identity\**\*" />
+    <EmbeddedResource Remove="Areas\Identity\**\*" />
+
+    <Compile Remove="Data\ApplicationDbContext.cs" />
+    <Compile Remove="Data\Migrations\**\*.cs" />
+  </ItemGroup>
+
+</Project>

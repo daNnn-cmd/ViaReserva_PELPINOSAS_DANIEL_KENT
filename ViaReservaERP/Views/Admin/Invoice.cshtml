@@ -1,0 +1,135 @@
+@model ViaReservaERP.Models.Admin.InvoiceViewModel
+@{
+    ViewData["Title"] = $"Invoice #{Model.Reservation.ReservationId}";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-panel" id="printableInvoice" style="max-width: 800px; margin: 0 auto; background: #fff; padding: 40px; box-shadow: 0 0 40px rgba(0,0,0,0.05);">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #f1f5f9; padding-bottom: 30px; margin-bottom: 30px;">
+        <div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: #1a2a6c; margin-bottom: 8px;">@Model.Reservation.Company?.CompanyName</div>
+            <div class="vr-sa-cell-muted">@Model.Reservation.Company?.Address</div>
+            <div class="vr-sa-cell-muted">@Model.Reservation.Company?.Email</div>
+            <div class="vr-sa-cell-muted">@Model.Reservation.Company?.Phone</div>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 2rem; font-weight: 800; color: #0b122d;">INVOICE</div>
+            <div style="font-weight: 600; color: #1a2a6c;">#RES-@Model.Reservation.ReservationId.ToString("D5")</div>
+            <div class="vr-sa-cell-muted">Date: @ViaReservaERP.AppTime.Now.Date.ToShortDateString()</div>
+        </div>
+    </div>
+
+    <!-- Bill To -->
+    <div class="row mb-5">
+        <div class="col-6">
+            <div class="vr-sa-label">BILL TO</div>
+            <div style="font-weight: 700; font-size: 1.1rem; color: #0b122d;">@Model.Reservation.Guest?.FullName</div>
+            <div class="vr-sa-cell-muted">@Model.Reservation.Guest?.Email</div>
+            <div class="vr-sa-cell-muted">@Model.Reservation.Guest?.Phone</div>
+        </div>
+        <div class="col-6 text-end">
+            <div class="vr-sa-label">STAY SUMMARY</div>
+            <div class="vr-sa-cell-muted">Check-In: @Model.Reservation.CheckInDate?.ToLongDateString()</div>
+            <div class="vr-sa-cell-muted">Check-Out: @Model.Reservation.CheckOutDate?.ToLongDateString()</div>
+            <div class="vr-sa-cell-muted">
+                Rooms: @string.Join(", ", Model.Reservation.ReservationRooms.Select(rr => rr.Room?.RoomNumber))
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Table -->
+    <table class="table" style="border-collapse: separate; border-spacing: 0 8px;">
+        <thead>
+            <tr style="background: #f8fafc;">
+                <th style="border:0; padding: 12px; border-radius: 8px 0 0 8px;">Description</th>
+                <th style="border:0; padding: 12px; text-align: center;">Qty</th>
+                <th style="border:0; padding: 12px; text-align: right; border-radius: 0 8px 8px 0;">Unit Price</th>
+                <th style="border:0; padding: 12px; text-align: right;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var rr in Model.Reservation.ReservationRooms)
+            {
+                <tr>
+                    <td style="padding: 12px; font-weight: 600;">Room Charge: @rr.Room?.RoomNumber (@rr.Room?.RoomType?.TypeName)</td>
+                    <td style="padding: 12px; text-align: center;">1</td>
+                    <td style="padding: 12px; text-align: right;">₱ @(rr.Price?.ToString("N2") ?? "0.00")</td>
+                    <td style="padding: 12px; text-align: right; font-weight: 700;">₱ @(rr.Price?.ToString("N2") ?? "0.00")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Payments Section -->
+    <div style="margin-top: 40px;">
+        <div class="vr-sa-label" style="margin-bottom: 12px;">PAYMENT HISTORY</div>
+        <table class="table table-sm">
+            <thead>
+                <tr style="color: #64748b; font-size: 0.8rem; text-transform: uppercase;">
+                    <th>Date</th>
+                    <th>Method</th>
+                    <th class="text-end">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var pay in Model.Payments)
+                {
+                    <tr>
+                        <td>@pay.CreatedAt.ToShortDateString()</td>
+                        <td>@pay.PaymentMethod</td>
+                        <td class="text-end @(pay.Amount < 0 ? "text-danger" : "")">
+                            ₱ @(pay.Amount?.ToString("N2") ?? "0.00")
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Payments.Any())
+                {
+                    <tr>
+                        <td colspan="3" class="text-center py-3 text-muted">No payments recorded.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Totals -->
+    <div style="margin-top: 40px; border-top: 2px solid #f1f5f9; padding-top: 20px;">
+        <div class="row justify-content-end">
+            <div class="col-5">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <div class="vr-sa-cell-muted">Subtotal</div>
+                    <div style="font-weight: 600;">₱ @Model.TotalAmount.ToString("N2")</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <div class="vr-sa-cell-muted">Total Paid</div>
+                    <div style="font-weight: 600; color: #16a34a;">₱ @Model.TotalPaid.ToString("N2")</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
+                    <div style="font-weight: 700; color: #0b122d; font-size: 1.2rem;">Balance Due</div>
+                    <div style="font-weight: 800; color: #ef4444; font-size: 1.2rem;">₱ @Model.Balance.ToString("N2")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="margin-top: 80px; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+        <div style="font-weight: 600; color: #0b122d;">Thank you for choosing @Model.Reservation.Company?.CompanyName!</div>
+        <div class="vr-sa-cell-muted" style="font-size: 0.8rem; margin-top: 4px;">This is a computer-generated invoice.</div>
+    </div>
+</div>
+
+<div class="text-center mt-4 d-print-none mb-5">
+    <button class="vr-sa-btn vr-sa-btn-primary" onclick="window.print()">
+        <i class="fa-solid fa-print me-2"></i> Print Invoice
+    </button>
+    <a href="@Url.Action("Reservations", "Admin")" class="vr-sa-btn ms-3">Return to Dashboard</a>
+</div>
+
+<style media="print">
+    .vr-sa-sidebar, .vr-sa-topbar, .vr-sa-sidebar-toggle, .d-print-none { display: none !important; }
+    .vr-sa-main { padding: 0 !important; background: white !important; }
+    .vr-sa-shell { display: block !important; }
+    #printableInvoice { box-shadow: none !important; margin: 0 !important; max-width: 100% !important; padding: 0 !important; }
+</style>

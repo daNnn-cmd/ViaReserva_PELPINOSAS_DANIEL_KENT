@@ -1,0 +1,109 @@
+@model ViaReservaERP.Models.SuperAdmin.AuditSecurityIncidentDetailsViewModel
+@{
+    ViewData["Title"] = "Security Incident Details";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Incident Type</div>
+                    <div class="vr-sa-report-stat-value">@Model.IncidentType.ToUpper()</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.08);"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Audit marker</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Total Events</div>
+                    <div class="vr-sa-report-stat-value">@Model.Rows.Count</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-shield-halved"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Logged incidents</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Scope</div>
+                    <div class="vr-sa-report-stat-value">@Model.CompanyName</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-hotel"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Tenant filtering</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Last Incident</div>
+                    <div class="vr-sa-report-stat-value">@(Model.Rows.Count > 0 ? Model.Rows.Max(x => x.TimestampUtc).ToString("MMM dd") : "—")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-clock"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Most recent breach attempt</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Security monitoring drill-down</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-btn" href="@Url.Action("AuditLogs", "SuperAdmin")"><i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Security Events Trace</div>
+                <div class="vr-sa-panel-sub">Investigative audit trail for @Model.IncidentType incidents across @Model.CompanyName.</div>
+            </div>
+        </div>
+    </section>
+
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>Log ID</th>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Company</th>
+                        <th>Module</th>
+                        <th>Action</th>
+                        <th>IP</th>
+                        <th>Status</th>
+                        <th>Timestamp</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Rows)
+                    {
+                        <tr>
+                            <td>@r.AuditId</td>
+                            <td>@(string.IsNullOrWhiteSpace(r.UserName) ? "System" : r.UserName)</td>
+                            <td>@(string.IsNullOrWhiteSpace(r.UserRole) ? "—" : r.UserRole)</td>
+                            <td>@(string.IsNullOrWhiteSpace(r.Company) ? "—" : r.Company)</td>
+                            <td>@(string.IsNullOrWhiteSpace(r.Module) ? "—" : r.Module)</td>
+                            <td>@(string.IsNullOrWhiteSpace(r.ActionPerformed) ? "—" : r.ActionPerformed)</td>
+                            <td>@(string.IsNullOrWhiteSpace(r.IpAddress) ? "—" : r.IpAddress)</td>
+                            <td>@r.Status</td>
+                            <td>@r.TimestampUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td><a class="vr-sa-iconbtn" href="@Url.Action("AuditLogDetails", "SuperAdmin", new { id = r.AuditId })" title="View"><i class="fa-solid fa-eye"></i></a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

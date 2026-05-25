@@ -1,0 +1,108 @@
+@model ViaReservaERP.Models.SuperAdmin.ServiceRequestAuditLogsViewModel
+@{
+    ViewData["Title"] = "Service Audit Logs";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Request ID</div>
+                    <div class="vr-sa-report-stat-value">#@Model.RequestId</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-hashtag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">System reference</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Audit Entries</div>
+                    <div class="vr-sa-report-stat-value">@Model.Rows.Count</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-list-check"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Total activity logs</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Hotel Company</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.HotelCompany) ? "—" : Model.HotelCompany)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-hotel"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Tenant scope</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Last Activity</div>
+                    <div class="vr-sa-report-stat-value">@(Model.Rows.Count > 0 ? Model.Rows.Max(x => x.TimestampUtc).ToString("MMM dd") : "—")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-clock"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Recent compliance</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Related monitoring contexts</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" href="@Url.Action("ServiceRequestDetails", "SuperAdmin", new { id = Model.RequestId })" title="Request Details">Details</a>
+                <a class="vr-sa-btn" href="@Url.Action("GuestServices", "SuperAdmin")"><i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Activity Logs</div>
+                <div class="vr-sa-panel-sub">Action performed, role, timestamp, company scope (UTC).</div>
+            </div>
+        </div>
+
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="vr-sa-alert" style="margin-top:12px;">
+                <div class="vr-sa-alert-title">No audit logs found</div>
+                <div class="vr-sa-alert-sub">No audit entries were recorded for this request reference.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Company</th>
+                            <th>User Role</th>
+                            <th>Action</th>
+                            <th>Table</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Rows)
+                        {
+                            <tr>
+                                <td>@r.TimestampUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@(string.IsNullOrWhiteSpace(r.Company) ? "—" : r.Company)</td>
+                                <td>@(string.IsNullOrWhiteSpace(r.ActorRole) ? "—" : r.ActorRole)</td>
+                                <td>@(string.IsNullOrWhiteSpace(r.Action) ? "—" : r.Action)</td>
+                                <td>@(string.IsNullOrWhiteSpace(r.Table) ? "—" : r.Table)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>

@@ -1,0 +1,210 @@
+@{
+    var roleId = User?.GetRoleId() ?? 0;
+    var isAdmin = roleId == 2;
+    var isAccountant = roleId == 3;
+    var isFrontDesk = roleId == 4;
+    var isServiceStaff = roleId == 5;
+    var isAuthorized = isAdmin || isAccountant || isFrontDesk || isServiceStaff;
+
+    var activeController = (ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty).ToLowerInvariant();
+    var activeAction = (ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty).ToLowerInvariant();
+
+    string Active(string controller, string action)
+    {
+        var isActive = activeController == controller.ToLowerInvariant()
+            && activeAction == action.ToLowerInvariant();
+
+        return isActive
+            ? "vr-sa-nav-item vr-sa-nav-item-active"
+            : "vr-sa-nav-item";
+    }
+}
+
+@if (!isAuthorized)
+{
+    return;
+}
+
+<aside class="vr-sa-sidebar" aria-label="Company Admin navigation">
+    
+    <div class="vr-sa-sidebar-top">
+        <div class="vr-sa-brand">
+            <img src="~/img/viareserva-logo.png" alt="VíaReserva" class="vr-sa-brand-logo" />
+            <div>
+                <div class="vr-sa-brand-name">VíaReserva</div>
+                <div class="vr-sa-brand-sub">@(isAdmin ? "Company Admin" : isAccountant ? "Accountant" : isServiceStaff ? "Service Staff" : "Front Desk")</div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="vr-sa-nav">
+
+        <!-- Dashboard -->
+        <a class="@Active(isAdmin ? "admin" : isAccountant ? "accounting" : isServiceStaff ? "servicestaff" : "frontdesk", "dashboard")" href="@(isAdmin ? Url.Action("Dashboard", "Admin") : isAccountant ? Url.Action("Dashboard", "Accounting") : isServiceStaff ? Url.Action("Dashboard", "ServiceStaff") : Url.Action("Dashboard", "FrontDesk"))">
+            <span class="vr-sa-ico vr-sa-ico-indigo">
+                <i class="fa-solid fa-chart-pie"></i>
+            </span>
+            <span>Dashboard</span>
+        </a>
+
+        @if (isServiceStaff)
+        {
+            <div class="vr-sa-nav-section">Service Tasks</div>
+
+            <a class="@Active("servicestaff", "requests")" href="@Url.Action("Requests", "ServiceStaff")">
+                <span class="vr-sa-ico vr-sa-ico-orange">
+                    <i class="fa-solid fa-bell-concierge"></i>
+                </span>
+                <span>My Assigned Tasks</span>
+            </a>
+        }
+
+        @if (!isAccountant && !isServiceStaff)
+        {
+            <div class="vr-sa-nav-section">Hotel Operations</div>
+        }
+
+        @if (!isAccountant && !isServiceStaff)
+        {
+            <!-- Reservation Monitoring -->
+            <a class="@Active(isAdmin ? "admin" : "frontdesk", "reservations")" href="@(isAdmin ? Url.Action("Reservations", "Admin") : Url.Action("Reservations", "FrontDesk"))">
+                <span class="vr-sa-ico vr-sa-ico-green">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </span>
+                <span>Reservations</span>
+            </a>
+        }
+
+        @if (isFrontDesk)
+        {
+            <a class="@Active("frontdesk", "create")" href="@Url.Action("Create", "FrontDesk")">
+                <span class="vr-sa-ico vr-sa-ico-blue">
+                    <i class="fa-solid fa-user-plus"></i>
+                </span>
+                <span>New Walk-in</span>
+            </a>
+        }
+
+        @if (!isAccountant && !isServiceStaff)
+        {
+            <!-- Guest Monitoring -->
+            <a class="@Active(isAdmin ? "admin" : "frontdesk", "guests")" href="@(isAdmin ? Url.Action("Guests", "Admin") : Url.Action("Guests", "FrontDesk"))">
+                <span class="vr-sa-ico vr-sa-ico-purple">
+                    <i class="fa-solid fa-user-group"></i>
+                </span>
+                <span>Guests</span>
+            </a>
+        }
+
+        @if (isAccountant)
+        {
+            <div class="vr-sa-nav-section">Accounting</div>
+
+            <a class="@Active("accounting", "transactions")" href="@Url.Action("Transactions", "Accounting")">
+                <span class="vr-sa-ico vr-sa-ico-teal">
+                    <i class="fa-solid fa-receipt"></i>
+                </span>
+                <span>Transactions</span>
+            </a>
+
+            <a class="@Active("accounting", "reports")" href="@Url.Action("Reports", "Accounting")">
+                <span class="vr-sa-ico vr-sa-ico-gold">
+                    <i class="fa-solid fa-chart-line"></i>
+                </span>
+                <span>Financial Reports</span>
+            </a>
+
+            <a class="@Active("accounting", "auditlogs")" href="@Url.Action("AuditLogs", "Accounting")">
+                <span class="vr-sa-ico vr-sa-ico-slate">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </span>
+                <span>Audit Logs</span>
+            </a>
+        }
+
+        @if (isFrontDesk)
+        {
+            <a class="@Active("frontdesk", "checkinout")" href="@Url.Action("CheckInOut", "FrontDesk")">
+                <span class="vr-sa-ico vr-sa-ico-emerald">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                </span>
+                <span>Check-in/out</span>
+            </a>
+        }
+
+        @if (isAdmin)
+        {
+            <!-- Staff Management -->
+            <a class="@Active("admin", "staff")" href="@Url.Action("Staff", "Admin")">
+                <span class="vr-sa-ico vr-sa-ico-teal">
+                    <i class="fa-solid fa-users"></i>
+                </span>
+                <span>Staff Management</span>
+            </a>
+
+            <a class="@Active("admin", "rooms")" href="@Url.Action("Rooms", "Admin")">
+                <span class="vr-sa-ico vr-sa-ico-blue">
+                    <i class="fa-solid fa-door-open"></i>
+                </span>
+                <span>Rooms</span>
+            </a>
+
+            <a class="@Active("admin", "subscription")" href="@Url.Action("Subscription", "Admin")">
+                <span class="vr-sa-ico vr-sa-ico-indigo">
+                    <i class="fa-solid fa-credit-card"></i>
+                </span>
+                <span>Subscription</span>
+            </a>
+        }
+
+        @if (isAdmin)
+        {
+            <div class="vr-sa-nav-section">Guest Services & Workflow</div>
+
+            <!-- Guest Service Requests -->
+            <a class="@Active("admin", "services")" href="@Url.Action("Services", "Admin")">
+                <span class="vr-sa-ico vr-sa-ico-orange">
+                    <i class="fa-solid fa-bell-concierge"></i>
+                </span>
+                <span>Service Requests</span>
+            </a>
+
+            <div class="vr-sa-nav-section">Business Insights</div>
+
+            <!-- Financial Reports -->
+            <a class="@Active("admin", "reports")" href="@Url.Action("Reports", "Admin")">
+                <span class="vr-sa-ico vr-sa-ico-gold">
+                    <i class="fa-solid fa-chart-line"></i>
+                </span>
+                <span>Financial Reports</span>
+            </a>
+
+            <!-- Audit Logs -->
+            <a class="@Active("admin", "auditlogs")" href="@Url.Action("AuditLogs", "Admin")">
+                <span class="vr-sa-ico vr-sa-ico-slate">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </span>
+                <span>Audit Logs</span>
+            </a>
+        }
+
+        <div class="vr-sa-nav-section">Account</div>
+
+        <!-- Profile -->
+        <a class="@Active(isAdmin ? "admin" : isAccountant ? "accounting" : isServiceStaff ? "servicestaff" : "frontdesk", "profile")" href="@(isAdmin ? Url.Action("Profile", "Admin") : isAccountant ? Url.Action("Profile", "Accounting") : isServiceStaff ? Url.Action("Profile", "ServiceStaff") : Url.Action("Profile", "FrontDesk"))">
+            <span class="vr-sa-ico vr-sa-ico-slate">
+                <i class="fa-solid fa-user-gear"></i>
+            </span>
+            <span>Profile Settings</span>
+        </a>
+
+        <div class="vr-sa-nav-spacer"></div>
+
+        <button type="button" id="vrAdminLogoutBtn" class="vr-sa-nav-item vr-sa-logout" data-bs-toggle="modal" data-bs-target="#vrSaLogoutConfirmModal">
+            <span class="vr-sa-ico">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </span>
+            <span>Log Out</span>
+        </button>
+    </nav>
+</aside>

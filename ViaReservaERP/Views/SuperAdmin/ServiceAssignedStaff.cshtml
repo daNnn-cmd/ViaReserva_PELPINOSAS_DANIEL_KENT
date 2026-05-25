@@ -1,0 +1,122 @@
+@model ViaReservaERP.Models.SuperAdmin.AssignedStaffDetailsViewModel
+@{
+    ViewData["Title"] = "Assigned Staff";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Staff Member</div>
+                    <div class="vr-sa-report-stat-value">@Model.FullName</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-user-tie"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Identity scope</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Active Tasks</div>
+                    <div class="vr-sa-report-stat-value">@Model.AssignedTasks.Count(t => !t.Status.ToLower().Contains("completed") && !t.Status.ToLower().Contains("done") && !t.Status.ToLower().Contains("cancel"))</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-list-check"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Pending completion</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Role</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.RoleName) ? "—" : Model.RoleName)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-id-badge"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">System classification</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Property</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.CompanyName) ? "—" : Model.CompanyName)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-hotel"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Tenant scope</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Related monitoring contexts</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-btn" href="@Url.Action("GuestServices", "SuperAdmin")"><i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Workload Overview</div>
+                <div class="vr-sa-panel-sub">Latest assigned tasks and operational context for @Model.FullName.</div>
+            </div>
+        </div>
+    </section>
+
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Assigned Tasks</div>
+                    <div class="vr-sa-panel-sub">Latest service requests assigned to this staff member.</div>
+                </div>
+            </div>
+
+            @if (Model.AssignedTasks.Count == 0)
+            {
+                <div class="vr-sa-alert" style="margin-top:12px;">
+                    <div class="vr-sa-alert-title">No assigned tasks found</div>
+                    <div class="vr-sa-alert-sub">This staff member has no assigned service requests.</div>
+                </div>
+            }
+            else
+            {
+                <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                    <table class="vr-sa-table">
+                        <thead>
+                            <tr>
+                                <th>Request ID</th>
+                                <th>Guest</th>
+                                <th>Service Type</th>
+                                <th>Status</th>
+                                <th>Request Date</th>
+                                <th style="width: 120px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model.AssignedTasks)
+                            {
+                                <tr>
+                                    <td>@r.RequestId</td>
+                                    <td>@(string.IsNullOrWhiteSpace(r.GuestName) ? "—" : r.GuestName)</td>
+                                    <td>@(string.IsNullOrWhiteSpace(r.ServiceType) ? "—" : r.ServiceType)</td>
+                                    <td>@(string.IsNullOrWhiteSpace(r.Status) ? "—" : r.Status)</td>
+                                    <td>@r.RequestDateUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        <a class="vr-sa-iconbtn" href="@Url.Action("ServiceRequestDetails", "SuperAdmin", new { id = r.RequestId })" title="View"><i class="fa-solid fa-eye"></i></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+</div>

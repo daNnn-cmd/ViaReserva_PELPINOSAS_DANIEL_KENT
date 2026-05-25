@@ -1,0 +1,160 @@
+@model ViaReservaERP.Models.SuperAdmin.ServiceRequestDetailsViewModel
+@{
+    ViewData["Title"] = $"Service Request #{Model.RequestId}";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Request ID</div>
+                    <div class="vr-sa-report-stat-value">#@Model.RequestId</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-hashtag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">System reference</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Service Type</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.ServiceType) ? "—" : Model.ServiceType)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-bell-concierge"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Requested service</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Status</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.Status) ? "—" : Model.Status)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-spinner"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Operational state</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Hotel Company</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.HotelCompany) ? "—" : Model.HotelCompany)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-hotel"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Tenant scope</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Related monitoring contexts</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" href="@Url.Action("ServiceTimeline", "SuperAdmin", new { requestId = Model.RequestId })" title="Timeline">Timeline</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("ServiceAuditLogs", "SuperAdmin", new { requestId = Model.RequestId })" title="Audit Logs">Audit</a>
+                @if (Model.ReservationId.HasValue)
+                {
+                    <a class="vr-sa-export-btn" href="@Url.Action("ReservationDetails", "SuperAdmin", new { id = Model.ReservationId.Value })" title="Reservation">Res</a>
+                }
+                <a class="vr-sa-btn" href="@Url.Action("GuestServices", "SuperAdmin")"><i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Details Overview</div>
+                <div class="vr-sa-panel-sub">Operational context and guest information for request #@Model.RequestId.</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="vr-sa-panels">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Request Summary</div>
+                    <div class="vr-sa-panel-sub">Request, service, and assignment context.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid">
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Request ID</div><div class="vr-sa-report-sub">System reference</div></div><div class="vr-sa-report-stat-value">@Model.RequestId</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Hotel Company</div><div class="vr-sa-report-sub">Tenant scope</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.HotelCompany) ? "—" : Model.HotelCompany)</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Reservation ID</div><div class="vr-sa-report-sub">Derived connection</div></div><div class="vr-sa-report-stat-value">@(Model.ReservationId.HasValue ? Model.ReservationId.Value.ToString() : "—")</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Service Type</div><div class="vr-sa-report-sub">Requested service</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.ServiceType) ? "—" : Model.ServiceType)</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Status</div><div class="vr-sa-report-sub">Operational state</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.Status) ? "—" : Model.Status)</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Assigned Staff</div><div class="vr-sa-report-sub">Current assignee</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.AssignedStaff) ? "—" : Model.AssignedStaff)</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Assigned Staff Role</div><div class="vr-sa-report-sub">Role classification</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.AssignedStaffRole) ? "—" : Model.AssignedStaffRole)</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Request Date</div><div class="vr-sa-report-sub">Created (UTC)</div></div><div class="vr-sa-report-stat-value">@Model.RequestDateUtc.ToString("yyyy-MM-dd HH:mm")</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Completion Date</div><div class="vr-sa-report-sub">Not yet available</div></div><div class="vr-sa-report-stat-value">@(Model.CompletionDateUtc.HasValue ? Model.CompletionDateUtc.Value.ToString("yyyy-MM-dd HH:mm") : "—")</div></div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Guest Details</div>
+                    <div class="vr-sa-panel-sub">Identity and contact (read-only).</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid">
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Guest Name</div><div class="vr-sa-report-sub">Guest profile</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.GuestName) ? "—" : Model.GuestName)</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Email</div><div class="vr-sa-report-sub">Guest contact</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.GuestEmail) ? "—" : Model.GuestEmail)</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Phone</div><div class="vr-sa-report-sub">Guest contact</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.GuestPhone) ? "—" : Model.GuestPhone)</div></div>
+            </div>
+        </section>
+    </div>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Request Timeline Preview</div>
+                <div class="vr-sa-panel-sub">Latest lifecycle events (UTC).</div>
+            </div>
+        </div>
+
+        @if (Model.Timeline.Count == 0)
+        {
+            <div class="vr-sa-alert" style="margin-top:12px;">
+                <div class="vr-sa-alert-title">No timeline events found</div>
+                <div class="vr-sa-alert-sub">No audit entries are associated with this request yet.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Company</th>
+                            <th>Role</th>
+                            <th>Action</th>
+                            <th>Table</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var e in Model.Timeline.Take(30))
+                        {
+                            <tr>
+                                <td>@e.TimestampUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@(string.IsNullOrWhiteSpace(e.Company) ? "—" : e.Company)</td>
+                                <td>@(string.IsNullOrWhiteSpace(e.ActorRole) ? "—" : e.ActorRole)</td>
+                                <td>@(string.IsNullOrWhiteSpace(e.Action) ? "—" : e.Action)</td>
+                                <td>@(string.IsNullOrWhiteSpace(e.Table) ? "—" : e.Table)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>

@@ -1,0 +1,237 @@
+@model ViaReservaERP.Models.Admin.GuestsViewModel
+@{
+    ViewData["Title"] = "Guest Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Total Guests</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalGuests</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #6366f1; background: rgba(99, 102, 241, 0.08);"><i class="fa-solid fa-users"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Company guest directory</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Active</div>
+                    <div class="vr-sa-report-stat-value">@Model.ActiveGuests</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-user-check"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Active guest profiles</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Inactive</div>
+                    <div class="vr-sa-report-stat-value">@Model.InactiveGuests</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #64748b; background: rgba(100, 116, 139, 0.08);"><i class="fa-solid fa-user-slash"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Inactive guest profiles</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">New This Month</div>
+                    <div class="vr-sa-report-stat-value">@Model.NewGuestsThisMonth</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-user-plus"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">New guest profiles this month</div>
+        </div>
+
+        <div class="vr-sa-reports-summary" style="grid-column: 1 / -1;">
+            <div class="vr-sa-reports-summary-title">Search Directory</div>
+            <form method="get" action="@Url.Action("Guests", "FrontDesk")" class="mt-3">
+                <div class="d-flex gap-2">
+                    <input type="text" name="search" class="vr-sa-input" style="font-size: 0.88rem; flex: 1;" placeholder="Search name, email, or phone..." value="@Model.Search" />
+                    <button type="submit" class="vr-sa-btn vr-sa-btn-primary" style="padding: 0 20px;">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                    <a class="vr-sa-btn" href="@Url.Action("Guests", "FrontDesk")" title="Reset Filters">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div class="vr-sa-panel-title">Guest Directory</div>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>Guest Details</th>
+                        <th>Contact Info</th>
+                        <th class="vr-sa-cell-center">Status</th>
+                        <th style="width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var g in Model.Rows)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-weight: 700; color: #0f172a;">@g.FullName</div>
+                                <div class="vr-sa-cell-muted" style="font-size: 0.82rem;">Registered: @g.CreatedAt.ToShortDateString()</div>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    <div class="d-flex align-items-center gap-2" style="font-size: 0.85rem; color: #475569;">
+                                        <i class="fa-regular fa-envelope" style="width: 14px; opacity: 0.6;"></i> @(string.IsNullOrEmpty(g.Email) ? "No Email" : g.Email)
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2" style="font-size: 0.85rem; color: #475569;">
+                                        <i class="fa-solid fa-phone" style="width: 14px; opacity: 0.6;"></i> @(string.IsNullOrEmpty(g.Phone) ? "No Phone" : g.Phone)
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="vr-sa-cell-center">
+                                <div style="font-weight: 500; color: @(g.IsActive ? "#22c55e" : "#64748b");">
+                                    @(g.IsActive ? "Active" : "Inactive")
+                                </div>
+                            </td>
+                            <td>
+                                <div class="vr-sa-actions">
+                                    <button type="button"
+                                            class="vr-sa-iconbtn"
+                                            title="Edit Guest"
+                                            style="color: #6366f1;"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editGuestModal"
+                                            data-guest-id="@g.GuestId"
+                                            data-guest-name="@g.FullName"
+                                            data-guest-email="@g.Email"
+                                            data-guest-phone="@g.Phone"
+                                            data-guest-active="@(g.IsActive ? "true" : "false")">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="vr-sa-pagination">
+            <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.Page - 1) * Model.PageSize + 1, Model.TotalRows))–@(Math.Min(Model.Page * Model.PageSize, Model.TotalRows)) of @Model.TotalRows</div>
+            <div class="vr-sa-pagination-actions">
+                @{
+                    var prev = Model.Page - 1;
+                    var next = Model.Page + 1;
+                }
+                <a class="vr-sa-pagebtn" href="@Url.Action("Guests", "FrontDesk", new { search = Model.Search, sort = Model.Sort, dir = Model.Dir, pageSize = Model.PageSize, page = prev })" aria-disabled="@(Model.Page <= 1)">Previous</a>
+
+                @for (var i = 1; i <= Model.TotalPages; i++)
+                {
+                    if (Model.TotalPages > 8 && i > 3 && i < Model.TotalPages - 2 && Math.Abs(i - Model.Page) > 1)
+                    {
+                        if (i == 4 || i == Model.TotalPages - 3) { <span class="vr-sa-cell-muted px-2">...</span> }
+                        continue;
+                    }
+                    <a class="vr-sa-pagebtn @(i == Model.Page ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("Guests", "FrontDesk", new { search = Model.Search, sort = Model.Sort, dir = Model.Dir, pageSize = Model.PageSize, page = i })">@i</a>
+                }
+
+                <a class="vr-sa-pagebtn" href="@Url.Action("Guests", "FrontDesk", new { search = Model.Search, sort = Model.Sort, dir = Model.Dir, pageSize = Model.PageSize, page = next })" aria-disabled="@(Model.Page >= Model.TotalPages)">Next</a>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade vr-sa-modal" id="editGuestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">Update Guest Information</h5>
+                    <div class="vr-sa-panel-sub" id="editGuestModalSub">Edit guest profile details</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="@Url.Action("UpdateGuest", "FrontDesk")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="editGuestId" />
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="vr-sa-label">Full Name</label>
+                            <input type="text" name="fullName" id="editGuestFullName" class="vr-sa-input" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="vr-sa-label">Email</label>
+                            <input type="email" name="email" id="editGuestEmail" class="vr-sa-input" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="vr-sa-label">Phone</label>
+                            <input type="text" name="phone" id="editGuestPhone" class="vr-sa-input" />
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-between p-3" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+                                <div>
+                                    <div style="font-weight: 800; color: #0b122d;">Account Status</div>
+                                    <div class="vr-sa-cell-muted" style="font-size: 0.9rem;">Deactivate if the guest profile should not be used.</div>
+                                </div>
+                                <div class="form-check form-switch" style="transform: scale(1.05);">
+                                    <input class="form-check-input" type="checkbox" name="isActive" id="editGuestIsActive" value="true" />
+                                    <label class="form-check-label" for="editGuestIsActive" style="font-weight: 700;">Active</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="vr-sa-btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="vr-sa-btn vr-sa-btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const modal = document.getElementById('editGuestModal');
+            if (!modal) return;
+
+            modal.addEventListener('show.bs.modal', function (event) {
+                const btn = event.relatedTarget;
+                if (!btn) return;
+
+                const id = btn.getAttribute('data-guest-id') || '';
+                const name = btn.getAttribute('data-guest-name') || '';
+                const email = btn.getAttribute('data-guest-email') || '';
+                const phone = btn.getAttribute('data-guest-phone') || '';
+                const active = (btn.getAttribute('data-guest-active') || 'false') === 'true';
+
+                const sub = document.getElementById('editGuestModalSub');
+                const idEl = document.getElementById('editGuestId');
+                const nameEl = document.getElementById('editGuestFullName');
+                const emailEl = document.getElementById('editGuestEmail');
+                const phoneEl = document.getElementById('editGuestPhone');
+                const activeEl = document.getElementById('editGuestIsActive');
+
+                if (idEl) idEl.value = id;
+                if (nameEl) nameEl.value = name;
+                if (emailEl) emailEl.value = email;
+                if (phoneEl) phoneEl.value = phone;
+                if (activeEl) activeEl.checked = active;
+                if (sub) sub.innerHTML = `Editing <strong>${name}</strong>`;
+            });
+        })();
+    </script>
+}

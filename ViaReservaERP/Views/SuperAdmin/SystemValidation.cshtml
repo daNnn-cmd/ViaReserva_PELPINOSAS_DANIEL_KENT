@@ -1,0 +1,439 @@
+@model ViaReservaERP.Models.SuperAdmin.SystemValidationViewModel
+@{
+    ViewData["Title"] = "System Validation";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div class="vr-sa-report-stat-kicker">Revenue Alignment</div>
+            <div class="vr-sa-report-stat-value">₱ @Model.RevenueDelta.ToString("N0")</div>
+            <div class="vr-sa-report-stat-sub">Delta (should be 0)</div>
+        </div>
+        <div class="vr-sa-report-stat">
+            <div class="vr-sa-report-stat-kicker">Failed Payments</div>
+            <div class="vr-sa-report-stat-value">@Model.FailedPayments</div>
+            <div class="vr-sa-report-stat-sub">Stripe/Local errors</div>
+        </div>
+        <div class="vr-sa-report-stat">
+            <div class="vr-sa-report-stat-kicker">Orphan Records</div>
+            <div class="vr-sa-report-stat-value">@(Model.OrphanReservations + Model.OrphanPayments + Model.OrphanWorkflows)</div>
+            <div class="vr-sa-report-stat-sub">Missing references</div>
+        </div>
+        <div class="vr-sa-report-stat">
+            <div class="vr-sa-report-stat-kicker">Critical Alerts</div>
+            <div class="vr-sa-report-stat-value">@Model.ConfirmedReservationsWithoutSuccessfulPayment</div>
+            <div class="vr-sa-report-stat-sub">Confirmed w/o payment</div>
+        </div>
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">System Health</div>
+            <div class="vr-sa-reports-summary-sub">UTC: @Model.RunAtUtc.ToString("HH:mm")</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" href="@Url.Action("SystemValidation","SuperAdmin")">Refresh</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("SystemValidation","SuperAdmin", new { escalate = true })">Escalate</a>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="vr-sa-report-grid" style="margin-top:14px;">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Payments without Transactions</div>
+                    <div class="vr-sa-panel-sub">Succeeded payments that have no matching revenue transaction.</div>
+                </div>
+            </div>
+            <div class="vr-sa-table-wrap" style="margin-top:12px;">
+                <table class="vr-sa-table-modern">
+                    <thead>
+                        <tr>
+                            <th style="width:140px;">Payment</th>
+                            <th style="width:140px;">Reservation</th>
+                            <th>Company</th>
+                            <th style="width:160px;">Amount</th>
+                            <th style="width:160px;">Status</th>
+                            <th>Ref</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.PaymentsWithoutTransactionRows.Count == 0)
+                    {
+                        <tr><td colspan="6" class="vr-sa-cell-muted">No issues found.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var r in Model.PaymentsWithoutTransactionRows)
+                        {
+                            <tr>
+                                <td>#@r.PaymentId</td>
+                                <td class="vr-sa-cell-muted">#@r.ReservationId</td>
+                                <td>@r.Company</td>
+                                <td>₱ @r.Amount.ToString("N2")</td>
+                                <td>@r.Status</td>
+                                <td class="vr-sa-cell-muted">@r.Ref</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Transactions without Payments</div>
+                    <div class="vr-sa-panel-sub">Revenue transactions referencing reservations with no succeeded payment.</div>
+                </div>
+            </div>
+            <div class="vr-sa-table-wrap" style="margin-top:12px;">
+                <table class="vr-sa-table-modern">
+                    <thead>
+                        <tr>
+                            <th style="width:160px;">Transaction</th>
+                            <th style="width:140px;">Reservation</th>
+                            <th>Company</th>
+                            <th style="width:160px;">Amount</th>
+                            <th>Ref</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.TransactionsWithoutPaymentRows.Count == 0)
+                    {
+                        <tr><td colspan="5" class="vr-sa-cell-muted">No issues found.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var r in Model.TransactionsWithoutPaymentRows)
+                        {
+                            <tr>
+                                <td>#@r.TransactionId</td>
+                                <td class="vr-sa-cell-muted">#@r.ReservationId</td>
+                                <td>@r.Company</td>
+                                <td>₱ @r.Amount.ToString("N2")</td>
+                                <td class="vr-sa-cell-muted">@r.Ref</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Confirmed Reservations without Successful Payment</div>
+                    <div class="vr-sa-panel-sub">Confirmed reservations must have succeeded payment records.</div>
+                </div>
+            </div>
+            <div class="vr-sa-table-wrap" style="margin-top:12px;">
+                <table class="vr-sa-table-modern">
+                    <thead>
+                        <tr>
+                            <th style="width:140px;">Reservation</th>
+                            <th>Guest</th>
+                            <th>Company</th>
+                            <th style="width:160px;">Amount</th>
+                            <th style="width:160px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.ConfirmedReservationWithoutPayRows.Count == 0)
+                    {
+                        <tr><td colspan="5" class="vr-sa-cell-muted">No issues found.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var r in Model.ConfirmedReservationWithoutPayRows)
+                        {
+                            <tr>
+                                <td>#@r.ReservationId</td>
+                                <td>@r.Guest</td>
+                                <td>@r.Company</td>
+                                <td>₱ @r.Amount.ToString("N2")</td>
+                                <td>@r.Status</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Duplicate Revenue Transaction Groups</div>
+                    <div class="vr-sa-panel-sub">Exact transaction IDs grouped per reservation (must be 1 per reservation).</div>
+                </div>
+            </div>
+            <div class="vr-sa-table-wrap" style="margin-top:12px;">
+                <table class="vr-sa-table-modern">
+                    <thead>
+                        <tr>
+                            <th style="width:140px;">Reservation</th>
+                            <th>Company</th>
+                            <th>Transaction IDs</th>
+                            <th style="width:160px;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.DuplicateRevenueGroups.Count == 0)
+                    {
+                        <tr><td colspan="4" class="vr-sa-cell-muted">No issues found.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var g in Model.DuplicateRevenueGroups)
+                        {
+                            <tr>
+                                <td class="vr-sa-cell-muted">#@g.ReservationId</td>
+                                <td>@g.Company</td>
+                                <td class="vr-sa-cell-muted">@string.Join(", ", g.TransactionIds)</td>
+                                <td>₱ @g.TotalAmount.ToString("N2")</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Orphan Reservations</div>
+                    <div class="vr-sa-panel-sub">Reservations missing guest or room assignment.</div>
+                </div>
+            </div>
+            <div class="vr-sa-table-wrap" style="margin-top:12px;">
+                <table class="vr-sa-table-modern">
+                    <thead>
+                        <tr>
+                            <th style="width:140px;">Reservation</th>
+                            <th>Company</th>
+                            <th>Issue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.OrphanReservationRows.Count == 0)
+                    {
+                        <tr><td colspan="3" class="vr-sa-cell-muted">No issues found.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var r in Model.OrphanReservationRows)
+                        {
+                            <tr>
+                                <td>#@r.RecordId</td>
+                                <td>@r.Company</td>
+                                <td>@r.Issue</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Orphan Payments</div>
+                    <div class="vr-sa-panel-sub">Payments missing reservation/company references.</div>
+                </div>
+            </div>
+            <div class="vr-sa-table-wrap" style="margin-top:12px;">
+                <table class="vr-sa-table-modern">
+                    <thead>
+                        <tr>
+                            <th style="width:140px;">Payment</th>
+                            <th>Company</th>
+                            <th>Issue</th>
+                            <th>Ref</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.OrphanPaymentRows.Count == 0)
+                    {
+                        <tr><td colspan="4" class="vr-sa-cell-muted">No issues found.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var r in Model.OrphanPaymentRows)
+                        {
+                            <tr>
+                                <td>#@r.RecordId</td>
+                                <td>@r.Company</td>
+                                <td>@r.Issue</td>
+                                <td class="vr-sa-cell-muted">@r.Ref</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Duplicate Revenue Transactions</div>
+                    <div class="vr-sa-panel-sub">Potential double-counting in reports.</div>
+                </div>
+            </div>
+            <div class="vr-sa-table-wrap" style="margin-top:12px;">
+                <table class="vr-sa-table-modern">
+                    <thead>
+                        <tr>
+                            <th style="width:140px;">Transaction</th>
+                            <th>Company</th>
+                            <th>Issue</th>
+                            <th>Ref</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.DuplicateRevenueTransactionRows.Count == 0)
+                    {
+                        <tr><td colspan="4" class="vr-sa-cell-muted">No issues found.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var r in Model.DuplicateRevenueTransactionRows)
+                        {
+                            <tr>
+                                <td>#@r.RecordId</td>
+                                <td>@r.Company</td>
+                                <td>@r.Issue</td>
+                                <td class="vr-sa-cell-muted">@r.Ref</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Orphan Workflows</div>
+                    <div class="vr-sa-panel-sub">Workflow instances pointing to missing reservations.</div>
+                </div>
+            </div>
+            <div class="vr-sa-table-wrap" style="margin-top:12px;">
+                <table class="vr-sa-table-modern">
+                    <thead>
+                        <tr>
+                            <th style="width:160px;">Workflow</th>
+                            <th>Company</th>
+                            <th>Issue</th>
+                            <th>Ref</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.OrphanWorkflowRows.Count == 0)
+                    {
+                        <tr><td colspan="4" class="vr-sa-cell-muted">No issues found.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var r in Model.OrphanWorkflowRows)
+                        {
+                            <tr>
+                                <td>#@r.RecordId</td>
+                                <td>@r.Company</td>
+                                <td>@r.Issue</td>
+                                <td class="vr-sa-cell-muted">@r.Ref</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Failed Payments</div>
+                    <div class="vr-sa-panel-sub">Operational failures requiring retries or cancellation workflows.</div>
+                </div>
+            </div>
+            <div class="vr-sa-table-wrap" style="margin-top:12px;">
+                <table class="vr-sa-table-modern">
+                    <thead>
+                        <tr>
+                            <th style="width:140px;">Payment</th>
+                            <th>Company</th>
+                            <th>Status</th>
+                            <th>Stripe Ref</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.FailedPaymentRows.Count == 0)
+                    {
+                        <tr><td colspan="4" class="vr-sa-cell-muted">No issues found.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var r in Model.FailedPaymentRows)
+                        {
+                            <tr>
+                                <td>#@r.RecordId</td>
+                                <td>@r.Company</td>
+                                <td>@r.Issue</td>
+                                <td class="vr-sa-cell-muted">@r.Ref</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Pending Refunds</div>
+                    <div class="vr-sa-panel-sub">Refund requests awaiting processing.</div>
+                </div>
+            </div>
+            <div class="vr-sa-table-wrap" style="margin-top:12px;">
+                <table class="vr-sa-table-modern">
+                    <thead>
+                        <tr>
+                            <th style="width:140px;">Payment</th>
+                            <th>Company</th>
+                            <th>Status</th>
+                            <th>Stripe Ref</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.PendingRefundRows.Count == 0)
+                    {
+                        <tr><td colspan="4" class="vr-sa-cell-muted">No issues found.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var r in Model.PendingRefundRows)
+                        {
+                            <tr>
+                                <td>#@r.RecordId</td>
+                                <td>@r.Company</td>
+                                <td>@r.Issue</td>
+                                <td class="vr-sa-cell-muted">@r.Ref</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>

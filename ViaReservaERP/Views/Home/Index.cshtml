@@ -1,0 +1,626 @@
+@model IEnumerable<ViaReservaERP.Models.Company>
+@{
+    ViewData["Title"] = "Home Page";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ViaReserva - Premium Hospitality ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --vr-navy: #0f2d57;
+            --vr-gold: #c5a365;
+            --vr-blue: #1e40af;
+            --vr-light: #f8fafc;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--vr-light);
+            color: #334155;
+            overflow-x: hidden;
+        }
+        /* Navbar */
+        .vr-nav {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(15, 45, 87, 0.1);
+            padding: 1rem 2rem;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+        .vr-nav-brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--vr-navy);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .vr-nav-links a {
+            color: #475569;
+            font-weight: 600;
+            text-decoration: none;
+            margin-left: 2rem;
+            transition: color 0.2s;
+        }
+        .vr-nav-links a:hover {
+            color: var(--vr-navy);
+        }
+        .vr-btn-login {
+            background: var(--vr-navy);
+            color: white !important;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .vr-btn-login:hover {
+            background: var(--vr-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(15,45,87,0.2);
+        }
+        /* Hero Section */
+        .vr-hero {
+            position: relative;
+            padding: 180px 2rem 100px;
+            background: url('/img/login-bg-modern.png') no-repeat center center;
+            background-size: cover;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        .vr-hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(15,45,87,0.92) 0%, rgba(11,18,45,0.98) 100%);
+        }
+        .vr-hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .vr-hero-title {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, #fff, var(--vr-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .vr-hero-subtitle {
+            font-size: 1.25rem;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 2.5rem;
+            line-height: 1.6;
+        }
+        .vr-hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        .vr-btn-primary {
+            background: var(--vr-gold);
+            color: var(--vr-navy);
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .vr-btn-primary:hover {
+            background: #d4b57b;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(197,163,101,0.3);
+            color: var(--vr-navy);
+        }
+        .vr-btn-outline {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+        .vr-btn-outline:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        /* Features */
+        .vr-features {
+            padding: 100px 2rem;
+            background: white;
+        }
+        .vr-section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        .vr-section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--vr-navy);
+            margin-bottom: 1rem;
+        }
+        .vr-feature-card {
+            background: var(--vr-light);
+            border: 1px solid rgba(15,45,87,0.05);
+            border-radius: 20px;
+            padding: 40px 30px;
+            height: 100%;
+            transition: all 0.3s;
+        }
+        .vr-feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(15,45,87,0.08);
+            border-color: rgba(197,163,101,0.3);
+        }
+        .vr-feature-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(15,45,87,0.05);
+            color: var(--vr-navy);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .vr-feature-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--vr-navy);
+            margin-bottom: 1rem;
+        }
+        .vr-feature-text {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        /* Pricing */
+        .vr-pricing {
+            padding: 100px 2rem;
+            background: white;
+        }
+        .vr-price-card {
+            background: white;
+            border: 1px solid rgba(15,45,87,0.08);
+            border-radius: 20px;
+            padding: 40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .vr-price-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(15,45,87,0.08);
+            border-color: rgba(197,163,101,0.3);
+        }
+        .vr-price-card-featured {
+            background: var(--vr-navy);
+            color: white;
+            transform: scale(1.05);
+            border: none;
+            box-shadow: 0 24px 48px rgba(15,45,87,0.2);
+        }
+        .vr-price-card-featured:hover {
+            transform: scale(1.05) translateY(-10px);
+            box-shadow: 0 30px 60px rgba(15,45,87,0.3);
+        }
+        .vr-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--vr-gold);
+            color: var(--vr-navy);
+            padding: 6px 16px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .vr-price-name {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--vr-navy);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+        .vr-price-card-featured .vr-price-name {
+            color: rgba(255,255,255,0.8);
+        }
+        .vr-price {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            color: var(--vr-navy);
+        }
+        .vr-price-card-featured .vr-price {
+            color: white;
+        }
+        .vr-price span {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+        .vr-price-card-featured .vr-price span {
+            color: rgba(255,255,255,0.6);
+        }
+        .vr-price-desc {
+            color: #64748b;
+            margin-bottom: 2rem;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+        .vr-price-card-featured .vr-price-desc {
+            color: rgba(255,255,255,0.8);
+        }
+        .vr-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 2rem 0;
+            flex: 1;
+        }
+        .vr-list li {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            color: #475569;
+        }
+        .vr-price-card-featured .vr-list li {
+            color: rgba(255,255,255,0.9);
+        }
+        .vr-list li i {
+            color: var(--vr-gold);
+        }
+        .vr-btn-plan {
+            display: block;
+            text-align: center;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .vr-btn-plan-outline {
+            background: transparent;
+            border: 2px solid rgba(15,45,87,0.1);
+            color: var(--vr-navy);
+        }
+        .vr-btn-plan-outline:hover {
+            border-color: var(--vr-navy);
+            background: rgba(15,45,87,0.05);
+            color: var(--vr-navy);
+        }
+        .vr-btn-plan-primary {
+            background: var(--vr-gold);
+            color: var(--vr-navy);
+            border: none;
+        }
+        .vr-btn-plan-primary:hover {
+            background: #d4b57b;
+            color: var(--vr-navy);
+            transform: translateY(-2px);
+        }
+        
+        /* Footer */
+        .vr-footer {
+            background: var(--vr-navy);
+            color: rgba(255,255,255,0.7);
+            padding: 60px 2rem;
+            text-align: center;
+        }
+        .vr-footer-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 1rem;
+        }
+        .vr-footer-links a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            margin: 0 1rem;
+        }
+        .vr-footer-links a:hover {
+            color: white;
+        }
+        /* Hamburger Toggle */
+        .vr-nav-toggle {
+            display: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            border: 1px solid rgba(15,45,87,0.12);
+            background: transparent;
+            color: var(--vr-navy);
+            font-size: 1.1rem;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .vr-nav-toggle:hover {
+            background: rgba(15,45,87,0.05);
+        }
+        .vr-nav-mobile {
+            display: none;
+        }
+        @@media (max-width: 767px) {
+            .vr-nav-toggle {
+                display: inline-flex;
+            }
+            .vr-nav-links {
+                display: none !important;
+            }
+            .vr-nav-mobile {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: rgba(255,255,255,0.98);
+                backdrop-filter: blur(12px);
+                border-bottom: 1px solid rgba(15,45,87,0.08);
+                padding: 16px 24px;
+                flex-direction: column;
+                gap: 8px;
+                box-shadow: 0 12px 24px rgba(15,45,87,0.08);
+                animation: vrNavSlideDown 0.25s ease;
+            }
+            .vr-nav-mobile.vr-nav-open {
+                display: flex;
+            }
+            .vr-nav-mobile a {
+                color: #334155;
+                font-weight: 600;
+                text-decoration: none;
+                padding: 10px 12px;
+                border-radius: 10px;
+                transition: background 0.2s;
+            }
+            .vr-nav-mobile a:hover {
+                background: rgba(15,45,87,0.04);
+            }
+            .vr-nav-mobile .vr-btn-login {
+                text-align: center;
+                margin-top: 4px;
+            }
+            .vr-hero {
+                padding: 140px 1.5rem 60px;
+                min-height: auto;
+            }
+            .vr-hero-subtitle {
+                font-size: 1rem;
+            }
+            .vr-features,
+            .vr-pricing {
+                padding: 60px 1.5rem;
+            }
+        }
+        @@keyframes vrNavSlideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="vr-nav">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="@Url.Action("Index", "Home")" class="vr-nav-brand">
+                <img src="~/img/viareserva-logo.png" alt="ViaReserva" style="height: 32px;" />
+                ViaReserva
+            </a>
+            <button class="vr-nav-toggle" id="vrNavToggle" aria-label="Toggle menu" aria-expanded="false">
+                <i class="fa-solid fa-bars" id="vrNavToggleIcon"></i>
+            </button>
+            <div class="vr-nav-links d-none d-md-flex align-items-center">
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="@Url.Action("Privacy", "Home")">Privacy</a>
+                <a href="@Url.Action("Login", "Account")" class="vr-btn-login">Sign In</a>
+            </div>
+            <div class="vr-nav-mobile" id="vrNavMobile">
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="@Url.Action("Privacy", "Home")">Privacy</a>
+                <a href="@Url.Action("Login", "Account")" class="vr-btn-login">Sign In</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="vr-hero">
+        <div class="vr-hero-overlay"></div>
+        <div class="container vr-hero-content">
+            <h1 class="vr-hero-title">Smart Hotel Management &amp; Reservation System</h1>
+            <p class="vr-hero-subtitle">Manage bookings, empower your staff, and deliver unforgettable guest experiences—all united in one powerful, secure SaaS platform.</p>
+            <div class="vr-hero-actions flex-column flex-sm-row">
+                <a href="@Url.Action("Login", "Account")" class="vr-btn-primary">Get Started</a>
+                <a href="@Url.Action("Book", "Reservation")" class="vr-btn-outline">Book a Stay</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="features" class="vr-features">
+        <div class="container">
+            <div class="vr-section-header">
+                <h2 class="vr-section-title">Built for Modern Hospitality</h2>
+                <p style="color: #64748b; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">From front desk to finance—keep every team aligned with workflows, absolute visibility, and strict accountability.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="vr-feature-card">
+                        <div class="vr-feature-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                        <h3 class="vr-feature-title">Reservation Management</h3>
+                        <p class="vr-feature-text">Handle multi-room bookings, check-in/out support, and live status tracking across all your properties effortlessly.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="vr-feature-card">
+                        <div class="vr-feature-icon"><i class="fa-solid fa-users"></i></div>
+                        <h3 class="vr-feature-title">Guest Tracking</h3>
+                        <p class="vr-feature-text">Maintain centralized guest profiles with detailed contact info, previous stays, and service history.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="vr-feature-card">
+                        <div class="vr-feature-icon"><i class="fa-solid fa-bell-concierge"></i></div>
+                        <h3 class="vr-feature-title">Service Workflows</h3>
+                        <p class="vr-feature-text">Assign, track, and fulfill guest requests with clear accountability and built-in escalations.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="vr-feature-card">
+                        <div class="vr-feature-icon"><i class="fa-solid fa-credit-card"></i></div>
+                        <h3 class="vr-feature-title">Payments &amp; Billing</h3>
+                        <p class="vr-feature-text">Stripe-integrated payment intents, billing statuses, and automated revenue capture designed for scale.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="vr-feature-card">
+                        <div class="vr-feature-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                        <h3 class="vr-feature-title">Real-time Analytics</h3>
+                        <p class="vr-feature-text">Instant operational insights with role-based navigation, customizable dashboards, and secure access.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="vr-feature-card">
+                        <div class="vr-feature-icon"><i class="fa-solid fa-gears"></i></div>
+                        <h3 class="vr-feature-title">Automated Approvals</h3>
+                        <p class="vr-feature-text">Design required approvals and step tracking for reservations, services, and complex internal processes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+        <section id="pricing" class="vr-pricing">
+            <div class="container">
+                <div class="vr-section-header">
+                    <h2 class="vr-section-title">Subscription Plans</h2>
+                    <p style="color: #64748b; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">Choose a plan that fits your property today—and scale seamlessly as you grow.</p>
+                </div>
+                
+                <div class="row g-4 align-items-center" style="max-width: 1100px; margin: 0 auto;">
+                    <div class="col-lg-4">
+                        <div class="vr-price-card">
+                            <div class="vr-price-name">Basic</div>
+                            <div class="vr-price">₱2,999<span>/mo</span></div>
+                            <div class="vr-price-desc">For small hotels, inns, and boutique hotels.</div>
+                            <ul class="vr-list">
+                                <li><i class="fa-solid fa-check"></i> Up to 25 rooms</li>
+                                <li><i class="fa-solid fa-check"></i> Reservation management</li>
+                                <li><i class="fa-solid fa-check"></i> Guest booking portal</li>
+                                <li><i class="fa-solid fa-check"></i> Basic reporting</li>
+                                <li><i class="fa-solid fa-check"></i> Email support</li>
+                            </ul>
+                            <a href="@Url.Action("Register", "Subscription", new { plan = "Basic" })" class="vr-btn-plan vr-btn-plan-outline">Choose Basic</a>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <div class="vr-price-card vr-price-card-featured">
+                            <div class="vr-badge">Recommended</div>
+                            <div class="vr-price-name">Standard</div>
+                            <div class="vr-price">₱6,999<span>/mo</span></div>
+                            <div class="vr-price-desc">For mid-sized hotels, resorts, and growing hotels.</div>
+                            <ul class="vr-list">
+                                <li><i class="fa-solid fa-check"></i> Unlimited rooms</li>
+                                <li><i class="fa-solid fa-check"></i> Workflow automation</li>
+                                <li><i class="fa-solid fa-check"></i> Guest service management</li>
+                                <li><i class="fa-solid fa-check"></i> Accounting dashboard</li>
+                                <li><i class="fa-solid fa-check"></i> Payment processing</li>
+                                <li><i class="fa-solid fa-check"></i> Priority support</li>
+                            </ul>
+                            <a href="@Url.Action("Register", "Subscription", new { plan = "Standard" })" class="vr-btn-plan vr-btn-plan-primary">Choose Standard</a>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <div class="vr-price-card">
+                            <div class="vr-price-name">Premium</div>
+                            <div class="vr-price">Custom<span></span></div>
+                            <div class="vr-price-desc">For enterprise hotel chains, large resorts, and multi-branch businesses.</div>
+                            <ul class="vr-list">
+                                <li><i class="fa-solid fa-check"></i> Multi-branch support</li>
+                                <li><i class="fa-solid fa-check"></i> Advanced analytics</li>
+                                <li><i class="fa-solid fa-check"></i> Custom workflows</li>
+                                <li><i class="fa-solid fa-check"></i> API integrations</li>
+                                <li><i class="fa-solid fa-check"></i> Dedicated onboarding</li>
+                                <li><i class="fa-solid fa-check"></i> 24/7 support</li>
+                            </ul>
+                            <a href="@Url.Action("Inquiry", "Enterprise")" class="vr-btn-plan vr-btn-plan-outline">Contact Sales</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    <footer class="vr-footer">
+        <div class="container">
+            <div class="vr-footer-logo">ViaReserva</div>
+            <div class="vr-footer-links mb-4">
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="@Url.Action("Privacy", "Home")">Privacy Policy</a>
+            </div>
+            <div style="font-size: 0.9rem;">
+                &copy; @ViaReservaERP.AppTime.Now.Year ViaReserva Systems. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mobile nav toggle
+        (function() {
+            const toggle = document.getElementById('vrNavToggle');
+            const mobile = document.getElementById('vrNavMobile');
+            const icon = document.getElementById('vrNavToggleIcon');
+            if (toggle && mobile) {
+                toggle.addEventListener('click', () => {
+                    const open = mobile.classList.toggle('vr-nav-open');
+                    toggle.setAttribute('aria-expanded', open);
+                    if (icon) {
+                        icon.className = open ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+                    }
+                });
+                // Close menu when clicking a link
+                mobile.querySelectorAll('a').forEach(a => {
+                    a.addEventListener('click', () => {
+                        mobile.classList.remove('vr-nav-open');
+                        toggle.setAttribute('aria-expanded', 'false');
+                        if (icon) icon.className = 'fa-solid fa-bars';
+                    });
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+@model ViaReservaERP.Models.SuperAdmin.ReservationAuditLogsViewModel
+@{
+    ViewData["Title"] = "Reservation Audit Logs";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Reservation ID</div>
+                    <div class="vr-sa-report-stat-value">#@Model.ReservationId</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-hashtag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Linked reservation</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Audit Entries</div>
+                    <div class="vr-sa-report-stat-value">@Model.Rows.Count</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-list-check"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Recorded activity</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Property</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.HotelCompany) ? "—" : Model.HotelCompany)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-hotel"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Tenant scope</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Last Activity</div>
+                    <div class="vr-sa-report-stat-value">@(Model.Rows.OrderByDescending(r => r.TimestampUtc).FirstOrDefault()?.TimestampUtc.ToString("MM-dd HH:mm") ?? "—")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-clock"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">UTC timeline</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Related monitoring contexts</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" href="@Url.Action("ReservationDetails", "SuperAdmin", new { id = Model.ReservationId })" title="Reservation Details">Details</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("ReservationPayment", "SuperAdmin", new { reservationId = Model.ReservationId })" title="Payment Tracking">Payment</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("ReservationServiceRequests", "SuperAdmin", new { reservationId = Model.ReservationId })" title="Service Requests">Services</a>
+                <a class="vr-sa-btn" href="@Url.Action("Reservations", "SuperAdmin")"><i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Audit Log Overview</div>
+                <div class="vr-sa-panel-sub">Complete compliance trail for reservation #@Model.ReservationId.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">System Activity Logs</div>
+                <div class="vr-sa-panel-sub">Action, role, timestamp, and company scope (UTC).</div>
+            </div>
+        </div>
+
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="vr-sa-alert" style="margin-top:12px;">
+                <div class="vr-sa-alert-title">No audit logs found</div>
+                <div class="vr-sa-alert-sub">No audit entries were recorded for this reservation reference.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Company Scope</th>
+                            <th>User Role</th>
+                            <th>Activity</th>
+                            <th>Entity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Rows)
+                        {
+                            var action = (r.Action ?? "").ToLower();
+                            var actionClass = action.Contains("create") || action.Contains("insert") ? "vr-sa-status-success" :
+                                              action.Contains("update") || action.Contains("modify") ? "vr-sa-status-info" :
+                                              action.Contains("delete") || action.Contains("remove") ? "vr-sa-status-danger" : "vr-sa-status-neutral";
+
+                            <tr>
+                                <td class="vr-sa-cell-muted">@r.TimestampUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@(string.IsNullOrWhiteSpace(r.Company) ? "—" : r.Company)</td>
+                                <td>
+                                    <span class="vr-sa-status-pill vr-sa-status-neutral" style="font-size: 0.7rem; padding: 2px 8px;">@(string.IsNullOrWhiteSpace(r.UserRole) ? "System" : r.UserRole)</span>
+                                </td>
+                                <td style="font-weight: 500; color: #0b122d;">
+                                    <i class="fa-solid fa-circle-info me-1" style="font-size: 0.75rem; color: #64748b;"></i>
+                                    @(string.IsNullOrWhiteSpace(r.Action) ? "—" : r.Action)
+                                </td>
+                                <td>
+                                    <code style="font-size: 0.85rem; color: #64748b;">@(string.IsNullOrWhiteSpace(r.Table) ? "—" : r.Table)</code>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>
+</div>

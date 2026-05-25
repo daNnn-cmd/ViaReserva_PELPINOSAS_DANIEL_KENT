@@ -1,0 +1,236 @@
+@model ViaReservaERP.Models.GuestPortal.GuestReservationsViewModel
+@{
+    ViewData["Title"] = "My Reservations";
+    ViewData["PageSubtitle"] = "View and manage your bookings";
+    Layout = "~/Views/Shared/_GuestLayout.cshtml";
+
+    var categories = new[] {
+        new { Id = "active",    Label = "Active",     Icon = "fa-solid fa-door-open",        Rows = Model.Active,     ShowCancel = true },
+        new { Id = "completed", Label = "Completed",  Icon = "fa-solid fa-flag-checkered",   Rows = Model.Completed,  ShowCancel = false },
+    };
+}
+
+<!-- Page header -->
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+    <div>
+        <h1 class="vr-gp-section-title" style="font-size:1.3rem;">My Reservations</h1>
+        <div class="vr-gp-section-sub">Active and completed bookings</div>
+    </div>
+    <a href="@Url.Action("Book","Reservation")" class="vr-gp-btn vr-gp-btn-primary">
+        <i class="fa-solid fa-plus"></i> New Booking
+    </a>
+</div>
+
+<!-- Tabs -->
+<div class="vr-gp-tabs" id="resTabs">
+    @foreach (var cat in categories)
+    {
+        <button class="vr-gp-tab @(cat.Id == "active" ? "vr-gp-tab-active" : "")" data-tab="@cat.Id">
+            <i class="@cat.Icon"></i> @cat.Label <span class="vr-gp-tab-count">@cat.Rows.Count</span>
+        </button>
+    }
+</div>
+
+<!-- Tab panels -->
+@foreach (var cat in categories)
+{
+    <div class="vr-gp-tab-panel" data-panel="@cat.Id" style="@(cat.Id != "active" ? "display:none;" : "")">
+        <div class="vr-gp-card">
+            @if (cat.Rows.Count == 0)
+            {
+                <div class="vr-gp-empty">
+                    <div class="vr-gp-empty-icon"><i class="fa-regular fa-calendar"></i></div>
+                    No @cat.Id reservations found.
+                </div>
+            }
+            else
+            {
+                <div class="vr-gp-table-wrap">
+                    <table class="vr-gp-table">
+                        <thead>
+                        <tr>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Room</th>
+                            <th>Status</th>
+                            <th style="text-align:right;">Total</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var r in cat.Rows)
+                        {
+                            <tr>
+                                <td>@r.CheckInDate?.ToString("MMM dd, yyyy")</td>
+                                <td>@r.CheckOutDate?.ToString("MMM dd, yyyy")</td>
+                                <td>@(string.IsNullOrWhiteSpace(r.RoomNumber) ? "Unassigned" : r.RoomNumber)</td>
+                                <td>@r.Status</td>
+                                <td style="text-align:right;">
+                                    <div style="font-weight:600;">₱ @r.TotalAmount.ToString("N2")</div>
+                                    @if (r.TaxAmount > 0 || r.ServiceCharge > 0)
+                                    {
+                                        <div style="font-size:0.75rem;color:#64748b;">
+                                            Includes VAT: ₱@r.TaxAmount.ToString("N2")<br/>
+                                            SC: ₱@r.ServiceCharge.ToString("N2")
+                                        </div>
+                                    }
+                                </td>
+                                <td>
+                                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                                        <a class="vr-gp-btn" style="padding:6px 12px;font-size:0.78rem;" href="@Url.Action("ReservationDetails","Guest", new { id = r.ReservationId })">
+                                            <i class="fa-regular fa-eye"></i> Details
+                                        </a>
+                                        <a class="vr-gp-btn" style="padding:6px 12px;font-size:0.78rem;" href="@Url.Action("Tracking","Guest", new { reservationId = r.ReservationId })">
+                                            <i class="fa-solid fa-route"></i> Track
+                                        </a>
+                                        @if (cat.ShowCancel && (r.Status == "Pending" || r.Status == "Confirmed"))
+                                        {
+                                            <button type="button" class="vr-gp-btn cancel-trigger"
+                                                    style="padding:6px 12px;font-size:0.78rem;color:var(--gp-rose);border-color:rgba(225,29,72,0.2);"
+                                                    data-res-id="@r.ReservationId"
+                                                    data-res-room="@(string.IsNullOrWhiteSpace(r.RoomNumber) ? "Unassigned" : r.RoomNumber)"
+                                                    data-res-checkin="@r.CheckInDate?.ToString("MMM dd, yyyy")"
+                                                    data-res-checkout="@r.CheckOutDate?.ToString("MMM dd, yyyy")"
+                                                    data-res-total="₱ @r.TotalAmount.ToString("N2")"
+                                                    data-res-status="@r.Status">
+                                                <i class="fa-regular fa-circle-xmark"></i> Cancel
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<!-- ═══════════════════ Cancel Reservation Modal ═══════════════════ -->
+<div id="cancelModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,0);transition:background 0.25s ease;">
+    <div id="cancelModalInner" style="background:#fff;border-radius:16px;max-width:440px;width:92%;margin:auto;padding:0;box-shadow:0 20px 60px rgba(0,0,0,0.25);transform:scale(0.92) translateY(12px);opacity:0;transition:all 0.3s cubic-bezier(0.16,1,0.3,1);overflow:hidden;">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#fef2f2 0%,#fff1f2 100%);padding:24px 28px 18px;border-bottom:1px solid #fecdd3;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#e11d48,#be123c);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="fa-solid fa-triangle-exclamation" style="color:#fff;font-size:1.2rem;"></i>
+                </div>
+                <div>
+                    <div style="font-weight:700;font-size:1.1rem;color:#1e293b;">Cancel Reservation</div>
+                    <div style="font-size:0.82rem;color:#94a3b8;">This action cannot be undone</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div style="padding:22px 28px;">
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:18px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div>
+                        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:#94a3b8;font-weight:600;">Reservation</div>
+                        <div style="font-weight:700;color:#1e293b;font-size:0.95rem;" id="cm-id">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:#94a3b8;font-weight:600;">Status</div>
+                        <div style="font-weight:600;color:#f59e0b;font-size:0.95rem;" id="cm-status">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:#94a3b8;font-weight:600;">Check-in</div>
+                        <div style="font-weight:600;color:#1e293b;font-size:0.88rem;" id="cm-checkin">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:#94a3b8;font-weight:600;">Check-out</div>
+                        <div style="font-weight:600;color:#1e293b;font-size:0.88rem;" id="cm-checkout">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:#94a3b8;font-weight:600;">Room</div>
+                        <div style="font-weight:600;color:#1e293b;font-size:0.88rem;" id="cm-room">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:#94a3b8;font-weight:600;">Total</div>
+                        <div style="font-weight:700;color:#059669;font-size:0.95rem;" id="cm-total">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background:#fef2f2;border:1px solid #fecdd3;border-radius:8px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;margin-bottom:6px;">
+                <i class="fa-solid fa-info-circle" style="color:#e11d48;margin-top:2px;flex-shrink:0;"></i>
+                <div style="font-size:0.82rem;color:#9f1239;line-height:1.45;">
+                    Cancelling this reservation will release the room and initiate a <strong>refund</strong> if payment has been made. You will receive a notification once processed.
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="padding:0 28px 24px;display:flex;gap:10px;justify-content:flex-end;">
+            <button type="button" id="cancelModalClose" class="vr-gp-btn" style="padding:10px 22px;font-size:0.88rem;font-weight:600;">
+                Keep Reservation
+            </button>
+            <form id="cancelForm" method="post" action="" style="display:inline;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="vr-gp-btn" style="padding:10px 22px;font-size:0.88rem;font-weight:600;background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;border:none;border-radius:8px;">
+                    <i class="fa-regular fa-circle-xmark" style="margin-right:4px;"></i> Confirm Cancellation
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function() {
+    // Tab switching
+    const tabs = document.querySelectorAll('.vr-gp-tab');
+    const panels = document.querySelectorAll('.vr-gp-tab-panel');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('vr-gp-tab-active'));
+            tab.classList.add('vr-gp-tab-active');
+            const target = tab.dataset.tab;
+            panels.forEach(p => p.style.display = p.dataset.panel === target ? '' : 'none');
+        });
+    });
+
+    // Cancel modal
+    const modal = document.getElementById('cancelModal');
+    const inner = document.getElementById('cancelModalInner');
+    const form  = document.getElementById('cancelForm');
+    const closeBtn = document.getElementById('cancelModalClose');
+
+    function openCancelModal(btn) {
+        const id = btn.dataset.resId;
+        document.getElementById('cm-id').textContent      = '#' + id;
+        document.getElementById('cm-status').textContent   = btn.dataset.resStatus;
+        document.getElementById('cm-checkin').textContent   = btn.dataset.resCheckin;
+        document.getElementById('cm-checkout').textContent  = btn.dataset.resCheckout;
+        document.getElementById('cm-room').textContent      = btn.dataset.resRoom;
+        document.getElementById('cm-total').textContent     = btn.dataset.resTotal;
+        form.action = '@Url.Action("CancelReservation","Guest")' + '?id=' + id;
+
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => {
+            modal.style.background = 'rgba(0,0,0,0.45)';
+            inner.style.transform  = 'scale(1) translateY(0)';
+            inner.style.opacity    = '1';
+        });
+    }
+
+    function closeCancelModal() {
+        modal.style.background = 'rgba(0,0,0,0)';
+        inner.style.transform  = 'scale(0.92) translateY(12px)';
+        inner.style.opacity    = '0';
+        setTimeout(() => { modal.style.display = 'none'; }, 280);
+    }
+
+    document.querySelectorAll('.cancel-trigger').forEach(btn => {
+        btn.addEventListener('click', () => openCancelModal(btn));
+    });
+
+    closeBtn.addEventListener('click', closeCancelModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeCancelModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.style.display === 'flex') closeCancelModal(); });
+})();
+</script>
+}

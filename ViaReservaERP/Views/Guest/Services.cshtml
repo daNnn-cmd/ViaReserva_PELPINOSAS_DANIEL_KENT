@@ -1,0 +1,106 @@
+@model ViaReservaERP.Models.GuestPortal.GuestServicesViewModel
+@{
+    ViewData["Title"] = "Service Requests";
+    ViewData["PageSubtitle"] = "Request and track hotel services";
+    Layout = "~/Views/Shared/_GuestLayout.cshtml";
+}
+
+<!-- Page header -->
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+    <div>
+        <h1 class="vr-gp-section-title" style="font-size:1.3rem;">Service Requests</h1>
+        <div class="vr-gp-section-sub">Request housekeeping, room service, transportation, and more</div>
+    </div>
+</div>
+
+<!-- Service catalog -->
+<div class="vr-gp-card" style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div>
+            <div class="vr-gp-section-title"><i class="fa-solid fa-sparkles" style="color:var(--gp-gold);margin-right:6px;"></i> Available Services</div>
+            <div class="vr-gp-section-sub">Select a service to create a request</div>
+        </div>
+    </div>
+
+    @if (Model.Catalog.Count == 0)
+    {
+        <div class="vr-gp-empty">
+            <div class="vr-gp-empty-icon"><i class="fa-solid fa-concierge-bell"></i></div>
+            No services configured for this hotel.
+        </div>
+    }
+    else
+    {
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;">
+            @foreach (var s in Model.Catalog)
+            {
+                <div class="vr-gp-service-card">
+                    <div class="vr-gp-service-icon"><i class="fa-solid fa-concierge-bell"></i></div>
+                    <div style="flex:1;">
+                        <div style="font-weight:600;color:var(--gp-navy);font-size:0.9rem;">@s.ServiceName</div>
+                        <div style="font-size:0.82rem;color:var(--gp-navy-40);margin-top:2px;">
+                            ₱ @s.Price.ToString("N2") 
+                            <span style="font-size:0.7rem;opacity:0.8;">(+ tax)</span>
+                        </div>
+                    </div>
+                    <form method="post" action="@Url.Action("RequestService","Guest", new { serviceId = s.ServiceId })" style="flex-shrink:0;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="vr-gp-btn vr-gp-btn-primary" style="padding:7px 14px;font-size:0.78rem;">
+                            <i class="fa-solid fa-plus"></i> Request
+                        </button>
+                    </form>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- My requests -->
+<div class="vr-gp-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+            <div class="vr-gp-section-title">My Requests</div>
+            <div class="vr-gp-section-sub">Track statuses: Pending → Assigned → In Progress → Completed</div>
+            <div class="vr-gp-section-sub" style="margin-top:4px; font-size:0.8rem; color:var(--gp-navy-40);">
+                <i class="fa-solid fa-circle-info"></i> Note: If the service status is completed, the service price will be added to your guest bill upon check-in at the hotel.
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Requests.Count == 0)
+    {
+        <div class="vr-gp-empty">
+            <div class="vr-gp-empty-icon"><i class="fa-regular fa-clipboard"></i></div>
+            No service requests yet. Choose a service above to get started.
+        </div>
+    }
+    else
+    {
+        <div class="vr-gp-table-wrap">
+            <table class="vr-gp-table">
+                <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Requested</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model.Requests)
+                {
+                    <tr>
+                        <td>@r.ServiceName</td>
+                        <td style="font-weight:600;">
+                            ₱ @r.Price.ToString("N2")
+                            <div style="font-size:0.7rem;font-weight:400;color:var(--gp-muted);">Excl. VAT & SC</div>
+                        </td>
+                        <td>@r.Status</td>
+                        <td class="vr-gp-cell-muted">@r.RequestedAtUtc.ToString("MMM dd, yyyy HH:mm")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

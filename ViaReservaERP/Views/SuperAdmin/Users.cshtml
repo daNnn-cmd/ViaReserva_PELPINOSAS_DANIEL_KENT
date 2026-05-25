@@ -1,0 +1,444 @@
+@model ViaReservaERP.Models.SuperAdmin.UsersManagementViewModel
+@{
+    ViewData["Title"] = "User Management";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+@functions {
+    private static readonly TimeZoneInfo PhTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
+
+    string PhTime(DateTime dt)
+    {
+        var utc = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+        return TimeZoneInfo.ConvertTimeFromUtc(utc, PhTimeZone).ToString("yyyy-MM-dd HH:mm");
+    }
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Total Users</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalUsers</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-users"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">All non-archived users</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Active Users</div>
+                    <div class="vr-sa-report-stat-value">@Model.ActiveUsers</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-user-check"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Users with access enabled</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Suspended Users</div>
+                    <div class="vr-sa-report-stat-value">@Model.SuspendedUsers</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.08);"><i class="fa-solid fa-user-slash"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Disabled accounts</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Recently Created</div>
+                    <div class="vr-sa-report-stat-value">@Model.RecentlyCreatedUsers</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-user-plus"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Last 7 days</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Quick Actions</div>
+            <div class="vr-sa-reports-summary-sub">Management & data export</div>
+            <div class="vr-sa-reports-summary-actions">
+                <button type="button" class="vr-sa-btn vr-sa-btn-primary" data-bs-toggle="modal" data-bs-target="#vrSaUserCreateModal">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add User</span>
+                </button>
+                <a class="vr-sa-btn" href="@Url.Action("ArchivedUsers", "SuperAdmin")" title="View Archives">
+                    <i class="fa-solid fa-box-archive"></i>
+                    <span>Archives</span>
+                </a>
+                
+                <div style="width: 1px; height: 28px; background: rgba(15, 23, 42, 0.08); margin: 0 4px;"></div>
+
+                <div class="vr-sa-export-pill">
+                    <a class="vr-sa-export-link" title="Export PDF" href="@Url.Action("ExportUsers", "SuperAdmin", new { format = "pdf" })">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </a>
+                    <a class="vr-sa-export-link" title="Export CSV" href="@Url.Action("ExportUsers", "SuperAdmin", new { format = "csv" })">
+                        <i class="fa-solid fa-file-csv"></i>
+                    </a>
+                    <a class="vr-sa-export-link" title="Export Excel" href="@Url.Action("ExportUsers", "SuperAdmin", new { format = "xlsx" })">
+                        <i class="fa-solid fa-file-excel"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Filters</div>
+                <div class="vr-sa-panel-sub">Search users, filter by company and role.</div>
+            </div>
+        </div>
+
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Search</div>
+                <input class="vr-sa-filter-input" name="search" value="@Model.Search" placeholder="Name or email" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Company</div>
+                <select class="vr-sa-filter-input" name="companyId">
+                    <option value="" selected="@(Model.CompanyId == null)">All companies</option>
+                    @foreach (var c in Model.Companies)
+                    {
+                        <option value="@c.CompanyId" selected="@(Model.CompanyId == c.CompanyId)">@c.CompanyName</option>
+                    }
+                </select>
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Role</div>
+                <select class="vr-sa-filter-input" name="roleId">
+                    <option value="" selected="@(Model.RoleId == null)">All roles</option>
+                    @foreach (var r in Model.Roles)
+                    {
+                        <option value="@r.RoleId" selected="@(Model.RoleId == r.RoleId)">@r.RoleName</option>
+                    }
+                </select>
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Page Size</div>
+                <select class="vr-sa-filter-input" name="pageSize">
+                    <option value="20" selected="@(Model.PageSize == 20)">20</option>
+                    <option value="25" selected="@(Model.PageSize == 25)">25</option>
+                    <option value="50" selected="@(Model.PageSize == 50)">50</option>
+                    <option value="100" selected="@(Model.PageSize == 100)">100</option>
+                </select>
+            </div>
+
+            <input type="hidden" name="sort" value="@Model.Sort" />
+            <input type="hidden" name="dir" value="@Model.Dir" />
+            <input type="hidden" name="page" value="1" />
+
+            <div class="vr-sa-filter" style="grid-column: 1 / -1;">
+                <div class="vr-sa-report-card-actions">
+                    <button type="submit" class="vr-sa-btn">Apply Filters</button>
+                    <a class="vr-sa-btn" href="@Url.Action("Users", "SuperAdmin")">Reset</a>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">User Directory</div>
+                <div class="vr-sa-panel-sub">@Model.TotalRows user records found</div>
+            </div>
+            <div class="vr-sa-pill">Page @Model.Page of @Model.TotalPages</div>
+        </div>
+
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="vr-sa-alert">
+                <div class="vr-sa-alert-title">No users found</div>
+                <div class="vr-sa-alert-sub">Try adjusting filters or create a new user.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Company</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Created Date</th>
+                            <th style="width: 140px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var u in Model.Rows)
+                        {
+                            <tr>
+                                <td>
+                                    <div style="font-weight:500; color:#0b122d;">@u.FullName</div>
+                                </td>
+                                <td class="vr-sa-cell-muted">@u.Email</td>
+                                <td class="vr-sa-cell-muted">@(u.Company != null ? u.Company.CompanyName : "")</td>
+                                <td class="vr-sa-cell-muted">@(u.Role != null ? u.Role.RoleName : "")</td>
+                                <td>
+                                    <div class="vr-sa-cell-muted">@(u.IsActive ? "Active" : "Suspended")</div>
+                                </td>
+                                <td class="vr-sa-cell-muted">@PhTime(u.CreatedAt)</td>
+                                <td>
+                                    <div class="vr-sa-actions">
+                                        <button type="button" class="vr-sa-iconbtn" title="Edit" aria-label="Edit" data-bs-toggle="modal" data-bs-target="#vrSaUserEditModal" data-user-id="@u.UserId" data-user-fullname="@u.FullName" data-user-email="@u.Email" data-user-company="@u.CompanyId" data-user-role="@u.RoleId" data-user-active="@u.IsActive"><i class="fa-solid fa-pen-to-square"></i></button>
+
+                                        <form method="post" action="@Url.Action("ToggleUserActive", "SuperAdmin", new { userId = u.UserId })">
+                                            @Html.AntiForgeryToken()
+                                            <button class="vr-sa-iconbtn" type="submit" title="@(u.IsActive ? "Deactivate" : "Activate")" aria-label="@(u.IsActive ? "Deactivate" : "Activate")">
+                                                @if(u.IsActive){ <i class="fa-solid fa-pause"></i> } else { <i class="fa-solid fa-play"></i> }
+                                            </button>
+                                        </form>
+
+                                        <button type="button" class="vr-sa-iconbtn" title="Reset password" aria-label="Reset password" data-bs-toggle="modal" data-bs-target="#vrSaUserResetModal" data-user-id="@u.UserId"><i class="fa-solid fa-key"></i></button>
+
+                                        <button type="button" class="vr-sa-iconbtn" style="color: #f59e0b;" title="Archive" aria-label="Archive" data-bs-toggle="modal" data-bs-target="#vrSaUserArchiveModal" data-user-id="@u.UserId" data-user-fullname="@u.FullName"><i class="fa-solid fa-box-archive"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="vr-sa-pagination">
+                <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.Page - 1) * Model.PageSize + 1, Model.TotalRows))–@(Math.Min(Model.Page * Model.PageSize, Model.TotalRows)) of @Model.TotalRows</div>
+                <div class="vr-sa-pagination-actions">
+                    @{
+                        var prev = Model.Page - 1;
+                        var next = Model.Page + 1;
+                    }
+                    <a class="vr-sa-pagebtn" href="@Url.Action("Users", "SuperAdmin", new { search = Model.Search, companyId = Model.CompanyId, roleId = Model.RoleId, sort = Model.Sort, dir = Model.Dir, pageSize = Model.PageSize, page = prev })" aria-disabled="@(Model.Page <= 1)">Previous</a>
+                    @for (var i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <a class="vr-sa-pagebtn @(i == Model.Page ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("Users", "SuperAdmin", new { search = Model.Search, companyId = Model.CompanyId, roleId = Model.RoleId, sort = Model.Sort, dir = Model.Dir, pageSize = Model.PageSize, page = i })">@i</a>
+                    }
+                    <a class="vr-sa-pagebtn" href="@Url.Action("Users", "SuperAdmin", new { search = Model.Search, companyId = Model.CompanyId, roleId = Model.RoleId, sort = Model.Sort, dir = Model.Dir, pageSize = Model.PageSize, page = next })" aria-disabled="@(Model.Page >= Model.TotalPages)">Next</a>
+                </div>
+            </div>
+        }
+    </section>
+</div>
+
+<div class="modal fade vr-sa-modal" id="vrSaUserCreateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="@Url.Action("CreateUser", "SuperAdmin")">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="vr-sa-label">Full Name</label>
+                            <input name="FullName" class="vr-sa-input" required maxlength="150" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="vr-sa-label">Email</label>
+                            <input name="Email" type="email" class="vr-sa-input" required maxlength="150" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="vr-sa-label">Company</label>
+                            <select name="CompanyId" class="vr-sa-select">
+                                @foreach (var c in Model.Companies)
+                                {
+                                    <option value="@c.CompanyId">@c.CompanyName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="vr-sa-label">Role</label>
+                            <select name="RoleId" class="vr-sa-select">
+                                @foreach (var r in Model.Roles)
+                                {
+                                    <option value="@r.RoleId">@r.RoleName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="vr-sa-label">Password</label>
+                            <input name="Password" type="password" class="vr-sa-input" required minlength="6" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="vr-sa-label">Status</label>
+                            <select name="IsActive" class="vr-sa-select">
+                                <option value="true" selected>Active</option>
+                                <option value="false">Suspended</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="vr-sa-btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="vr-sa-btn vr-sa-btn-primary">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade vr-sa-modal" id="vrSaUserEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="@Url.Action("UpdateUser", "SuperAdmin")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="UserId" id="vrSaUserEditId" />
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="vr-sa-label">Full Name</label>
+                            <input name="FullName" id="vrSaUserEditName" class="vr-sa-input" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="vr-sa-label">Email</label>
+                            <input name="Email" id="vrSaUserEditEmail" class="vr-sa-input" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="vr-sa-label">Company</label>
+                            <select name="CompanyId" id="vrSaUserEditCompany" class="vr-sa-select">
+                                @foreach (var c in Model.Companies)
+                                {
+                                    <option value="@c.CompanyId">@c.CompanyName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="vr-sa-label">Role</label>
+                            <select name="RoleId" id="vrSaUserEditRole" class="vr-sa-select">
+                                @foreach (var r in Model.Roles)
+                                {
+                                    <option value="@r.RoleId">@r.RoleName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="vr-sa-label">New Password (optional)</label>
+                            <input name="Password" type="password" class="vr-sa-input" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="vr-sa-label">Status</label>
+                            <select name="IsActive" id="vrSaUserEditActive" class="vr-sa-select">
+                                <option value="true">Active</option>
+                                <option value="false">Suspended</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="vr-sa-btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="vr-sa-btn vr-sa-btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade vr-sa-modal" id="vrSaUserResetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reset Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="@Url.Action("ResetUserPassword", "SuperAdmin")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="userId" id="vrSaResetUserId" />
+                <div class="modal-body">
+                    <label class="vr-sa-label">New Password</label>
+                    <input name="newPassword" type="password" class="vr-sa-input" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="vr-sa-btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="vr-sa-btn vr-sa-btn-primary">Reset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade vr-sa-modal" id="vrSaUserArchiveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Archive User Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="@Url.Action("SoftDeleteUser", "SuperAdmin")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="userId" id="vrSaUserArchiveId" />
+                <div class="modal-body">
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="width: 64px; height: 64px; background: rgba(245, 158, 11, 0.08); color: #f59e0b; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.5rem;">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <h4 style="font-weight: 700; color: #0b122d; margin-bottom: 8px;">Confirm User Archival</h4>
+                        <p style="color: #64748b; font-size: 0.95rem; line-height: 1.5;">You are about to archive the account for <strong id="vrSaUserArchiveName" style="color: #0b122d;">this user</strong>. This will revoke all access permissions and end their active sessions.</p>
+                    </div>
+                </div>
+                <div class="modal-footer" style="justify-content: center; gap: 12px; border-top: none; padding-bottom: 30px;">
+                    <button type="button" class="vr-sa-btn" data-bs-dismiss="modal" style="min-width: 120px;">Cancel</button>
+                    <button type="submit" class="vr-sa-btn vr-sa-btn-primary" style="background: #f59e0b; border-color: #f59e0b; min-width: 120px;">Yes, Archive</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const editModal = document.getElementById('vrSaUserEditModal');
+            editModal?.addEventListener('show.bs.modal', function (event) {
+                const btn = event.relatedTarget;
+                if (!btn) return;
+
+                document.getElementById('vrSaUserEditId').value = btn.getAttribute('data-user-id') || '';
+                document.getElementById('vrSaUserEditName').value = btn.getAttribute('data-user-fullname') || '';
+                document.getElementById('vrSaUserEditEmail').value = btn.getAttribute('data-user-email') || '';
+
+                const companyId = btn.getAttribute('data-user-company') || '';
+                const roleId = btn.getAttribute('data-user-role') || '';
+                document.getElementById('vrSaUserEditCompany').value = companyId;
+                document.getElementById('vrSaUserEditRole').value = roleId;
+
+                const active = (btn.getAttribute('data-user-active') || '').toLowerCase() === 'true';
+                document.getElementById('vrSaUserEditActive').value = active ? 'true' : 'false';
+            });
+
+            const resetModal = document.getElementById('vrSaUserResetModal');
+            resetModal?.addEventListener('show.bs.modal', function (event) {
+                const btn = event.relatedTarget;
+                if (!btn) return;
+                document.getElementById('vrSaResetUserId').value = btn.getAttribute('data-user-id') || '';
+            });
+
+            const archiveModal = document.getElementById('vrSaUserArchiveModal');
+            archiveModal?.addEventListener('show.bs.modal', function (event) {
+                const btn = event.relatedTarget;
+                if (!btn) return;
+                document.getElementById('vrSaUserArchiveId').value = btn.getAttribute('data-user-id') || '';
+                document.getElementById('vrSaUserArchiveName').textContent = btn.getAttribute('data-user-fullname') || 'this user';
+            });
+        })();
+    </script>
+}

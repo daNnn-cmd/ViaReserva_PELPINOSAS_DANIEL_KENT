@@ -1,0 +1,43 @@
+@model ViaReservaERP.Models.Admin.AddServiceViewModel
+
+<div class="modal-header">
+    <div>
+        <h5 class="modal-title" style="font-weight: 700; color: #0b122d;">New Service Request</h5>
+        <div class="vr-sa-panel-sub">Adding service for <strong>@Model.GuestName</strong></div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<form asp-action="ProcessAddService" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="ReservationId" />
+    
+    <div class="modal-body py-4">
+        <div class="mb-4">
+            <label class="vr-sa-label">Select Service / Item</label>
+            <select asp-for="SelectedServiceId" asp-items="Model.AvailableServices" class="vr-sa-input" required>
+                <option value="">-- Choose Service --</option>
+            </select>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-12">
+                <label class="vr-sa-label">Quantity</label>
+                <input asp-for="Quantity" type="number" class="vr-sa-input" min="1" required />
+            </div>
+        </div>
+
+        <div class="vr-sa-alert vr-sa-alert-info">
+            <div class="vr-sa-alert-sub">
+                Billable services will be automatically added to the guest's folio total.
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer border-0 pb-4">
+        <button type="button" class="vr-sa-btn" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="vr-sa-btn vr-sa-btn-primary">
+            <i class="fa-solid fa-plus me-2"></i> Post Service
+        </button>
+    </div>
+</form>

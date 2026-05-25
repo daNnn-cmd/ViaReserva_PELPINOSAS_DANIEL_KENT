@@ -1,0 +1,82 @@
+@{
+    Layout = "_SuperAdminLayout";
+}
+
+
+<style>
+    .vr-profile-grid {
+        display: grid;
+        gap: 24px;
+        grid-template-columns: 1fr;
+    }
+    @@media (min-width: 992px) {
+        .vr-profile-grid {
+            grid-template-columns: 1fr 2fr;
+        }
+    }
+</style>
+
+<div class="vr-profile-grid">
+    <div class="vr-sa-card" style="height: fit-content;">
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 20px;">
+            <div id="avatarPreview" style="width: 120px; height: 120px; border-radius: 50%; background: #c5a365; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; margin-bottom: 16px; overflow: hidden; border: 4px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                @if (!string.IsNullOrEmpty(ViewData["AvatarUrl"] as string))
+                {
+                    <img src="@ViewData["AvatarUrl"]" style="width: 100%; height: 100%; object-fit: cover;" />
+                }
+                else
+                {
+                    <i class="fa-solid fa-user"></i>
+                }
+            </div>
+            <h2 style="font-size: 1.25rem; font-weight: 600; color: #0b122d;">@User?.Identity?.Name</h2>
+            <div style="color: rgba(15, 23, 42, 0.62); font-size: 0.9rem;">Super Admin</div>
+            
+            <form id="avatarForm" method="post" action="@Url.Action("UpdateAvatar", "SuperAdmin")" enctype="multipart/form-data" style="margin-top: 24px; width: 100%;">
+                @Html.AntiForgeryToken()
+                <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display: none;" onchange="document.getElementById('avatarForm').submit();" />
+                <button type="button" class="vr-sa-btn" style="width: 100%;" onclick="document.getElementById('avatarInput').click();">
+                    <i class="fa-solid fa-camera me-2"></i>Change Avatar
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="vr-sa-card">
+        <h3 style="font-size: 1.1rem; font-weight: 600; color: #0b122d; margin-bottom: 20px;">Personal Information</h3>
+        
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success" style="padding: 10px; font-size: 0.9rem; border-radius: 8px;">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger" style="padding: 10px; font-size: 0.9rem; border-radius: 8px;">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <form method="post" action="@Url.Action("UpdateProfile", "SuperAdmin")">
+            @Html.AntiForgeryToken()
+            <div class="mb-3">
+                <label class="form-label" style="font-weight: 500; font-size: 0.9rem;">Full Name</label>
+                <input type="text" name="fullName" class="form-control" value="@User?.Identity?.Name" required style="border-radius: 8px; border: 1px solid rgba(15, 23, 42, 0.1);" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" style="font-weight: 500; font-size: 0.9rem;">Email Address</label>
+                <input type="email" name="email" class="form-control" value="@ViewData["UserEmail"]" required style="border-radius: 8px; border: 1px solid rgba(15, 23, 42, 0.1);" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" style="font-weight: 500; font-size: 0.9rem;">Phone Number</label>
+                <input type="text" name="phone" class="form-control" value="@ViewData["UserPhone"]" style="border-radius: 8px; border: 1px solid rgba(15, 23, 42, 0.1);" />
+            </div>
+            <div class="mb-4">
+                <label class="form-label" style="font-weight: 500; font-size: 0.9rem;">Role</label>
+                <input type="text" class="form-control" value="Super Admin" disabled style="border-radius: 8px; border: 1px solid rgba(15, 23, 42, 0.1); background: #f5f6fa;" />
+            </div>
+            <button type="submit" class="vr-sa-btn" style="background: #0b122d; color: white;">Save Changes</button>
+        </form>
+    </div>
+</div>

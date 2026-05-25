@@ -1,0 +1,425 @@
+@model ViaReservaERP.Models.SuperAdmin.WorkflowManagementViewModel
+@{
+    ViewData["Title"] = "Workflow Management";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Active Workflows</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalActiveWorkflows</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-diagram-project"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Pending / in progress</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Completed</div>
+                    <div class="vr-sa-report-stat-value">@Model.CompletedWorkflows</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-circle-check"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Successful completions</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Pending Approvals</div>
+                    <div class="vr-sa-report-stat-value">@Model.PendingApprovals</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-stamp"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Routing queue</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Failed / Escalated</div>
+                    <div class="vr-sa-report-stat-value">@(Model.FailedWorkflows + Model.EscalatedWorkflows)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.08);"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Exceptions & SLA risk</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Export Options</div>
+            <div class="vr-sa-reports-summary-sub">Workflow monitoring report</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" title="PDF" href="@Url.Action("WorkflowManagement", "SuperAdminReports", new { format = "pdf" })">PDF</a>
+                <a class="vr-sa-export-btn" title="CSV" href="@Url.Action("WorkflowManagement", "SuperAdminReports", new { format = "csv" })">CSV</a>
+                <a class="vr-sa-export-btn" title="Excel" href="@Url.Action("WorkflowManagement", "SuperAdminReports", new { format = "xlsx" })">XLSX</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Filters</div>
+                <div class="vr-sa-panel-sub">Filter by time range, granularity, and company.</div>
+            </div>
+        </div>
+
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">View by</div>
+                <select class="vr-sa-filter-input" name="granularity" onchange="this.form.submit()">
+                    <option value="day" selected="@(Model.Granularity == "day")">Day</option>
+                    <option value="month" selected="@(Model.Granularity == "month")">Month</option>
+                    <option value="year" selected="@(Model.Granularity == "year")">Year</option>
+                </select>
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Start</div>
+                <input class="vr-sa-filter-input" type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">End</div>
+                <input class="vr-sa-filter-input" type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Company</div>
+                <select class="vr-sa-filter-input" name="companyId">
+                    <option value="" selected="@(Model.CompanyId == null)">All companies</option>
+                    @foreach (var c in Model.Companies)
+                    {
+                        <option value="@c.CompanyId" selected="@(Model.CompanyId == c.CompanyId)">@c.CompanyName</option>
+                    }
+                </select>
+            </div>
+
+            <input type="hidden" name="page" value="1" />
+            <input type="hidden" name="pageSize" value="@Model.PageSize" />
+
+            <div class="vr-sa-filter" style="grid-column: 1 / -1;">
+                <div class="vr-sa-report-card-actions">
+                    <button type="submit" class="vr-sa-btn">Apply Filters</button>
+                    <a class="vr-sa-btn" href="@Url.Action("WorkflowManagement", "SuperAdmin")">Reset</a>
+                </div>
+            </div>
+        </form>
+    </section>
+
+
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Workflow Monitoring</div>
+                <div class="vr-sa-panel-sub">Real-time automation tracking across all modules.</div>
+            </div>
+            <div class="vr-sa-pill">Page @Model.Page of @Model.TotalPages</div>
+        </div>
+
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="vr-sa-alert" style="margin-top:12px;">
+                <div class="vr-sa-alert-title">No workflow instances found</div>
+                <div class="vr-sa-alert-sub">Try adjusting time range or company filters.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Company / Type</th>
+                            <th>Source / Dept</th>
+                            <th>Stage / Status</th>
+                            <th>Timeline</th>
+                            <th class="text-center">Priority</th>
+                            <th style="width: 140px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Rows)
+                        {
+                            var status = (r.ApprovalStatus ?? "").ToLower();
+                            var statusClass = status.Contains("approved") || status.Contains("completed") ? "vr-sa-status-success" :
+                                             status.Contains("progress") || status.Contains("pending") ? "vr-sa-status-warning" :
+                                             status.Contains("rejected") || status.Contains("failed") ? "vr-sa-status-danger" : "vr-sa-status-neutral";
+
+                            var priority = (r.Priority ?? "").ToLower();
+                            var priorityClass = priority.Contains("high") || priority.Contains("urgent") ? "vr-sa-status-danger" :
+                                               priority.Contains("medium") ? "vr-sa-status-warning" : "vr-sa-status-neutral";
+
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 500; color: #0b122d;">@(string.IsNullOrWhiteSpace(r.CompanyName) ? "—" : r.CompanyName)</div>
+                                    <div style="font-size: 0.8rem; color: #64748b;">@r.WorkflowType</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 500; color: #0b122d;">@r.TriggerSource</div>
+                                    <div style="font-size: 0.8rem; color: #64748b;">@r.AssignedDepartment</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 500; color: #0b122d;">@r.CurrentStage</div>
+                                    <div style="font-size: 0.8rem; color: #64748b; font-weight: 500;">@r.ApprovalStatus</div>
+                                </td>
+                                <td>
+                                    <div style="font-size: 0.9rem; color: #0b122d;">@r.CreatedDateUtc.ToString("MMM dd, HH:mm")</div>
+                                    @if (r.CompletionDateUtc.HasValue)
+                                    {
+                                        <div style="font-size: 0.8rem; color: #22c55e;">Done: @r.CompletionDateUtc.Value.ToString("MMM dd, HH:mm")</div>
+                                    }
+                                </td>
+                                <td class="text-center" style="font-weight: 500; color: #475569;">
+                                    @r.Priority
+                                </td>
+                                <td>
+                                    <div class="vr-sa-actions">
+                                        <a class="vr-sa-iconbtn" href="@Url.Action("WorkflowDetails", "SuperAdmin", new { id = r.WorkflowInstanceId })" title="Details"><i class="fa-solid fa-eye"></i></a>
+                                        <a class="vr-sa-iconbtn" href="@Url.Action("WorkflowApprovalHistory", "SuperAdmin", new { id = r.WorkflowInstanceId })" title="Approval History"><i class="fa-solid fa-history"></i></a>
+                                        <a class="vr-sa-iconbtn" href="@Url.Action("WorkflowDepartmentTasks", "SuperAdmin", new { id = r.WorkflowInstanceId })" title="Dept Tasks"><i class="fa-solid fa-tasks"></i></a>
+                                        <a class="vr-sa-iconbtn" href="@Url.Action("WorkflowAuditLogs", "SuperAdmin", new { id = r.WorkflowInstanceId })" title="Audit Logs"><i class="fa-solid fa-history"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="vr-sa-pagination">
+                <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.Page - 1) * Model.PageSize + 1, Model.TotalRows))–@(Math.Min(Model.Page * Model.PageSize, Model.TotalRows)) of @Model.TotalRows</div>
+                <div class="vr-sa-pagination-actions">
+                    @{
+                        var prev = Model.Page - 1;
+                        var next = Model.Page + 1;
+                    }
+                    <a class="vr-sa-pagebtn" href="@Url.Action("WorkflowManagement", "SuperAdmin", new { granularity = Model.Granularity, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), companyId = Model.CompanyId, pageSize = Model.PageSize, page = prev })" aria-disabled="@(Model.Page <= 1)">Previous</a>
+                    @for (var i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <a class="vr-sa-pagebtn @(i == Model.Page ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("WorkflowManagement", "SuperAdmin", new { granularity = Model.Granularity, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), companyId = Model.CompanyId, pageSize = Model.PageSize, page = i })">@i</a>
+                    }
+                    <a class="vr-sa-pagebtn" href="@Url.Action("WorkflowManagement", "SuperAdmin", new { granularity = Model.Granularity, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), companyId = Model.CompanyId, pageSize = Model.PageSize, page = next })" aria-disabled="@(Model.Page >= Model.TotalPages)">Next</a>
+                </div>
+            </div>
+        }
+    </section>
+
+    <div class="vr-sa-panels" style="margin-top:14px;">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Workflow Process Tracker</div>
+                    <div class="vr-sa-panel-sub">Central automation lifecycle alignment.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid">
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Request Created</div><div class="vr-sa-report-sub">Instances created in range</div></div><div class="vr-sa-report-stat-value">@Model.Tracker.RequestCreated</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Approval Routing</div><div class="vr-sa-report-sub">Pending / routed approvals</div></div><div class="vr-sa-report-stat-value">@Model.Tracker.ApprovalRouting</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Department Assignment</div><div class="vr-sa-report-sub">Assigned steps detected</div></div><div class="vr-sa-report-stat-value">@Model.Tracker.DepartmentAssignment</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Task Processing</div><div class="vr-sa-report-sub">In-progress work</div></div><div class="vr-sa-report-stat-value">@Model.Tracker.TaskProcessing</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Completion</div><div class="vr-sa-report-sub">Completed instances</div></div><div class="vr-sa-report-stat-value">@Model.Tracker.Completion</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Audit Logging</div><div class="vr-sa-report-sub">Workflow audit signals</div></div><div class="vr-sa-report-stat-value">@Model.Tracker.AuditLogging</div></div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Approval &amp; Escalation Monitoring</div>
+                    <div class="vr-sa-panel-sub">Operational warning center for bottlenecks and SLA risk.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid">
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Pending Approvals</div><div class="vr-sa-report-sub">Awaiting action</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.PendingApprovals</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Delayed Approvals</div><div class="vr-sa-report-sub">Pending 24+ hours</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.DelayedApprovals</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Escalated Requests</div><div class="vr-sa-report-sub">Escalation signals</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.EscalatedRequests</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Failed Automations</div><div class="vr-sa-report-sub">Automation exceptions</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.FailedAutomations</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">SLA Violations</div><div class="vr-sa-report-sub">Pending 72+ hours</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.SlaViolations</div></div>
+            </div>
+        </section>
+    </div>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Automation Analytics</div>
+                <div class="vr-sa-panel-sub">Completion rates, approval delays, success rates, escalations, and department bottlenecks.</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-chart-split">
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Workflow Completion Rate (%)</div>
+                <div id="vrSaWfCompletion" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Approval Delays (hrs)</div>
+                <div id="vrSaWfDelays" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Automation Success Rate (%)</div>
+                <div id="vrSaWfSuccess" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Escalation Frequency</div>
+                <div id="vrSaWfEscal" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Department Bottlenecks (Pending)</div>
+                <div id="vrSaWfDept" class="vr-sa-apex"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Cross-Module Integration</div>
+                <div class="vr-sa-panel-sub">How workflows interact across Reservations, Guest Services, Accounting, Billing, and Governance modules.</div>
+            </div>
+        </div>
+
+        @if (Model.IntegrationRows.Count == 0)
+        {
+            <div class="vr-sa-alert" style="margin-top:12px;">
+                <div class="vr-sa-alert-title">No integration signals found</div>
+                <div class="vr-sa-alert-sub">No reference types were detected for the selected range.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Module</th>
+                            <th>Workflows</th>
+                            <th>Pending</th>
+                            <th>Escalated</th>
+                            <th>Failed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.IntegrationRows)
+                        {
+                            <tr>
+                                <td>@r.Module</td>
+                                <td>@r.Workflows</td>
+                                <td>@r.Pending</td>
+                                <td>@r.Escalated</td>
+                                <td>@r.Failed</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    @{
+        var jsonOpts = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+    }
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.1"></script>
+    <script>
+        (function () {
+            const palette = {
+                blue: '#1a2a6c',
+                burgundy: '#b21f1f',
+                text: '#1e293b',
+                grid: 'rgba(30, 41, 59, 0.10)',
+                muted: 'rgba(30, 41, 59, 0.62)'
+            };
+
+            function baseOptions() {
+                return {
+                    chart: {
+                        toolbar: { show: false },
+                        foreColor: palette.muted,
+                        fontFamily: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial'
+                    },
+                    grid: { borderColor: palette.grid, strokeDashArray: 4, padding: { left: 6, right: 6 } },
+                    legend: { position: 'bottom', fontWeight: 400, markers: { width: 8, height: 8, radius: 8 } },
+                    tooltip: { theme: 'light' },
+                    dataLabels: { enabled: false }
+                };
+            }
+
+            const completion = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CompletionRatesAnalytics, jsonOpts));
+            const delays = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ApprovalDelaysAnalytics, jsonOpts));
+            const success = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AutomationSuccessAnalytics, jsonOpts));
+            const escal = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.EscalationFrequencyAnalytics, jsonOpts));
+            const dept = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DepartmentBottlenecksAnalytics, jsonOpts));
+
+            const completionEl = document.querySelector('#vrSaWfCompletion');
+            const delaysEl = document.querySelector('#vrSaWfDelays');
+            const successEl = document.querySelector('#vrSaWfSuccess');
+            const escalEl = document.querySelector('#vrSaWfEscal');
+            const deptEl = document.querySelector('#vrSaWfDept');
+
+            if (completionEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'line';
+                opt.chart.height = 210;
+                opt.stroke = { curve: 'smooth', width: 2 };
+                opt.series = [{ name: 'Completion Rate (%)', data: completion.datasets['Completion Rate (%)'] || [] }];
+                opt.colors = ['#22c55e'];
+                opt.xaxis = { categories: completion.labels || [] };
+                new ApexCharts(completionEl, opt).render();
+            }
+
+            if (delaysEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'area';
+                opt.chart.height = 210;
+                opt.stroke = { curve: 'smooth', width: 2 };
+                opt.fill = { type: 'solid', opacity: 0.10 };
+                opt.series = [{ name: 'Approval Delay (hrs)', data: delays.datasets['Approval Delay (hrs)'] || [] }];
+                opt.colors = ['#f59e0b'];
+                opt.xaxis = { categories: delays.labels || [] };
+                new ApexCharts(delaysEl, opt).render();
+            }
+
+            if (successEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'line';
+                opt.chart.height = 210;
+                opt.stroke = { curve: 'smooth', width: 2 };
+                opt.series = [{ name: 'Automation Success (%)', data: success.datasets['Automation Success (%)'] || [] }];
+                opt.colors = ['#0ea5e9'];
+                opt.xaxis = { categories: success.labels || [] };
+                new ApexCharts(successEl, opt).render();
+            }
+
+            if (escalEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'bar';
+                opt.chart.height = 210;
+                opt.plotOptions = { bar: { borderRadius: 8, columnWidth: '58%' } };
+                opt.series = [{ name: 'Escalations', data: escal.datasets['Escalations'] || [] }];
+                opt.colors = [palette.burgundy];
+                opt.xaxis = { categories: escal.labels || [] };
+                new ApexCharts(escalEl, opt).render();
+            }
+
+            if (deptEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'bar';
+                opt.chart.height = 210;
+                opt.plotOptions = { bar: { horizontal: true, borderRadius: 8, barHeight: '58%' } };
+                opt.series = [{ name: 'Pending', data: dept.datasets['Pending'] || [] }];
+                opt.colors = [palette.blue];
+                opt.xaxis = { categories: dept.labels || [], labels: { style: { colors: palette.muted } } };
+                new ApexCharts(deptEl, opt).render();
+            }
+        })();
+    </script>
+}

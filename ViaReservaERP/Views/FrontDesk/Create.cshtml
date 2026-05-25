@@ -1,0 +1,304 @@
+@model ViaReservaERP.Models.FrontDesk.WalkInReservationViewModel
+@{
+    ViewData["Title"] = "Walk-in Reservation";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-panel" style="max-width: 900px; margin: 0 auto;">
+    <div class="vr-sa-panel-head" style="margin-bottom: 30px;">
+        <div>
+            <div class="vr-sa-panel-title">Walk-in Reservation</div>
+            <div class="vr-sa-panel-sub">Create a reservation for walk-in guests and optionally check them in immediately.</div>
+        </div>
+        <a href="@Url.Action("Reservations", "FrontDesk")" class="vr-sa-btn">
+            <i class="fa-solid fa-arrow-left me-2"></i> Back to List
+        </a>
+    </div>
+
+    <form method="post" id="walkInReservationForm">
+        @Html.AntiForgeryToken()
+
+        <div class="vr-sa-alert" style="margin-bottom: 24px; @(ViewData.ModelState.IsValid ? "display: none;" : "")" id="validationSummary">
+            <div class="vr-sa-alert-title">Please correct the following:</div>
+            <div asp-validation-summary="All" class="text-danger vr-sa-alert-sub"></div>
+        </div>
+
+        <div class="vr-sa-form-section" style="margin-bottom: 24px;">
+            <div class="row g-4">
+                <div class="col-md-12">
+                    <div class="d-flex align-items-center justify-content-between" style="gap: 12px;">
+                        <div>
+                            <div style="font-weight: 800; color: #0b122d;">Arrival Handling</div>
+                            <div class="vr-sa-cell-muted" style="font-size: 0.9rem;">If enabled, the guest will be checked in and the room will be marked occupied.</div>
+                        </div>
+                        <div class="form-check form-switch" style="transform: scale(1.05);">
+                            <input class="form-check-input" type="checkbox" asp-for="CheckInNow" />
+                            <label class="form-check-label" for="CheckInNow" style="font-weight: 700;">Check-in now</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="vr-sa-form-section" style="margin-bottom: 32px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div style="width: 32px; height: 32px; background: #1a2a6c; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">1</div>
+                <h4 style="margin: 0; font-weight: 700; color: #0b122d;">Guest Information</h4>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label class="vr-sa-label">Select Existing Guest</label>
+                    <select asp-for="SelectedGuestId" asp-items="Model.Guests" class="vr-sa-input">
+                        <option value="">-- Create New Guest --</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <div id="newGuestFields">
+                        <label class="vr-sa-label">New Guest Full Name</label>
+                        <input asp-for="NewGuestFullName" class="vr-sa-input" placeholder="Enter name if not in list" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="vr-sa-label">Guest Email</label>
+                    <input asp-for="NewGuestEmail" class="vr-sa-input" placeholder="example@email.com" />
+                </div>
+                <div class="col-md-6">
+                    <label class="vr-sa-label">Guest Phone</label>
+                    <input asp-for="NewGuestPhone" class="vr-sa-input" placeholder="+63 9XX XXX XXXX" />
+                    <span asp-validation-for="NewGuestPhone" class="text-danger" style="font-size: 0.85rem; display: block; margin-top: 4px;"></span>
+                </div>
+
+                <div class="col-md-12">
+                    <div class="d-flex align-items-center justify-content-between" style="gap: 12px;">
+                        <div>
+                            <div style="font-weight: 800; color: #0b122d;">Guest Portal Account</div>
+                            <div class="vr-sa-cell-muted" style="font-size: 0.9rem;">Optional: create login access for the guest (same as Reservation/Book).</div>
+                        </div>
+                        <div class="form-check form-switch" style="transform: scale(1.05);">
+                            <input class="form-check-input" type="checkbox" asp-for="CreatePortalAccount" />
+                            <label class="form-check-label" for="CreatePortalAccount" style="font-weight: 700;">Create account</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6" id="portalPasswordWrap">
+                    <label class="vr-sa-label">Guest Portal Password</label>
+                    <input asp-for="NewGuestPassword" type="password" class="vr-sa-input" placeholder="Set a password for guest login" />
+                </div>
+            </div>
+        </div>
+
+        <div class="vr-sa-form-section" style="margin-bottom: 32px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div style="width: 32px; height: 32px; background: #1a2a6c; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">2</div>
+                <h4 style="margin: 0; font-weight: 700; color: #0b122d;">Select Available Room</h4>
+            </div>
+
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="max-height: 300px; overflow-y: auto;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Select</th>
+                            <th>Room #</th>
+                            <th>Type</th>
+                            <th>Base Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var room in Model.AvailableRooms)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="radio" asp-for="SelectedRoomId" value="@room.RoomId" data-price="@room.BasePrice" class="room-selector" required />
+                                </td>
+                                <td style="font-weight: 600;">@room.RoomNumber</td>
+                                <td class="vr-sa-cell-muted">@room.TypeName</td>
+                                <td style="font-weight: 700; color: #16a34a;">₱ @room.BasePrice.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="vr-sa-form-section" style="margin-bottom: 32px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div style="width: 32px; height: 32px; background: #1a2a6c; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">3</div>
+                <h4 style="margin: 0; font-weight: 700; color: #0b122d;">Stay Details</h4>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <label class="vr-sa-label">Check-In Date</label>
+                    <input asp-for="CheckInDate" type="date" class="vr-sa-input stay-date" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="vr-sa-label">Check-Out Date</label>
+                    <input asp-for="CheckOutDate" type="date" class="vr-sa-input stay-date" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="vr-sa-label">Number of Guests</label>
+                    <input asp-for="NumberOfGuests" type="number" class="vr-sa-input" min="1" required />
+                </div>
+            </div>
+        </div>
+
+        <div class="vr-sa-panel" style="background: rgba(15, 23, 42, 0.02); border: 1px dashed rgba(15, 23, 42, 0.12);">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div style="font-weight: 700; color: #0b122d; font-size: 1.1rem;">Estimated Total</div>
+                    <div class="vr-sa-cell-muted" id="computationBreakdown">Select a room and dates to see estimate.</div>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div style="font-size: 2rem; font-weight: 800; color: #1a2a6c;" id="displayTotal">₱ 0.00</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5 d-flex justify-content-end gap-3">
+            <a class="vr-sa-btn" href="@Url.Action("Reservations", "FrontDesk")">Cancel</a>
+            <button type="submit" class="vr-sa-btn vr-sa-btn-primary" style="min-width: 220px; height: 50px; font-size: 1rem;">
+                <i class="fa-solid fa-check-double me-2"></i> Create Walk-in
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const guestSelect = document.getElementById('SelectedGuestId');
+            const newGuestFields = document.getElementById('newGuestFields');
+            const roomSelectors = document.querySelectorAll('.room-selector');
+            const stayDates = document.querySelectorAll('.stay-date');
+            const displayTotal = document.getElementById('displayTotal');
+            const breakdown = document.getElementById('computationBreakdown');
+
+            // Set min dates to today
+            const now = new Date();
+            const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+            const checkInEl = document.getElementById('CheckInDate');
+            const checkOutEl = document.getElementById('CheckOutDate');
+            if (checkInEl) checkInEl.setAttribute('min', todayStr);
+            if (checkOutEl) checkOutEl.setAttribute('min', todayStr);
+
+            let lastQuoteKey = '';
+
+            async function computeTotal() {
+                let selectedRoomPrice = 0;
+                roomSelectors.forEach(s => { if (s.checked) selectedRoomPrice = parseFloat(s.dataset.price); });
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const checkIn = new Date(checkInEl.value);
+                const checkOut = new Date(checkOutEl.value);
+
+                if (checkInEl.value && checkOutEl.value && checkIn >= today && checkOut > checkIn && selectedRoomPrice > 0) {
+                    const diffTime = Math.abs(checkOut - checkIn);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    const baseAmount = selectedRoomPrice * diffDays;
+                    const key = `${baseAmount}`;
+                    lastQuoteKey = key;
+
+                    try {
+                        const resp = await fetch('@Url.Action("TaxQuote", "FrontDesk")' + '?baseAmount=' + encodeURIComponent(baseAmount));
+                        const data = await resp.json();
+                        if (!resp.ok) throw new Error(data?.message || 'Failed to compute taxes.');
+                        if (lastQuoteKey !== key) return;
+
+                        displayTotal.textContent = '₱ ' + Number(data.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        breakdown.textContent = `${diffDays} night(s) x ₱ ${selectedRoomPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} base rate | SC: ₱ ${Number(data.serviceCharge || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} | VAT: ₱ ${Number(data.taxAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    } catch (e) {
+                        displayTotal.textContent = '₱ 0.00';
+                        breakdown.textContent = e?.message || 'Unable to compute taxes.';
+                    }
+                } else if (checkInEl.value && checkIn < today) {
+                    displayTotal.textContent = '₱ 0.00';
+                    breakdown.innerHTML = '<span class="text-danger" style="font-weight:700;">Check-in date cannot be in the past.</span>';
+                } else {
+                    displayTotal.textContent = '₱ 0.00';
+                    breakdown.textContent = 'Select a room and valid dates to see estimate.';
+                }
+            }
+
+            if (guestSelect) {
+                guestSelect.addEventListener('change', () => {
+                    if (guestSelect.value) {
+                        newGuestFields.style.opacity = '0.5';
+                        newGuestFields.querySelectorAll('input').forEach(i => i.disabled = true);
+                    } else {
+                        newGuestFields.style.opacity = '1';
+                        newGuestFields.querySelectorAll('input').forEach(i => i.disabled = false);
+                    }
+                });
+            }
+
+            const portalToggle = document.getElementById('CreatePortalAccount');
+            const pwWrap = document.getElementById('portalPasswordWrap');
+            function syncPortalUi() {
+                if (!portalToggle || !pwWrap) return;
+                const enabled = portalToggle.checked;
+                pwWrap.style.display = enabled ? '' : 'none';
+            }
+            if (portalToggle) {
+                portalToggle.addEventListener('change', syncPortalUi);
+                syncPortalUi();
+            }
+
+            roomSelectors.forEach(s => s.addEventListener('change', computeTotal));
+            stayDates.forEach(d => d.addEventListener('change', computeTotal));
+            computeTotal();
+
+            // Real-time letter trapping and inline validation for Guest Phone
+            const phoneInput = document.getElementById('NewGuestPhone');
+            if (phoneInput) {
+                const handlePhoneInput = function (e) {
+                    const originalValue = phoneInput.value;
+                    // Check if it contains any letter
+                    if (/[a-zA-Z]/.test(originalValue)) {
+                        // Strip letters
+                        phoneInput.value = originalValue.replace(/[a-zA-Z]/g, '');
+                        showPhoneError("Guest phone number cannot contain letters.");
+                    } else {
+                        // Keep any other error message clear if it is clean
+                        clearPhoneError();
+                    }
+                };
+
+                phoneInput.addEventListener('input', handlePhoneInput);
+                phoneInput.addEventListener('change', handlePhoneInput);
+                phoneInput.addEventListener('blur', handlePhoneInput);
+                phoneInput.addEventListener('paste', function () {
+                    setTimeout(handlePhoneInput, 0);
+                });
+            }
+
+            function showPhoneError(msg) {
+                let errSpan = document.getElementById('phoneCustomError');
+                if (!errSpan) {
+                    errSpan = document.createElement('span');
+                    errSpan.id = 'phoneCustomError';
+                    errSpan.className = 'text-danger';
+                    errSpan.style.fontSize = '0.85rem';
+                    errSpan.style.display = 'block';
+                    errSpan.style.marginTop = '4px';
+                    phoneInput.parentNode.appendChild(errSpan);
+                }
+                errSpan.textContent = msg;
+                phoneInput.classList.add('is-invalid');
+                phoneInput.style.borderColor = '#dc3545';
+            }
+
+            function clearPhoneError() {
+                const errSpan = document.getElementById('phoneCustomError');
+                if (errSpan) {
+                    errSpan.remove();
+                }
+                phoneInput.classList.remove('is-invalid');
+                phoneInput.style.borderColor = '';
+            }
+        })();
+    </script>
+}

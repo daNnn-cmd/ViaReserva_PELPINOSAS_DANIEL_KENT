@@ -1,0 +1,167 @@
+@model ViaReservaERP.Models.ErpUser
+@{
+    ViewData["Title"] = "Profile Settings";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .vr-profile-grid {
+        display: grid;
+        gap: 24px;
+        grid-template-columns: 1fr;
+    }
+    @@media (min-width: 992px) {
+        .vr-profile-grid {
+            grid-template-columns: 1fr 2fr;
+        }
+    }
+</style>
+
+<div class="vr-profile-grid">
+    <div class="vr-sa-card" style="height: fit-content;">
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 20px;">
+            <div id="avatarPreview" style="width: 120px; height: 120px; border-radius: 50%; background: #0ea5e9; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; margin-bottom: 16px; overflow: hidden; border: 4px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                @if (!string.IsNullOrEmpty(ViewData["AvatarUrl"] as string))
+                {
+                    <img src="@ViewData["AvatarUrl"]" style="width: 100%; height: 100%; object-fit: cover;" />
+                }
+                else
+                {
+                    <i class="fa-solid fa-user"></i>
+                }
+            </div>
+            <h4 style="margin: 0; font-weight: 700; color: #0b122d;">@Model.FullName</h4>
+            <p style="color: #64748b; font-size: 0.9rem; margin-top: 4px;">Financial Accountant</p>
+            
+            <form id="avatarForm" action="@Url.Action("UpdateAvatar", "Accounting")" method="post" enctype="multipart/form-data" style="width: 100%; margin-top: 20px;">
+                @Html.AntiForgeryToken()
+                <input type="file" name="avatar" id="avatarInput" hidden accept="image/*" onchange="document.getElementById('avatarForm').submit()" />
+                <button type="button" class="vr-sa-btn vr-sa-btn-primary w-100" onclick="document.getElementById('avatarInput').click()">
+                    <i class="fa-solid fa-camera me-2"></i> Change Avatar
+                </button>
+            </form>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success mt-3 w-100" style="font-size: 0.85rem; border-radius: 12px; border: none; background: #ecfdf5; color: #065f46;">
+                    <i class="fa-solid fa-circle-check me-2"></i> @TempData["SuccessMessage"]
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger mt-3 w-100" style="font-size: 0.85rem; border-radius: 12px; border: none; background: #fef2f2; color: #991b1b;">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i> @TempData["ErrorMessage"]
+                </div>
+            }
+        </div>
+
+        <div style="border-top: 1px solid #f1f5f9; padding: 20px;">
+            <div style="margin-bottom: 12px;">
+                <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; margin-bottom: 4px;">Account Status</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e;"></span>
+                    <span style="font-weight: 600; color: #0f172a;">Active</span>
+                </div>
+            </div>
+            <div style="margin-bottom: 0;">
+                <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; margin-bottom: 4px;">Security Level</div>
+                <div style="font-weight: 600; color: #0f172a;">Financial Audit Access</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="vr-profile-main">
+        <!-- Profile Management Panel -->
+        <section class="vr-sa-panel mb-4">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Account Profile</div>
+                    <div class="vr-sa-panel-sub">Update your identity and authentication credentials</div>
+                </div>
+            </div>
+
+            <div class="p-4 pt-0">
+                <form method="post" action="@Url.Action("UpdateProfile", "Accounting")" class="mt-4">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="vr-sa-label" style="font-weight: 700; color: #0f172a; margin-bottom: 8px; display: block;">Full Name</label>
+                            <div class="position-relative">
+                                <span class="position-absolute top-50 translate-middle-y ms-3" style="color: #94a3b8;"><i class="fa-solid fa-signature"></i></span>
+                                <input name="fullName" class="vr-sa-input ps-5" value="@Model.FullName" required style="height: 48px;" placeholder="Enter your full name" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="vr-sa-label" style="font-weight: 700; color: #0f172a; margin-bottom: 8px; display: block;">Email Address</label>
+                            <div class="position-relative">
+                                <span class="position-absolute top-50 translate-middle-y ms-3" style="color: #94a3b8;"><i class="fa-solid fa-envelope"></i></span>
+                                <input class="vr-sa-input ps-5" value="@Model.Email" readonly style="height: 48px; background: #f8fafc; cursor: not-allowed;" />
+                            </div>
+                            <div class="mt-2" style="font-size: 0.75rem; color: #64748b;">
+                                <i class="fa-solid fa-lock me-1"></i> Managed by Admin
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="vr-sa-label" style="font-weight: 700; color: #0f172a; margin-bottom: 8px; display: block;">Update Password (Optional)</label>
+                            <div class="position-relative">
+                                <span class="position-absolute top-50 translate-middle-y ms-3" style="color: #94a3b8;"><i class="fa-solid fa-key"></i></span>
+                                <input type="password" name="newPassword" class="vr-sa-input ps-5" placeholder="Enter new password to update" style="height: 48px;" />
+                            </div>
+                            <div class="mt-2" style="font-size: 0.75rem; color: #64748b;">
+                                Leave blank if you do not wish to change your current password.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-5 pt-4 border-top">
+                        <button type="submit" class="vr-sa-btn vr-sa-btn-primary px-5" style="height: 48px; font-weight: 700;">
+                            <i class="fa-solid fa-floppy-disk me-2"></i> Save Changes
+                        </button>
+                        <a class="vr-sa-btn d-flex align-items-center px-4" href="@Url.Action("Dashboard", "Accounting")" style="height: 48px;">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Context & Authorization -->
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Context & Authorization</div>
+                    <div class="vr-sa-panel-sub">Tenant association and system permission levels</div>
+                </div>
+            </div>
+
+            <div class="p-4 pt-0 mt-3">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="p-4" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px;">
+                            <div class="vr-sa-cell-muted mb-3" style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px;">Authorized Company</div>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="vr-sa-card-icon" style="width: 44px; height: 44px; background: #fff; border: 1px solid #e2e8f0; color: #0f172a;">
+                                    <i class="fa-solid fa-building-user"></i>
+                                </div>
+                                <div style="font-size: 1.25rem; font-weight: 900; color: #0f172a;">@Model.Company?.CompanyName</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="p-4" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px;">
+                            <div class="vr-sa-cell-muted mb-3" style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px;">Assigned Role</div>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="vr-sa-card-icon" style="width: 44px; height: 44px; background: #fff; border: 1px solid #e2e8f0; color: #0ea5e9;">
+                                    <i class="fa-solid fa-user-tie"></i>
+                                </div>
+                                <div style="font-size: 1.25rem; font-weight: 900; color: #0f172a;">Accountant</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>

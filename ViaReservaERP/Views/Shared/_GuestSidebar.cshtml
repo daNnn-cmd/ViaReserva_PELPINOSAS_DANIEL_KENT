@@ -1,0 +1,68 @@
+@{
+    var activeController = (ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty).ToLowerInvariant();
+    var activeAction = (ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty).ToLowerInvariant();
+
+    string Active(string controller, string action)
+    {
+        var isActive = activeController == controller.ToLowerInvariant() && activeAction == action.ToLowerInvariant();
+        return isActive ? "vr-gp-nav-item vr-gp-nav-active" : "vr-gp-nav-item";
+    }
+}
+
+<aside class="vr-gp-sidebar" aria-label="Guest portal navigation">
+    <div class="vr-gp-sidebar-top">
+        <a class="vr-gp-brand" href="@Url.Action("Dashboard","Guest")">
+            <img src="~/img/viareserva-logo.png" alt="VíaReserva" class="vr-gp-brand-logo" />
+            <div>
+                <div class="vr-gp-brand-name">VíaReserva</div>
+                <div class="vr-gp-brand-sub">Guest Portal</div>
+            </div>
+        </a>
+    </div>
+
+    <nav class="vr-gp-nav">
+        <a class="@Active("guest", "dashboard")" href="@Url.Action("Dashboard","Guest")">
+            <span class="vr-gp-nav-icon"><i class="fa-solid fa-table-cells-large"></i></span>
+            <span>Dashboard</span>
+        </a>
+
+        <div class="vr-gp-nav-section">Bookings</div>
+        <a class="@Active("guest", "reservations")" href="@Url.Action("Reservations","Guest")">
+            <span class="vr-gp-nav-icon"><i class="fa-regular fa-calendar-check"></i></span>
+            <span>My Reservations</span>
+        </a>
+        <a class="@Active("reservation", "book")" href="@Url.Action("Book","Reservation")">
+            <span class="vr-gp-nav-icon"><i class="fa-solid fa-plus"></i></span>
+            <span>New Booking</span>
+        </a>
+
+        <div class="vr-gp-nav-section">Services</div>
+        <a class="@Active("guest", "services")" href="@Url.Action("Services","Guest")">
+            <span class="vr-gp-nav-icon"><i class="fa-solid fa-concierge-bell"></i></span>
+            <span>Service Requests</span>
+        </a>
+
+        <div class="vr-gp-nav-section">Billing</div>
+        <a class="@Active("guest", "payments")" href="@Url.Action("Payments","Guest")">
+            <span class="vr-gp-nav-icon"><i class="fa-regular fa-credit-card"></i></span>
+            <span>Payments</span>
+        </a>
+
+        <div class="vr-gp-nav-section">Account</div>
+        <a class="@Active("guest", "profile")" href="@Url.Action("Profile","Guest")">
+            <span class="vr-gp-nav-icon"><i class="fa-regular fa-user"></i></span>
+            <span>Profile</span>
+        </a>
+        <a class="@Active("guest", "notifications")" href="@Url.Action("Notifications","Guest")">
+            <span class="vr-gp-nav-icon"><i class="fa-regular fa-bell"></i></span>
+            <span>Notifications</span>
+        </a>
+
+        <div class="vr-gp-nav-spacer"></div>
+
+        <button type="button" class="vr-gp-nav-item vr-gp-nav-logout" data-bs-toggle="modal" data-bs-target="#vrGpLogoutModal">
+            <span class="vr-gp-nav-icon"><i class="fa-solid fa-right-from-bracket"></i></span>
+            <span>Sign Out</span>
+        </button>
+    </nav>
+</aside>

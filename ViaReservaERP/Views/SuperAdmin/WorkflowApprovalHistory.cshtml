@@ -1,0 +1,110 @@
+@model ViaReservaERP.Models.SuperAdmin.WorkflowApprovalHistoryViewModel
+@{
+    ViewData["Title"] = "Approval History";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Instance ID</div>
+                    <div class="vr-sa-report-stat-value">#@Model.InstanceId</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-hashtag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">System reference</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Chain Length</div>
+                    <div class="vr-sa-report-stat-value">@Model.Rows.Count</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-link"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Executed steps</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Property</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.CompanyName) ? "—" : Model.CompanyName)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-hotel"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Tenant scope</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Last Action</div>
+                    <div class="vr-sa-report-stat-value">@(Model.Rows.Count > 0 ? Model.Rows.Max(x => x.PerformedAtUtc).ToString("MMM dd") : "—")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-clock"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Recent activity</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Related monitoring contexts</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" href="@Url.Action("WorkflowDetails", "SuperAdmin", new { id = Model.InstanceId })" title="Instance Details">Details</a>
+                <a class="vr-sa-btn" href="@Url.Action("WorkflowManagement", "SuperAdmin")"><i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Approval Chain</div>
+                <div class="vr-sa-panel-sub">Steps, actions taken, and performers (UTC).</div>
+            </div>
+        </div>
+
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="vr-sa-alert" style="margin-top:12px;">
+                <div class="vr-sa-alert-title">No approval history found</div>
+                <div class="vr-sa-alert-sub">No instance steps were recorded yet.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Performed At</th>
+                            <th>Step</th>
+                            <th>Order</th>
+                            <th>Action Taken</th>
+                            <th>Performed By</th>
+                            <th>Role</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model.Rows)
+                        {
+                            <tr>
+                                <td>@s.PerformedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@(string.IsNullOrWhiteSpace(s.StepName) ? "—" : s.StepName)</td>
+                                <td>@(s.StepOrder.HasValue ? s.StepOrder.Value.ToString() : "—")</td>
+                                <td>@(string.IsNullOrWhiteSpace(s.ActionTaken) ? "—" : s.ActionTaken)</td>
+                                <td>@(string.IsNullOrWhiteSpace(s.PerformedBy) ? "System" : s.PerformedBy)</td>
+                                <td>@(string.IsNullOrWhiteSpace(s.PerformedByRole) ? "—" : s.PerformedByRole)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>

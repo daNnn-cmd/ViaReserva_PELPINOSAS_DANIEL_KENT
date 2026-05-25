@@ -1,0 +1,229 @@
+@model ViaReservaERP.Models.Admin.AdminAuditLogsViewModel
+@{
+    ViewData["Title"] = "Audit Logs";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <!-- Audit KPIs -->
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Logs Today</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalLogsToday</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-list-ul"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Property-wide events</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Security Alerts</div>
+                    <div class="vr-sa-report-stat-value">@Model.SecurityAlerts</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.08);"><i class="fa-solid fa-shield-halved"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">High-risk markers</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Login Attempts</div>
+                    <div class="vr-sa-report-stat-value">@Model.LoginAttempts</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-right-to-bracket"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Success & failures</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Critical Events</div>
+                    <div class="vr-sa-report-stat-value">@Model.CriticalEvents</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Governance signals</div>
+        </div>
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Export Options</div>
+            <div class="vr-sa-reports-summary-sub">Download audit report</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" title="PDF" href="@Url.Action("ExportAudit", "AdminReports", new { startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), format = "pdf" })">PDF</a>
+                <a class="vr-sa-export-btn" title="CSV" href="@Url.Action("ExportAudit", "AdminReports", new { startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), format = "csv" })">CSV</a>
+                <a class="vr-sa-export-btn" title="Excel" href="@Url.Action("ExportAudit", "AdminReports", new { startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), format = "xlsx" })">XLSX</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Panel -->
+    <section class="vr-sa-panel vr-sa-reports-filters mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Filters</div>
+                <div class="vr-sa-panel-sub">Monitor administrative and operational activity.</div>
+            </div>
+        </div>
+
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Search</div>
+                <input class="vr-sa-filter-input" name="search" value="@Model.Search" placeholder="User, action or module" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Start</div>
+                <input class="vr-sa-filter-input" type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">End</div>
+                <input class="vr-sa-filter-input" type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <input type="hidden" name="page" value="1" />
+
+            <div class="vr-sa-filter" style="align-self:end;">
+                <button type="submit" class="vr-sa-btn">Apply</button>
+                <a class="vr-sa-btn" href="@Url.Action("AuditLogs", "Admin")">Reset</a>
+            </div>
+        </form>
+    </section>
+
+    <!-- Main Table Panel -->
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">System Audit Stream</div>
+                <div class="vr-sa-panel-sub">Immutable record of all changes, transactions, and access events (UTC).</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>User / Role</th>
+                        <th>Module</th>
+                        <th>Action</th>
+                        <th style="width: 400px;">Data Changes (Old → New)</th>
+                        <th class="text-center">Status</th>
+                        <th>Timestamp</th>
+                        <th style="width: 80px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Rows)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500; color: #0b122d;">@(string.IsNullOrWhiteSpace(r.UserName) ? "System" : r.UserName)</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">@(string.IsNullOrWhiteSpace(r.UserRole) ? "Automated" : r.UserRole)</div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 600; color: #0b122d; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.025em;">@r.Module</div>
+                            </td>
+                            <td style="font-weight: 500; color: #0b122d;">@r.Action</td>
+                            <td>
+                                <div class="vr-sa-audit-diff">
+                                    @if (!string.IsNullOrWhiteSpace(r.OldValues))
+                                    {
+                                        <div class="vr-sa-audit-val old" title="Old Values">
+                                            <span class="vr-sa-audit-label">OLD</span>
+                                            <code>@r.OldValues</code>
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(r.NewValues))
+                                    {
+                                        <div class="vr-sa-audit-val new" title="New Values">
+                                            <span class="vr-sa-audit-label">NEW</span>
+                                            <code>@r.NewValues</code>
+                                        </div>
+                                    }
+                                    @if (string.IsNullOrWhiteSpace(r.OldValues) && string.IsNullOrWhiteSpace(r.NewValues))
+                                    {
+                                        <div style="color: #94a3b8; font-style: italic; font-size: 0.8rem;">No data changes recorded.</div>
+                                    }
+                                </div>
+                            </td>
+                            <td class="text-center" style="font-weight: 500; color: #475569;">
+                                @r.Status
+                            </td>
+                            <td>
+                                <div style="font-size: 0.9rem; color: #0b122d;">@r.Timestamp.ToString("MMM dd, yyyy")</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">@r.Timestamp.ToString("HH:mm:ss")</div>
+                            </td>
+                            <td>
+                                <div class="vr-sa-actions">
+                                    <button type="button" class="vr-sa-iconbtn" data-bs-toggle="collapse" data-bs-target="#audit-@r.AuditId" title="View Deep Analysis"><i class="fa-solid fa-magnifying-glass-chart"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="collapse" id="audit-@r.AuditId">
+                            <td colspan="7" class="bg-light p-3">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="p-3 bg-white rounded border border-light">
+                                            <div class="small fw-bold text-uppercase text-muted mb-2">Previous State</div>
+                                            <code class="small text-break">@(string.IsNullOrWhiteSpace(r.OldValues) ? "{ \"data\": \"none\" }" : r.OldValues)</code>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="p-3 bg-white rounded border border-light">
+                                            <div class="small fw-bold text-uppercase text-muted mb-2">New State</div>
+                                            <code class="small text-break text-success">@(string.IsNullOrWhiteSpace(r.NewValues) ? "{ \"data\": \"none\" }" : r.NewValues)</code>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <div class="small text-muted">
+                                            <i class="fa-solid fa-network-wired me-1"></i> Origin IP: @r.IpAddress
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Rows.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="vr-sa-cell-muted">No audit logs found for the selected range.</div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.TotalPages > 1)
+        {
+            <div class="vr-sa-pagination" style="margin-top: 14px;">
+                <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.Page - 1) * Model.PageSize + 1, Model.TotalRows))–@(Math.Min(Model.Page * Model.PageSize, Model.TotalRows)) of @Model.TotalRows logs</div>
+                <div class="vr-sa-pagination-actions">
+                    @{
+                        var prev = Model.Page - 1;
+                        var next = Model.Page + 1;
+                    }
+                    <a class="vr-sa-pagebtn" href="@Url.Action("AuditLogs", "Admin", new { search = Model.Search, page = prev, startDate = Model.StartDate, endDate = Model.EndDate })" aria-disabled="@(Model.Page <= 1)">Previous</a>
+
+                    @for (var i = 1; i <= Model.TotalPages; i++)
+                    {
+                        if (Model.TotalPages > 8 && i > 3 && i < Model.TotalPages - 2 && Math.Abs(i - Model.Page) > 1)
+                        {
+                            if (i == 4 || i == Model.TotalPages - 3) { <span class="vr-sa-cell-muted px-2">...</span> }
+                            continue;
+                        }
+                        <a class="vr-sa-pagebtn @(i == Model.Page ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("AuditLogs", "Admin", new { search = Model.Search, page = i, startDate = Model.StartDate, endDate = Model.EndDate })">@i</a>
+                    }
+
+                    <a class="vr-sa-pagebtn" href="@Url.Action("AuditLogs", "Admin", new { search = Model.Search, page = next, startDate = Model.StartDate, endDate = Model.EndDate })" aria-disabled="@(Model.Page >= Model.TotalPages)">Next</a>
+                </div>
+            </div>
+        }
+    </section>
+</div>

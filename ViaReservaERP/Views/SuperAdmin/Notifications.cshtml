@@ -1,0 +1,45 @@
+@model ViaReservaERP.Models.SuperAdmin.SuperAdminNotificationsViewModel
+@{
+    Layout = "_SuperAdminLayout";
+}
+
+<div style="margin-bottom: 24px; display: flex; justify-content: flex-end; gap: 10px;">
+    <form method="post" action="@Url.Action("MarkAllNotificationsAsRead", "SuperAdmin")">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="vr-sa-btn">Mark All as Read</button>
+    </form>
+    <button type="button" class="vr-sa-btn" id="vrSaRefreshNotifications">Refresh</button>
+</div>
+
+<div class="vr-sa-card" style="padding: 0;">
+    <div id="vrSaNotificationsList" style="display: flex; flex-direction: column;">
+        <partial name="_NotificationsList" model="Model" />
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const list = document.getElementById('vrSaNotificationsList');
+            const refreshBtn = document.getElementById('vrSaRefreshNotifications');
+
+            async function refreshNotifications() {
+                try {
+                    const resp = await fetch('@Url.Action("NotificationsListPartial", "SuperAdmin")', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    if (!resp.ok) return;
+                    const html = await resp.text();
+                    if (list) list.innerHTML = html;
+                } catch (e) {
+                    // swallow
+                }
+            }
+
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', refreshNotifications);
+            }
+
+            // Poll every 10s for near real-time updates
+            setInterval(refreshNotifications, 10000);
+        })();
+    </script>
+}

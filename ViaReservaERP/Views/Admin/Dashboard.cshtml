@@ -1,0 +1,399 @@
+@model ViaReservaERP.Models.Admin.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@functions {
+    string DeltaClass(double? pct)
+    {
+        if (!pct.HasValue) return "vr-sa-kpi-delta vr-sa-kpi-delta-na";
+        if (pct.Value > 0.0001) return "vr-sa-kpi-delta vr-sa-kpi-delta-up";
+        if (pct.Value < -0.0001) return "vr-sa-kpi-delta vr-sa-kpi-delta-down";
+        return "vr-sa-kpi-delta";
+    }
+
+    string DeltaText(double? pct)
+    {
+        if (!pct.HasValue) return "—";
+        var sign = pct.Value > 0 ? "+" : "";
+        return $"{sign}{pct.Value:0.0}%";
+    }
+}
+
+<div class="vr-sa-reports">
+    <!-- Operational KPI Grid -->
+    <div class="vr-sa-grid vr-sa-grid-5" style="margin-bottom: 20px;">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">RESERVATIONS</div>
+                    <div class="vr-sa-report-stat-value">@Model.ReservationsCount</div>
+                    <div class="@DeltaClass(Model.ReservationsDeltaPct)">@DeltaText(Model.ReservationsDeltaPct) vs previous period</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-calendar-check"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Volume in selected range</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">GUEST ACQUISITION</div>
+                    <div class="vr-sa-report-stat-value">@Model.GuestsCount</div>
+                    <div class="@DeltaClass(Model.GuestsDeltaPct)">@DeltaText(Model.GuestsDeltaPct) new profiles</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-users-viewfinder"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Unique guest registrations</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">OCCUPANCY RATE</div>
+                    <div class="vr-sa-report-stat-value">@Model.OccupancyRate.ToString("N1")%</div>
+                    <div class="vr-sa-kpi-delta vr-sa-kpi-delta-na">@Model.ActiveStays rooms occupied</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.08);"><i class="fa-solid fa-door-open"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Real-time property usage</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">TOTAL REVENUE</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.RevenueMonth.ToString("N0")</div>
+                    <div class="@DeltaClass(Model.RevenueMonthDeltaPct)">@DeltaText(Model.RevenueMonthDeltaPct) vs previous period</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #c9a227; background: rgba(201, 162, 39, 0.08);"><i class="fa-solid fa-peso-sign"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Settled range payments</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">PENDING ACTIONS</div>
+                    <div class="vr-sa-report-stat-value">@Model.PendingRequestsCount</div>
+                    <div class="vr-sa-kpi-delta vr-sa-kpi-delta-na">@Model.PendingApprovals approvals</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-clipboard-list"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Workflows needing oversight</div>
+        </div>
+
+    </div>
+
+    <!-- Filter Bar -->
+    <section class="vr-sa-panel vr-sa-reports-filters" style="margin-bottom:24px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Analytics Time Range</div>
+                <div class="vr-sa-panel-sub">Selected: <span style="font-weight:500; color:#0b122d;">@Model.SelectedRangeLabel</span></div>
+            </div>
+        </div>
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Granularity</div>
+                <select class="vr-sa-filter-input" name="granularity" onchange="this.form.submit()">
+                    <option value="day" selected="@(Model.Granularity == "day")">Day</option>
+                    <option value="month" selected="@(Model.Granularity == "month")">Month</option>
+                    <option value="year" selected="@(Model.Granularity == "year")">Year</option>
+                </select>
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Year</div>
+                <select class="vr-sa-filter-input" name="year" onchange="this.form.submit()">
+                    <option value="">Select Year</option>
+                    @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
+                    {
+                        <option value="@y" selected="@(Model.SelectedYear == y)">@y</option>
+                    }
+                </select>
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Start</div>
+                <input class="vr-sa-filter-input" type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">End</div>
+                <input class="vr-sa-filter-input" type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter" style="grid-column: 1 / -1;">
+                <div class="vr-sa-report-card-actions">
+                    <button type="submit" class="vr-sa-btn">Apply Filters</button>
+                    <a class="vr-sa-btn" href="@Url.Action("Dashboard", "Admin")">Reset</a>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <!-- Analytics Panels -->
+    <div class="vr-sa-panels">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Revenue Stream</div>
+                    <div class="vr-sa-panel-sub">Property settlements over time</div>
+                </div>
+            </div>
+            <div class="vr-sa-chart vr-sa-chart-compact">
+                <div id="vrAdminRevenueChart" class="vr-sa-apex"></div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Reservation Volume</div>
+                    <div class="vr-sa-panel-sub">Bookings vs Operations</div>
+                </div>
+            </div>
+            <div class="vr-sa-chart vr-sa-chart-compact">
+                <div id="vrAdminReservationChart" class="vr-sa-apex"></div>
+            </div>
+        </section>
+    </div>
+
+    <div class="vr-sa-panels">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Service Operations</div>
+                    <div class="vr-sa-panel-sub">Requested services distribution</div>
+                </div>
+            </div>
+            <div class="vr-sa-chart vr-sa-chart-compact">
+                <div class="vr-sa-chart-split">
+                    <div>
+                        <div class="vr-sa-mini-title">Top Services</div>
+                        <div id="vrAdminServiceTopChart" class="vr-sa-apex"></div>
+                    </div>
+                    <div>
+                        <div class="vr-sa-mini-title">Service Fulfillment</div>
+                        <div id="vrAdminServiceStatusChart" class="vr-sa-apex"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Financial Health</div>
+                    <div class="vr-sa-panel-sub">Income vs Expenses Profitability</div>
+                </div>
+            </div>
+            <div class="vr-sa-chart vr-sa-chart-compact">
+                <div id="vrAdminFinancialChart" class="vr-sa-apex"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Recent Activity Table -->
+    <section class="vr-sa-panel mt-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Recent Reservations</div>
+                <div class="vr-sa-panel-sub">Latest guest arrivals and bookings</div>
+            </div>
+            <a class="vr-sa-link" style="font-weight: 700;" href="@Url.Action("Reservations", "Admin")">View Ledger</a>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>Guest / ID</th>
+                        <th>Created</th>
+                        <th class="vr-sa-cell-center">Status</th>
+                        <th class="vr-sa-cell-right">Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var res in Model.RecentReservations)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-weight: 700; color: #0b122d;">@res.GuestName</div>
+                                <div class="vr-sa-cell-muted" style="font-size: 0.8rem;">REF: #@res.ReservationId</div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 500; color: #0b122d;">@res.Date.ToString("MMM dd")</div>
+                                <div class="vr-sa-cell-muted" style="font-size: 0.8rem;">@res.Date.ToString("hh:mm tt")</div>
+                            </td>
+                            <td class="vr-sa-cell-center">
+                                <div style="font-weight: 600; color: @(res.Status == "Confirmed" ? "#22c55e" : res.Status == "Cancelled" ? "#ef4444" : "#f59e0b"); text-transform: uppercase; font-size: 0.75rem;">
+                                    @res.Status
+                                </div>
+                            </td>
+                            <td class="vr-sa-cell-right" style="font-weight: 800; color: #0b122d; font-size: 1rem;">₱ @res.Amount.ToString("N2")</td>
+                        </tr>
+                    }
+                    @if (!Model.RecentReservations.Any())
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <div class="vr-sa-cell-muted">No recent activity detected.</div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- System Diagnostics -->
+    <section class="vr-sa-panel mt-4" style="border-left: 4px solid #3b82f6;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">System Diagnostics</div>
+                <div class="vr-sa-panel-sub">Verify external integrations and API connectivity</div>
+            </div>
+        </div>
+        <div class="p-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div style="font-weight: 600; color: #0b122d; margin-bottom: 4px;">Email Integration (SendGrid)</div>
+                    <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 16px;">
+                        Ensure your API Key and Sender Email are configured in <code>appsettings.json</code> before testing.
+                    </div>
+                    <form asp-action="SendTestEmail" method="post" class="d-flex gap-2">
+                        <input type="email" name="recipientEmail" class="vr-sa-filter-input" style="flex: 1;" placeholder="Enter recipient email..." required />
+                        <button type="submit" class="vr-sa-btn vr-sa-btn-primary">
+                            <i class="fa-solid fa-paper-plane me-2"></i>Send Test
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-6 mt-4 mt-md-0 border-start ps-md-4">
+                    <div style="font-weight: 600; color: #0b122d; margin-bottom: 4px;">Integration Status</div>
+                    <div class="d-flex flex-column gap-2 mt-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="vr-sa-dot" style="background: #22c55e;"></span>
+                            <span style="font-size: 0.9rem;">SendGrid API: <strong>Configured</strong></span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="vr-sa-dot" style="background: #22c55e;"></span>
+                            <span style="font-size: 0.9rem;">Stripe API: <strong>Active</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    @{
+        var jsonOpts = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+    }
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.1"></script>
+    <script>
+        (function () {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+            const palette = {
+                blue: '#1a2a6c',
+                gold: '#c9a227',
+                emerald: '#10b981',
+                red: '#ef4444',
+                amber: '#f59e0b',
+                grid: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(30, 41, 59, 0.08)',
+                muted: isDark ? '#94a3b8' : '#64748b'
+            };
+
+            function baseOptions() {
+                return {
+                    chart: {
+                        toolbar: { show: false },
+                        foreColor: palette.muted,
+                        fontFamily: 'Inter, system-ui, sans-serif'
+                    },
+                    grid: { borderColor: palette.grid, strokeDashArray: 4 },
+                    legend: { position: 'bottom' },
+                    tooltip: { theme: isDark ? 'dark' : 'light' },
+                    dataLabels: { enabled: false }
+                };
+            }
+
+            const revenue = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueAnalytics, jsonOpts));
+            const reservations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ReservationAnalytics, jsonOpts));
+            const services = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ServiceAnalytics, jsonOpts));
+            const financial = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.FinancialAnalytics, jsonOpts));
+
+            // Revenue
+            const revenueEl = document.querySelector('#vrAdminRevenueChart');
+            if (revenueEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'area';
+                opt.chart.height = 240;
+                opt.stroke = { curve: 'smooth', width: 2 };
+                opt.fill = { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.05 } };
+                opt.colors = [palette.emerald];
+                opt.series = [{ name: 'Revenue', data: revenue.datasets['Revenue'] || [] }];
+                opt.xaxis = { categories: revenue.labels || [] };
+                new ApexCharts(revenueEl, opt).render();
+            }
+
+            // Reservations
+            const resEl = document.querySelector('#vrAdminReservationChart');
+            if (resEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'bar';
+                opt.chart.height = 240;
+                opt.plotOptions = { bar: { borderRadius: 6, columnWidth: '60%' } };
+                opt.series = [
+                    { name: 'Bookings', data: reservations.datasets['Bookings'] || [] },
+                    { name: 'Check-ins', data: reservations.datasets['Check-ins'] || [] },
+                    { name: 'Cancellations', data: reservations.datasets['Cancellations'] || [] }
+                ];
+                opt.colors = [palette.blue, palette.emerald, palette.red];
+                opt.xaxis = { categories: reservations.labels || [] };
+                new ApexCharts(resEl, opt).render();
+            }
+
+            // Service Donut 1
+            const svcTopEl = document.querySelector('#vrAdminServiceTopChart');
+            if (svcTopEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'donut';
+                opt.chart.height = 220;
+                opt.labels = services.labels || [];
+                opt.series = (services.datasets['Most Requested'] || []).map(x => Number(x));
+                opt.colors = [palette.blue, palette.gold, palette.emerald, palette.amber, '#64748b'];
+                new ApexCharts(svcTopEl, opt).render();
+            }
+
+            // Service Donut 2
+            const svcStatusEl = document.querySelector('#vrAdminServiceStatusChart');
+            if (svcStatusEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'donut';
+                opt.chart.height = 220;
+                opt.labels = ['Pending', 'Completed'];
+                opt.series = (services.datasets['Pending vs Completed'] || []).map(x => Number(x));
+                opt.colors = [palette.amber, palette.emerald];
+                new ApexCharts(svcStatusEl, opt).render();
+            }
+
+            // Financial Health
+            const finEl = document.querySelector('#vrAdminFinancialChart');
+            if (finEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'bar';
+                opt.chart.height = 240;
+                opt.plotOptions = { bar: { borderRadius: 6, columnWidth: '50%' } };
+                opt.series = [
+                    { name: 'Income', data: financial.datasets['Income'] || [] },
+                    { name: 'Expenses', data: financial.datasets['Expenses'] || [] },
+                    { name: 'Profit', data: financial.datasets['Profit'] || [] }
+                ];
+                opt.colors = [palette.emerald, palette.red, palette.blue];
+                opt.xaxis = { categories: financial.labels || [] };
+                new ApexCharts(finEl, opt).render();
+            }
+        })();
+    </script>
+}

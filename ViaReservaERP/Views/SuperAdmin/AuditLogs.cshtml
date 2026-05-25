@@ -1,0 +1,331 @@
+@model ViaReservaERP.Models.SuperAdmin.AuditLogsViewModel
+@{
+    ViewData["Title"] = "Audit Logs";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Total Logs Today</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalLogsToday</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-list-ul"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">System-wide events</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Security Alerts</div>
+                    <div class="vr-sa-report-stat-value">@Model.SecurityAlerts</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.08);"><i class="fa-solid fa-shield-halved"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">High-risk markers</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Login Attempts</div>
+                    <div class="vr-sa-report-stat-value">@Model.LoginAttempts</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-right-to-bracket"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Success & failures</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Critical Events</div>
+                    <div class="vr-sa-report-stat-value">@Model.CriticalEvents</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Governance signals</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Export Options</div>
+            <div class="vr-sa-reports-summary-sub">Download audit report</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" title="PDF" href="@Url.Action("Audit", "SuperAdminReports", new { format = "pdf" })">PDF</a>
+                <a class="vr-sa-export-btn" title="CSV" href="@Url.Action("Audit", "SuperAdminReports", new { format = "csv" })">CSV</a>
+                <a class="vr-sa-export-btn" title="Excel" href="@Url.Action("Audit", "SuperAdminReports", new { format = "xlsx" })">XLSX</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Filters</div>
+                <div class="vr-sa-panel-sub">Filter by date and company.</div>
+            </div>
+        </div>
+
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Start</div>
+                <input class="vr-sa-filter-input" type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">End</div>
+                <input class="vr-sa-filter-input" type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Company</div>
+                <select class="vr-sa-filter-input" name="companyId">
+                    <option value="" selected="@(Model.CompanyId == null)">All companies</option>
+                    @foreach (var c in Model.Companies)
+                    {
+                        <option value="@c.CompanyId" selected="@(Model.CompanyId == c.CompanyId)">@c.CompanyName</option>
+                    }
+                </select>
+            </div>
+            <input type="hidden" name="page" value="1" />
+            <input type="hidden" name="pageSize" value="@Model.PageSize" />
+            <div class="vr-sa-filter" style="align-self:end;">
+                <button class="vr-sa-btn" type="submit">Apply</button>
+            </div>
+        </form>
+    </section>
+
+
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">System Audit Trail</div>
+                <div class="vr-sa-panel-sub">Immutable record of all administrative and operational activities (UTC).</div>
+            </div>
+            <div class="vr-sa-pill">Page @Model.Page of @Model.TotalPages</div>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>User / Role</th>
+                        <th>Module</th>
+                        <th>Action</th>
+                        <th style="width: 400px;">Data Changes (Old → New)</th>
+                        <th class="text-center">Status</th>
+                        <th>Timestamp</th>
+                        <th style="width: 80px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Rows)
+                    {
+                        var status = (r.Status ?? "").ToLower();
+                        var statusClass = status.Contains("success") || status.Contains("ok") ? "vr-sa-status-success" :
+                                         status.Contains("fail") || status.Contains("error") ? "vr-sa-status-danger" :
+                                         status.Contains("warn") ? "vr-sa-status-warning" : "vr-sa-status-neutral";
+
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500; color: #0b122d;">@(string.IsNullOrWhiteSpace(r.UserName) ? "System" : r.UserName)</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">@(string.IsNullOrWhiteSpace(r.UserRole) ? "Automated" : r.UserRole)</div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 600; color: #0b122d; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.025em;">@r.Module</div>
+                            </td>
+                            <td style="font-weight: 500; color: #0b122d;">@r.ActionPerformed</td>
+                            <td>
+                                <div class="vr-sa-audit-diff">
+                                    @if (!string.IsNullOrWhiteSpace(r.OldValues))
+                                    {
+                                        <div class="vr-sa-audit-val old" title="Old Values">
+                                            <span class="vr-sa-audit-label">OLD</span>
+                                            <code>@r.OldValues</code>
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(r.NewValues))
+                                    {
+                                        <div class="vr-sa-audit-val new" title="New Values">
+                                            <span class="vr-sa-audit-label">NEW</span>
+                                            <code>@r.NewValues</code>
+                                        </div>
+                                    }
+                                    @if (string.IsNullOrWhiteSpace(r.OldValues) && string.IsNullOrWhiteSpace(r.NewValues))
+                                    {
+                                        <div style="color: #94a3b8; font-style: italic; font-size: 0.8rem;">No data changes recorded.</div>
+                                    }
+                                </div>
+                            </td>
+                            <td class="text-center" style="font-weight: 500; color: #475569;">
+                                @r.Status
+                            </td>
+                            <td>
+                                <div style="font-size: 0.9rem; color: #0b122d;">@r.TimestampUtc.ToString("MMM dd, yyyy")</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">@r.TimestampUtc.ToString("HH:mm:ss")</div>
+                            </td>
+                            <td>
+                                <div class="vr-sa-actions">
+                                    <a class="vr-sa-iconbtn" href="@Url.Action("AuditLogDetails", "SuperAdmin", new { id = r.AuditId })" title="View Full Analysis"><i class="fa-solid fa-magnifying-glass-chart"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="vr-sa-pagination">
+            <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.Page - 1) * Model.PageSize + 1, Model.TotalRows))–@(Math.Min(Model.Page * Model.PageSize, Model.TotalRows)) of @Model.TotalRows</div>
+            <div class="vr-sa-pagination-actions">
+                @{
+                    var prev = Model.Page - 1;
+                    var next = Model.Page + 1;
+                }
+                <a class="vr-sa-pagebtn" href="@Url.Action("AuditLogs", "SuperAdmin", new { startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), companyId = Model.CompanyId, pageSize = Model.PageSize, page = prev })" aria-disabled="@(Model.Page <= 1)">Previous</a>
+                @for (var i = 1; i <= Model.TotalPages; i++)
+                {
+                    <a class="vr-sa-pagebtn @(i == Model.Page ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("AuditLogs", "SuperAdmin", new { startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), companyId = Model.CompanyId, pageSize = Model.PageSize, page = i })">@i</a>
+                }
+                <a class="vr-sa-pagebtn" href="@Url.Action("AuditLogs", "SuperAdmin", new { startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), companyId = Model.CompanyId, pageSize = Model.PageSize, page = next })" aria-disabled="@(Model.Page >= Model.TotalPages)">Next</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Audit Analytics</div>
+                <div class="vr-sa-panel-sub">Daily volume, monthly trends, incidents, module distribution, and errors.</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-chart-split" style="margin-top:12px;">
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Daily log volume</div>
+                <div id="vrSaAuditDaily" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Monthly activity trends</div>
+                <div id="vrSaAuditMonthly" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Security incidents</div>
+                <div id="vrSaAuditIncidents" class="vr-sa-apex"></div>
+            </div>
+        </div>
+
+        <div class="vr-sa-chart-split" style="margin-top:14px;">
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Module activity distribution</div>
+                <div id="vrSaAuditModules" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Error frequency</div>
+                <div id="vrSaAuditErrors" class="vr-sa-apex"></div>
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+@{
+    var jsonOpts = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.1"></script>
+<script>
+    (function () {
+        if (!window.ApexCharts) return;
+
+        const palette = {
+            blue: '#1a2a6c',
+            burgundy: '#b21f1f',
+            text: '#1e293b',
+            grid: 'rgba(30, 41, 59, 0.10)',
+            muted: 'rgba(30, 41, 59, 0.62)'
+        };
+
+        function baseOptions() {
+            return {
+                chart: {
+                    toolbar: { show: false },
+                    foreColor: palette.muted,
+                    fontFamily: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial'
+                },
+                grid: { borderColor: palette.grid, strokeDashArray: 4, padding: { left: 6, right: 6 } },
+                legend: { position: 'bottom', fontWeight: 400, markers: { width: 8, height: 8, radius: 8 } },
+                tooltip: { theme: 'light' },
+                dataLabels: { enabled: false }
+            };
+        }
+
+        const daily = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DailyLogVolumeAnalytics, jsonOpts));
+        const monthly = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyActivityTrendsAnalytics, jsonOpts));
+        const incidents = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SecurityIncidentsAnalytics, jsonOpts));
+        const modules = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ModuleDistributionAnalytics, jsonOpts));
+        const errors = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ErrorFrequencyAnalytics, jsonOpts));
+
+        function series1(cs, name) {
+            if (cs && cs.datasets && cs.datasets[name]) return cs.datasets[name];
+            return (cs && cs.labels) ? cs.labels.map(() => 0) : [];
+        }
+
+        function renderLine(el, cs, name, color) {
+            if (!el) return;
+            const opt = baseOptions();
+            opt.chart.type = 'line';
+            opt.chart.height = 210;
+            opt.stroke = { curve: 'smooth', width: 2 };
+            opt.series = [{ name: name, data: series1(cs, name) }];
+            opt.colors = [color];
+            opt.xaxis = { categories: cs.labels || [] };
+            new ApexCharts(el, opt).render();
+        }
+
+        function renderArea(el, cs, name, color) {
+            if (!el) return;
+            const opt = baseOptions();
+            opt.chart.type = 'area';
+            opt.chart.height = 210;
+            opt.stroke = { curve: 'smooth', width: 2 };
+            opt.fill = { type: 'solid', opacity: 0.10 };
+            opt.series = [{ name: name, data: series1(cs, name) }];
+            opt.colors = [color];
+            opt.xaxis = { categories: cs.labels || [] };
+            new ApexCharts(el, opt).render();
+        }
+
+        function renderBar(el, cs, name, color) {
+            if (!el) return;
+            const opt = baseOptions();
+            opt.chart.type = 'bar';
+            opt.chart.height = 210;
+            opt.plotOptions = { bar: { borderRadius: 8, columnWidth: '58%' } };
+            opt.series = [{ name: name, data: series1(cs, name) }];
+            opt.colors = [color];
+            opt.xaxis = { categories: cs.labels || [] };
+            new ApexCharts(el, opt).render();
+        }
+
+        renderBar(document.querySelector('#vrSaAuditDaily'), daily, 'Log Volume', palette.blue);
+        renderLine(document.querySelector('#vrSaAuditMonthly'), monthly, 'Activity', '#0ea5e9');
+        renderArea(document.querySelector('#vrSaAuditIncidents'), incidents, 'Security Incidents', palette.burgundy);
+        renderBar(document.querySelector('#vrSaAuditErrors'), errors, 'Errors', '#f97316');
+
+        const modulesEl = document.querySelector('#vrSaAuditModules');
+        if (modulesEl) {
+            const opt = baseOptions();
+            opt.chart.type = 'bar';
+            opt.chart.height = 210;
+            opt.plotOptions = { bar: { borderRadius: 8, columnWidth: '58%' } };
+            opt.series = [{ name: 'Events', data: series1(modules, 'Events') }];
+            opt.colors = ['#22c55e'];
+            opt.xaxis = { categories: modules.labels || [] };
+            new ApexCharts(modulesEl, opt).render();
+        }
+    })();
+</script>
+}

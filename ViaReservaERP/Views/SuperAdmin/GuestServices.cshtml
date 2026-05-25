@@ -1,0 +1,351 @@
+@model ViaReservaERP.Models.SuperAdmin.GuestServiceMonitoringViewModel
+@{
+    ViewData["Title"] = "Guest Service Monitoring";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Total Requests</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalServiceRequests</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-concierge-bell"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Across all tenants</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Pending / Active</div>
+                    <div class="vr-sa-report-stat-value">@Model.PendingRequests</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-spinner"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Awaiting or in-progress</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Escalated</div>
+                    <div class="vr-sa-report-stat-value">@Model.EscalatedRequests</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.08);"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Requires urgent attention</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Avg Response</div>
+                    <div class="vr-sa-report-stat-value">@Model.AverageResponseTimeHours.ToString("0.0")h</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-clock"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Operational time signal</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Export Options</div>
+            <div class="vr-sa-reports-summary-sub">Download current view as PDF, CSV, or XLSX</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" title="PDF" href="@Url.Action("ServiceRequests", "SuperAdminReports", new { format = "pdf" })">PDF</a>
+                <a class="vr-sa-export-btn" title="CSV" href="@Url.Action("ServiceRequests", "SuperAdminReports", new { format = "csv" })">CSV</a>
+                <a class="vr-sa-export-btn" title="Excel" href="@Url.Action("ServiceRequests", "SuperAdminReports", new { format = "xlsx" })">XLSX</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Filters</div>
+                <div class="vr-sa-panel-sub">Narrow down service monitoring by date range, granularity, and company.</div>
+            </div>
+        </div>
+
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">View by</div>
+                <select class="vr-sa-filter-input" name="granularity" onchange="this.form.submit()">
+                    <option value="day" selected="@(Model.Granularity == "day")">Day</option>
+                    <option value="month" selected="@(Model.Granularity == "month")">Month</option>
+                    <option value="year" selected="@(Model.Granularity == "year")">Year</option>
+                </select>
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Start</div>
+                <input class="vr-sa-filter-input" type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">End</div>
+                <input class="vr-sa-filter-input" type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Company</div>
+                <select class="vr-sa-filter-input" name="companyId">
+                    <option value="" selected="@(Model.CompanyId == null)">All companies</option>
+                    @foreach (var c in Model.Companies)
+                    {
+                        <option value="@c.CompanyId" selected="@(Model.CompanyId == c.CompanyId)">@c.CompanyName</option>
+                    }
+                </select>
+            </div>
+
+            <input type="hidden" name="page" value="1" />
+            <input type="hidden" name="pageSize" value="@Model.PageSize" />
+
+            <div class="vr-sa-filter" style="grid-column: 1 / -1;">
+                <div class="vr-sa-report-card-actions">
+                    <button type="submit" class="vr-sa-btn">Apply Filters</button>
+                    <a class="vr-sa-btn" href="@Url.Action("GuestServices", "SuperAdmin")">Reset</a>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Service Request Table</div>
+                <div class="vr-sa-panel-sub">Read-only monitoring. Use actions to inspect details, staff assignments, and audit logs.</div>
+            </div>
+            <div class="vr-sa-pill">Page @Model.Page of @Model.TotalPages</div>
+        </div>
+
+        @if (Model.Requests.Count == 0)
+        {
+            <div class="vr-sa-alert" style="margin-top:12px;">
+                <div class="vr-sa-alert-title">No service requests found</div>
+                <div class="vr-sa-alert-sub">Try adjusting date or company filters.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Guest / Service</th>
+                            <th>Hotel / Company</th>
+                            <th>Assignment / Status</th>
+                            <th>Timeline</th>
+                            <th class="text-center">Priority</th>
+                            <th style="width: 140px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Requests)
+                        {
+                            var status = (r.Status ?? "").ToLower();
+                            var statusClass = status.Contains("completed") ? "vr-sa-status-success" :
+                                             status.Contains("progress") ? "vr-sa-status-info" :
+                                             status.Contains("pending") ? "vr-sa-status-warning" :
+                                             status.Contains("escalated") ? "vr-sa-status-danger" : "vr-sa-status-neutral";
+
+                            var priority = (r.Priority ?? "").ToLower();
+                            var priorityClass = priority.Contains("high") || priority.Contains("urgent") ? "vr-sa-status-danger" :
+                                               priority.Contains("medium") ? "vr-sa-status-warning" :
+                                               priority.Contains("low") ? "vr-sa-status-success" : "vr-sa-status-neutral";
+
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 500; color: #0b122d;">@(string.IsNullOrWhiteSpace(r.GuestName) ? "—" : r.GuestName)</div>
+                                    <div style="font-size: 0.8rem; color: #64748b;">@(string.IsNullOrWhiteSpace(r.ServiceType) ? "—" : r.ServiceType)</div>
+                                </td>
+                                <td>@(string.IsNullOrWhiteSpace(r.HotelCompany) ? "—" : r.HotelCompany)</td>
+                                <td>
+                                    <div style="font-weight: 500; color: #0b122d;">@(string.IsNullOrWhiteSpace(r.AssignedStaff) ? "Unassigned" : r.AssignedStaff)</div>
+                                    <div style="font-size: 0.8rem; color: #64748b; font-weight: 500;">@r.Status</div>
+                                </td>
+                                <td>
+                                    <div style="font-size: 0.9rem; color: #0b122d;">@r.RequestDateUtc.ToString("MMM dd, HH:mm")</div>
+                                    @if (r.CompletionDateUtc.HasValue)
+                                    {
+                                        <div style="font-size: 0.8rem; color: #22c55e;">Done: @r.CompletionDateUtc.Value.ToString("MMM dd, HH:mm")</div>
+                                    }
+                                </td>
+                                <td class="text-center" style="font-weight: 500; color: #475569;">
+                                    @r.Priority
+                                </td>
+                                <td>
+                                    <div class="vr-sa-actions">
+                                        <a class="vr-sa-iconbtn" href="@Url.Action("ServiceRequestDetails", "SuperAdmin", new { id = r.RequestId })" title="Details"><i class="fa-solid fa-eye"></i></a>
+                                        @if (r.AssignedStaffUserId.HasValue)
+                                        {
+                                            <a class="vr-sa-iconbtn" href="@Url.Action("ServiceAssignedStaff", "SuperAdmin", new { userId = r.AssignedStaffUserId.Value })" title="Assigned Staff"><i class="fa-solid fa-user-gear"></i></a>
+                                        }
+                                        <a class="vr-sa-iconbtn" href="@Url.Action("ServiceTimeline", "SuperAdmin", new { requestId = r.RequestId })" title="Timeline"><i class="fa-solid fa-clock-rotate-left"></i></a>
+                                        <a class="vr-sa-iconbtn" href="@Url.Action("ServiceAuditLogs", "SuperAdmin", new { requestId = r.RequestId })" title="Audit Logs"><i class="fa-solid fa-history"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="vr-sa-pagination">
+                <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.Page - 1) * Model.PageSize + 1, Model.TotalRows))–@(Math.Min(Model.Page * Model.PageSize, Model.TotalRows)) of @Model.TotalRows</div>
+                <div class="vr-sa-pagination-actions">
+                    @{
+                        var prev = Model.Page - 1;
+                        var next = Model.Page + 1;
+                    }
+                    <a class="vr-sa-pagebtn" href="@Url.Action("GuestServices", "SuperAdmin", new { granularity = Model.Granularity, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), companyId = Model.CompanyId, pageSize = Model.PageSize, page = prev })" aria-disabled="@(Model.Page <= 1)">Previous</a>
+                    @for (var i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <a class="vr-sa-pagebtn @(i == Model.Page ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("GuestServices", "SuperAdmin", new { granularity = Model.Granularity, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), companyId = Model.CompanyId, pageSize = Model.PageSize, page = i })">@i</a>
+                    }
+                    <a class="vr-sa-pagebtn" href="@Url.Action("GuestServices", "SuperAdmin", new { granularity = Model.Granularity, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), companyId = Model.CompanyId, pageSize = Model.PageSize, page = next })" aria-disabled="@(Model.Page >= Model.TotalPages)">Next</a>
+                </div>
+            </div>
+        }
+    </section>
+
+    <div class="vr-sa-panels" style="margin-top:14px;">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Service Workflow Tracker</div>
+                    <div class="vr-sa-panel-sub">Guest request lifecycle alignment.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid">
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Guest Request Created</div><div class="vr-sa-report-sub">New service requests logged</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.GuestRequestCreated</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Staff Assigned</div><div class="vr-sa-report-sub">Requests with assigned staff</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.StaffAssigned</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Service In Progress</div><div class="vr-sa-report-sub">Currently being worked on</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.ServiceInProgress</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Service Completed</div><div class="vr-sa-report-sub">Requests closed as completed</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.ServiceCompleted</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Feedback Submitted</div><div class="vr-sa-report-sub">Satisfaction signal (not yet available)</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.FeedbackSubmitted</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Audit Logged</div><div class="vr-sa-report-sub">Service-related audit events</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.AuditLogged</div></div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Service Alerts / Work Queue</div>
+                    <div class="vr-sa-panel-sub">Operational exceptions requiring attention.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid">
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Delayed Requests</div><div class="vr-sa-report-sub">Pending for 24+ hours</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.DelayedRequests</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Escalated Complaints</div><div class="vr-sa-report-sub">Escalated statuses detected</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.EscalatedComplaints</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Unassigned Requests</div><div class="vr-sa-report-sub">No staff assigned and not completed</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.UnassignedRequests</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Failed Service Completion</div><div class="vr-sa-report-sub">Failure statuses detected</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.FailedServiceCompletion</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Negative Guest Feedback</div><div class="vr-sa-report-sub">Not yet available</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.NegativeGuestFeedback</div></div>
+            </div>
+        </section>
+    </div>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Service Analytics</div>
+                <div class="vr-sa-panel-sub">Daily trends, most requested services, and operational time signals.</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-chart-split">
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Daily / Monthly / Yearly Requests</div>
+                <div id="vrSaSvcDaily" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Most Requested Services</div>
+                <div id="vrSaSvcTop" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Average Completion Time (Proxy)</div>
+                <div id="vrSaSvcAvg" class="vr-sa-apex"></div>
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    @{
+        var jsonOpts = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+    }
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.1"></script>
+    <script>
+        (function () {
+            const palette = {
+                blue: '#1a2a6c',
+                burgundy: '#b21f1f',
+                text: '#1e293b',
+                grid: 'rgba(30, 41, 59, 0.10)',
+                muted: 'rgba(30, 41, 59, 0.62)'
+            };
+
+            function baseOptions() {
+                return {
+                    chart: {
+                        toolbar: { show: false },
+                        foreColor: palette.muted,
+                        fontFamily: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial'
+                    },
+                    grid: { borderColor: palette.grid, strokeDashArray: 4, padding: { left: 6, right: 6 } },
+                    legend: { position: 'bottom', fontWeight: 400, markers: { width: 8, height: 8, radius: 8 } },
+                    tooltip: { theme: 'light' },
+                    dataLabels: { enabled: false }
+                };
+            }
+
+            const daily = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DailyRequestsAnalytics, jsonOpts));
+            const top = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MostRequestedServicesAnalytics, jsonOpts));
+            const avg = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AvgCompletionTimeAnalytics, jsonOpts));
+
+            const dailyEl = document.querySelector('#vrSaSvcDaily');
+            const topEl = document.querySelector('#vrSaSvcTop');
+            const avgEl = document.querySelector('#vrSaSvcAvg');
+
+            if (dailyEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'bar';
+                opt.chart.height = 210;
+                opt.plotOptions = { bar: { borderRadius: 8, columnWidth: '58%' } };
+                opt.series = [
+                    { name: 'Requests', data: daily.datasets['Requests'] || [] }
+                ];
+                opt.colors = ['#0ea5e9'];
+                opt.xaxis = { categories: daily.labels || [] };
+                opt.yaxis = { labels: { style: { colors: palette.muted } } };
+                new ApexCharts(dailyEl, opt).render();
+            }
+
+            if (topEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'donut';
+                opt.chart.height = 210;
+                opt.labels = top.labels || [];
+                opt.series = (top.datasets['Most Requested'] || []).map(x => Number(x));
+                opt.colors = [palette.blue, palette.burgundy, '#0ea5e9', '#22c55e', '#f59e0b', '#64748b', '#334155', '#94a3b8'];
+                opt.legend = { position: 'bottom' };
+                new ApexCharts(topEl, opt).render();
+            }
+
+            if (avgEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'line';
+                opt.chart.height = 210;
+                opt.stroke = { curve: 'smooth', width: 2 };
+                opt.series = [
+                    { name: 'Avg Age (hrs)', data: avg.datasets['Avg Age (hrs)'] || [] }
+                ];
+                opt.colors = [palette.burgundy];
+                opt.xaxis = { categories: avg.labels || [] };
+                opt.yaxis = { labels: { style: { colors: palette.muted } } };
+                new ApexCharts(avgEl, opt).render();
+            }
+        })();
+    </script>
+}

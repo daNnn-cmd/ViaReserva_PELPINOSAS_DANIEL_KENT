@@ -1,0 +1,168 @@
+@model ViaReservaERP.Models.Admin.StaffManagementViewModel
+@{
+    ViewData["Title"] = "Archived Staff";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats" style="grid-template-columns: 1fr auto;">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Archived Staff</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalRows</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-box-archive"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Staff accounts that have been revoked and hidden</div>
+        </div>
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Return to active directory</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-btn vr-sa-btn-primary" href="@Url.Action("Staff", "Admin")"><i class="fa-solid fa-arrow-left me-1"></i> Back to Staff Directory</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Archived Staff List</div>
+                <div class="vr-sa-panel-sub">Records here are hidden from active lists until restored.</div>
+            </div>
+            <div class="vr-sa-pill">Page @Model.Page of @Math.Max(1, Model.TotalPages)</div>
+        </div>
+
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="vr-sa-alert">
+                <div class="vr-sa-alert-title">No archived staff</div>
+                <div class="vr-sa-alert-sub">Archived staff records will appear here for restoration.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Staff Member</th>
+                            <th>Role & Access</th>
+                            <th class="vr-sa-cell-center">Created At</th>
+                            <th class="vr-sa-cell-center">Status</th>
+                            <th style="width: 100px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var u in Model.Rows)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="vr-sa-card-icon" style="width: 38px; height: 38px; font-size: 0.9rem; color: #64748b; background: #f1f5f9; flex-shrink: 0;">
+                                            <i class="fa-solid fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 700; color: #0f172a;">@u.FullName</div>
+                                            <div class="vr-sa-cell-muted" style="font-size: 0.82rem;">@u.Email</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-inline-flex align-items-center gap-2 px-2 py-1" style="background: rgba(99, 102, 241, 0.08); color: #4f46e5; border-radius: 6px; font-size: 0.82rem; font-weight: 600;">
+                                        <i class="fa-solid fa-shield-halved" style="font-size: 0.75rem;"></i>
+                                        @(u.Role?.RoleName ?? "No Role")
+                                    </div>
+                                </td>
+                                <td class="vr-sa-cell-muted vr-sa-cell-center">
+                                    @u.CreatedAt.ToString("MMM dd, yyyy")
+                                </td>
+                                <td class="vr-sa-cell-center">
+                                    <div class="vr-sa-pill" style="background: rgba(100, 116, 139, 0.1); color: #64748b;">Archived</div>
+                                </td>
+                                <td>
+                                    <div class="vr-sa-actions">
+                                        <button type="button" class="vr-sa-iconbtn" style="color: #22c55e;" title="Restore" aria-label="Restore" 
+                                                data-bs-toggle="modal" data-bs-target="#restoreStaffModal" 
+                                                data-staff-id="@u.UserId" data-staff-name="@u.FullName">
+                                            <i class="fa-solid fa-rotate-left"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="vr-sa-pagination">
+                <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.Page - 1) * Model.PageSize + 1, Model.TotalRows))–@(Math.Min(Model.Page * Model.PageSize, Model.TotalRows)) of @Model.TotalRows</div>
+                <div class="vr-sa-pagination-actions">
+                    @{
+                        var prev = Model.Page - 1;
+                        var next = Model.Page + 1;
+                    }
+                    <a class="vr-sa-pagebtn" href="@Url.Action("ArchivedStaff", "Admin", new { search = Model.Search, sort = Model.Sort, dir = Model.Dir, pageSize = Model.PageSize, page = prev })" aria-disabled="@(Model.Page <= 1)">Previous</a>
+                    
+                    @for (var i = 1; i <= Math.Max(1, Model.TotalPages); i++)
+                    {
+                        if (Model.TotalPages > 8 && i > 3 && i < Model.TotalPages - 2 && Math.Abs(i - Model.Page) > 1)
+                        {
+                            if (i == 4 || i == Model.TotalPages - 3) { <span class="vr-sa-cell-muted px-2">...</span> }
+                            continue;
+                        }
+                        <a class="vr-sa-pagebtn @(i == Model.Page ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("ArchivedStaff", "Admin", new { search = Model.Search, sort = Model.Sort, dir = Model.Dir, pageSize = Model.PageSize, page = i })">@i</a>
+                    }
+
+                    <a class="vr-sa-pagebtn" href="@Url.Action("ArchivedStaff", "Admin", new { search = Model.Search, sort = Model.Sort, dir = Model.Dir, pageSize = Model.PageSize, page = next })" aria-disabled="@(Model.Page >= Math.Max(1, Model.TotalPages))">Next</a>
+                </div>
+            </div>
+        }
+    </section>
+</div>
+
+<div class="modal fade vr-sa-modal" id="restoreStaffModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Restore Staff Member</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="@Url.Action("RestoreStaff", "Admin")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="vrRestoreStaffId" />
+                <div class="modal-body">
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="width: 64px; height: 64px; background: rgba(34, 197, 94, 0.08); color: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.5rem;">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </div>
+                        <h4 style="font-weight: 700; color: #0b122d; margin-bottom: 8px;">Restore Staff Member?</h4>
+                        <p style="color: #64748b; font-size: 0.95rem; line-height: 1.5;">You are about to restore <strong id="vrRestoreStaffName" style="color: #0b122d;">#</strong>. This will return them to the active staff directory. Their access will remain disabled until manually enabled.</p>
+                    </div>
+                </div>
+                <div class="modal-footer" style="justify-content: center; gap: 12px; border-top: none; padding-bottom: 30px;">
+                    <button type="button" class="vr-sa-btn" data-bs-dismiss="modal" style="min-width: 120px;">Cancel</button>
+                    <button type="submit" class="vr-sa-btn vr-sa-btn-primary" style="background: #22c55e; border-color: #22c55e; min-width: 120px;">Yes, Restore</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const restoreModal = document.getElementById('restoreStaffModal');
+            if (restoreModal) {
+                restoreModal.addEventListener('show.bs.modal', function (event) {
+                    const btn = event.relatedTarget;
+                    if (!btn) return;
+                    document.getElementById('vrRestoreStaffId').value = btn.getAttribute('data-staff-id') || '';
+                    document.getElementById('vrRestoreStaffName').textContent = btn.getAttribute('data-staff-name') || '#';
+                });
+            }
+        })();
+    </script>
+}

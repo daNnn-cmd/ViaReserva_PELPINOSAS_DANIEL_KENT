@@ -1,0 +1,65 @@
+@model ViaReservaERP.Models.GuestPortal.GuestTrackingViewModel
+@{
+    ViewData["Title"] = $"Tracking #{Model.ReservationId}";
+    ViewData["PageSubtitle"] = "Workflow progress";
+    Layout = "~/Views/Shared/_GuestLayout.cshtml";
+
+    string StatusBadge(string status)
+    {
+        var s = (status ?? "").Trim().ToLowerInvariant();
+        if (s.Contains("confirm") || s.Contains("active") || s.Contains("check") || s.Contains("complete") || s.Contains("approved")) return "vr-gp-badge vr-gp-badge-confirmed";
+        if (s.Contains("pend")) return "vr-gp-badge vr-gp-badge-pending";
+        if (s.Contains("cancel")) return "vr-gp-badge vr-gp-badge-cancelled";
+        return "vr-gp-badge vr-gp-badge-default";
+    }
+}
+
+<!-- Back + title -->
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+    <a href="@Url.Action("ReservationDetails","Guest", new { id = Model.ReservationId })" class="vr-gp-iconbtn" style="width:36px;height:36px;font-size:0.85rem;">
+        <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <div style="flex:1;">
+        <h1 class="vr-gp-section-title" style="font-size:1.3rem;">Workflow Tracking</h1>
+        <div class="vr-gp-section-sub">Reservation #@Model.ReservationId</div>
+    </div>
+    <span class="@StatusBadge(Model.Status)" style="font-size:0.82rem;">@Model.Status</span>
+</div>
+
+<!-- Workflow progress -->
+<div class="vr-gp-card">
+    <div style="margin-bottom:16px;">
+        <div class="vr-gp-section-title"><i class="fa-solid fa-route" style="color:var(--gp-teal);margin-right:6px;"></i> Timeline</div>
+        <div class="vr-gp-section-sub">Booking → Payment → Approval → Room Assignment → Check-In → Check-Out → Completed</div>
+    </div>
+
+    @if (Model.Steps.Count == 0)
+    {
+        <div class="vr-gp-empty">
+            <div class="vr-gp-empty-icon"><i class="fa-solid fa-route"></i></div>
+            No workflow steps found for this reservation yet.
+        </div>
+    }
+    else
+    {
+        <div style="display:grid;gap:0;position:relative;padding-left:20px;">
+            <!-- Timeline line -->
+            <div style="position:absolute;left:9px;top:8px;bottom:8px;width:2px;background:var(--gp-navy-06);"></div>
+
+            @foreach (var s in Model.Steps)
+            {
+                <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 0;position:relative;">
+                    <div style="width:20px;height:20px;border-radius:999px;background:var(--gp-teal);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;left:-20px;z-index:1;">
+                        <i class="fa-solid fa-check" style="color:#fff;font-size:0.55rem;"></i>
+                    </div>
+                    <div style="flex:1;margin-left:-6px;">
+                        <div style="font-weight:600;color:var(--gp-navy);font-size:0.9rem;">@s.Stage</div>
+                        <div style="font-size:0.78rem;color:var(--gp-navy-40);margin-top:2px;">
+                            <i class="fa-regular fa-clock" style="margin-right:3px;"></i> @s.WhenUtc.ToString("MMM dd, yyyy · h:mm tt")
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

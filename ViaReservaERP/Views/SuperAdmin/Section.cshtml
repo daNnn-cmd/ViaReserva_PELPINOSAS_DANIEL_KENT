@@ -1,0 +1,26 @@
+@model string
+@{
+    ViewData["Title"] = Model;
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-panel">
+    <div class="vr-sa-panel-head">
+        <div>
+            <div class="vr-sa-panel-title">@Model</div>
+            <div class="vr-sa-panel-sub">This section is ready for module-specific screens.</div>
+        </div>
+        <a class="vr-sa-link" href="@Url.Action("Dashboard", "SuperAdmin")">Back to Dashboard</a>
+    </div>
+
+    <div style="margin-top:14px;" class="vr-sa-muted">
+        Use this page as the shell for:
+        <div style="margin-top:8px;">
+            - Tables
+            - Filters
+            - Work queues
+            - Reports
+            - Settings
+        </div>
+    </div>
+</div>

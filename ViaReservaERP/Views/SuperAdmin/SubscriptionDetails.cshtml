@@ -1,0 +1,115 @@
+@model ViaReservaERP.Models.SuperAdmin.SubscriptionDetailsViewModel
+@{
+    ViewData["Title"] = "Subscription Details";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Subscription ID</div>
+                    <div class="vr-sa-report-stat-value">#@Model.SubscriptionId</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-hashtag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">System reference</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Plan</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.PlanName) ? "—" : Model.PlanName)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-layer-group"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Billing tier</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Price</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.Price.ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-peso-sign"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Plan price</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Company</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.CompanyName) ? "—" : Model.CompanyName)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-hotel"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Tenant scope</div>
+        </div>
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Subscription drill-down</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" href="@Url.Action("SubscriptionBillingHistory", "SuperAdmin", new { id = Model.SubscriptionId })" title="Billing History">Billing</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("SubscriptionUsageReport", "SuperAdmin", new { id = Model.SubscriptionId })" title="Usage Report">Usage</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("SubscriptionAuditLogs", "SuperAdmin", new { id = Model.SubscriptionId })" title="Audit Logs">Audit</a>
+                <a class="vr-sa-btn" href="@Url.Action("Subscriptions", "SuperAdmin")"><i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Details Overview</div>
+                <div class="vr-sa-panel-sub">Company, plan, dates, and identifiers for subscription #@Model.SubscriptionId.</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="vr-sa-panels">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Subscription Summary</div>
+                    <div class="vr-sa-panel-sub">Plan, billing cycle, and status.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid" style="margin-top:12px;">
+                @{
+                    var subStatus = (Model.Status ?? "").ToLower();
+                    var subClass = subStatus.Contains("active") ? "vr-sa-status-success" :
+                                   subStatus.Contains("cancel") ? "vr-sa-status-danger" :
+                                   subStatus.Contains("trial") ? "vr-sa-status-info" :
+                                   subStatus.Contains("pause") ? "vr-sa-status-warning" : "vr-sa-status-neutral";
+                }
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Subscription ID</div><div class="vr-sa-report-sub">System reference</div></div><div class="vr-sa-report-stat-value" style="font-weight: 600;">#@Model.SubscriptionId</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Company</div><div class="vr-sa-report-sub">Tenant</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.CompanyName) ? "—" : Model.CompanyName)</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Plan</div><div class="vr-sa-report-sub">Billing tier</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.PlanName) ? "—" : Model.PlanName)</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Price</div><div class="vr-sa-report-sub">Plan price</div></div><div class="vr-sa-report-stat-value" style="font-weight: 700; color: #0b122d;">₱ @Model.Price.ToString("N2")</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Billing Cycle</div><div class="vr-sa-report-sub">Duration months</div></div><div class="vr-sa-report-stat-value">@(Model.DurationMonths.HasValue ? $"{Model.DurationMonths.Value} month(s)" : "—")</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Start Date</div><div class="vr-sa-report-sub">Subscription start</div></div><div class="vr-sa-report-stat-value">@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "—")</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Renewal Date</div><div class="vr-sa-report-sub">End / renewal date</div></div><div class="vr-sa-report-stat-value">@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "—")</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Status</div><div class="vr-sa-report-sub">Subscription state</div></div><div class="vr-sa-report-stat-value"><span class="vr-sa-status-pill @subClass">@(string.IsNullOrWhiteSpace(Model.Status) ? "—" : Model.Status)</span></div></div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Provider Identifiers</div>
+                    <div class="vr-sa-panel-sub">External billing linkages.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid" style="margin-top:12px;">
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Stripe Subscription Id</div><div class="vr-sa-report-sub">Stripe linkage</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.StripeSubscriptionId) ? "—" : Model.StripeSubscriptionId)</div></div>
+            </div>
+        </section>
+    </div>
+</div>

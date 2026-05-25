@@ -1,0 +1,118 @@
+@model ViaReservaERP.Models.ServiceStaff.ServiceStaffDashboardViewModel
+@{
+    ViewData["Title"] = "Service Staff Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Pending / Assigned</div>
+                    <div class="vr-sa-report-stat-value" id="vrSsPending">@Model.Pending</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-hourglass-half"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Tasks waiting for action</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">In Progress</div>
+                    <div class="vr-sa-report-stat-value" id="vrSsInProgress">@Model.InProgress</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-person-digging"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Currently being handled</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Completed</div>
+                    <div class="vr-sa-report-stat-value" id="vrSsCompleted">@Model.Completed</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-circle-check"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Finished requests</div>
+        </div>
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Actions</div>
+            <div class="vr-sa-reports-summary-sub">Go to your task list</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-btn vr-sa-btn-primary" href="@Url.Action("Requests", "ServiceStaff")">My Assigned Tasks</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Recent Assigned Requests</div>
+                <div class="vr-sa-panel-sub">Latest 10 assigned to you.</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>Guest / Service</th>
+                        <th>Room</th>
+                        <th>Status</th>
+                        <th>Timeline</th>
+                        <th style="width: 100px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <partial name="_DashboardRecent" model="Model.Recent" />
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const elPending = document.getElementById('vrSsPending');
+            const elInProgress = document.getElementById('vrSsInProgress');
+            const elCompleted = document.getElementById('vrSsCompleted');
+            const table = document.querySelector('.vr-sa-table');
+
+            async function refreshStats() {
+                try {
+                    const resp = await fetch('@Url.Action("DashboardStats", "ServiceStaff")', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    if (!resp.ok) return;
+                    const data = await resp.json();
+                    if (elPending && typeof data.pending === 'number') elPending.textContent = String(data.pending);
+                    if (elInProgress && typeof data.inProgress === 'number') elInProgress.textContent = String(data.inProgress);
+                    if (elCompleted && typeof data.completed === 'number') elCompleted.textContent = String(data.completed);
+                } catch (e) {
+                    // swallow
+                }
+            }
+
+            async function refreshRecent() {
+                try {
+                    const resp = await fetch('@Url.Action("DashboardRecentPartial", "ServiceStaff")', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    if (!resp.ok) return;
+                    const html = await resp.text();
+                    const tbody = table ? table.querySelector('tbody') : null;
+                    if (tbody) tbody.innerHTML = html;
+                } catch (e) {
+                    // swallow
+                }
+            }
+
+            // Poll every 10s for near real-time updates
+            setInterval(function () {
+                refreshStats();
+                refreshRecent();
+            }, 10000);
+        })();
+    </script>
+}

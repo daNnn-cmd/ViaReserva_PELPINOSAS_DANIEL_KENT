@@ -1,0 +1,365 @@
+@model ViaReservaERP.Models.GuestPortal.GuestPaymentsViewModel
+@{
+    ViewData["Title"] = "Payments";
+    ViewData["PageSubtitle"] = "Receipts, refunds, and payment history";
+    Layout = "~/Views/Shared/_GuestLayout.cshtml";
+
+    var totalPaid = Model.Rows.Where(r => (r.Status ?? "").ToLowerInvariant().Contains("succeed")).Sum(r => r.Amount);
+    var balanceDue = Model.Balances.Sum(b => b.BalanceAmount);
+    var stripePublishableKey = (ViewData["StripePublishableKey"] as string) ?? string.Empty;
+}
+
+<!-- Page header -->
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+    <div>
+        <h1 class="vr-gp-section-title" style="font-size:1.3rem;">Payments</h1>
+        <div class="vr-gp-section-sub">Payment history and transaction records</div>
+    </div>
+</div>
+
+<!-- Summary cards -->
+<div class="vr-gp-stats" style="margin-bottom:20px;">
+    <div class="vr-gp-card">
+        <div class="vr-gp-stat">
+            <div class="vr-gp-stat-icon vr-gp-stat-icon-green"><i class="fa-solid fa-check-circle"></i></div>
+            <div class="vr-gp-stat-body">
+                <div class="vr-gp-stat-label">Total Paid</div>
+                <div class="vr-gp-stat-value" id="vrGpTotalPaid" style="font-size:1.3rem;">₱ @totalPaid.ToString("N2")</div>
+                <div class="vr-gp-stat-sub">Succeeded payments</div>
+            </div>
+        </div>
+    </div>
+    <div class="vr-gp-card">
+        <div class="vr-gp-stat">
+            <div class="vr-gp-stat-icon vr-gp-stat-icon-blue"><i class="fa-solid fa-receipt"></i></div>
+            <div class="vr-gp-stat-body">
+                <div class="vr-gp-stat-label">Transactions</div>
+                <div class="vr-gp-stat-value" id="vrGpCount">@Model.Rows.Count</div>
+                <div class="vr-gp-stat-sub">Total records</div>
+            </div>
+        </div>
+    </div>
+    <div class="vr-gp-card">
+        <div class="vr-gp-stat">
+            <div class="vr-gp-stat-icon vr-gp-stat-icon-gold"><i class="fa-solid fa-coins"></i></div>
+            <div class="vr-gp-stat-body">
+                <div class="vr-gp-stat-label">Balance Due</div>
+                <div class="vr-gp-stat-value" id="vrGpBalanceDue" style="font-size:1.3rem;">₱ @balanceDue.ToString("N2")</div>
+                <div class="vr-gp-stat-sub">Unpaid reservation balances</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="vrGpBalancePayForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@if (Model.Balances.Count > 0)
+{
+    <div class="vr-gp-card" style="margin-bottom:16px;">
+        <div style="margin-bottom:14px;">
+            <div class="vr-gp-section-title">Outstanding Balance</div>
+            <div class="vr-gp-section-sub">Pay remaining balances for your reservations</div>
+        </div>
+
+        <div class="vr-gp-table-wrap">
+            <table class="vr-gp-table">
+                <thead>
+                <tr>
+                    <th>Reservation</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Total</th>
+                    <th style="text-align:right;">Paid</th>
+                    <th style="text-align:right;">Balance</th>
+                    <th style="width:160px;text-align:right;">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var b in Model.Balances)
+                {
+                    <tr>
+                        <td style="font-weight:700;">#@b.ReservationId</td>
+                        <td>@(string.IsNullOrWhiteSpace(b.ReservationStatus) ? "—" : b.ReservationStatus)</td>
+                        <td style="text-align:right;font-weight:600;">₱ @b.TotalAmount.ToString("N2")</td>
+                        <td style="text-align:right;font-weight:600;">₱ @b.PaidAmount.ToString("N2")</td>
+                        <td style="text-align:right;font-weight:800;color:var(--gp-teal);">₱ @b.BalanceAmount.ToString("N2")</td>
+                        <td style="text-align:right;">
+                            <button type="button" class="vr-gp-btn vr-gp-btn-primary" style="padding: 8px 12px;" data-pay-reservation="@b.ReservationId">
+                                <i class="fa-regular fa-credit-card"></i> Pay Now
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+        <div id="vrGpPayPanel" style="display:none; margin-top:14px; padding-top:14px; border-top: 1px solid #e2e8f0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+                <div>
+                    <div style="font-weight:800; color: var(--gp-navy);">Pay reservation <span id="vrGpPayResId"></span></div>
+                    <div class="vr-gp-section-sub" style="margin-top:2px;">Amount: ₱ <span id="vrGpPayAmount"></span></div>
+                </div>
+                <button type="button" class="vr-gp-btn" id="vrGpPayCancel" style="padding: 8px 12px;">
+                    Cancel
+                </button>
+            </div>
+
+            <div id="vrGpCardElement" style="padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px;"></div>
+            <div id="vrGpPayError" class="vr-gp-empty" style="display:none; margin-top:10px; padding: 10px;">
+                <div class="vr-gp-empty-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <span id="vrGpPayErrorText"></span>
+            </div>
+
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap;">
+                <button type="button" class="vr-gp-btn vr-gp-btn-primary" id="vrGpPayConfirm">
+                    <i class="fa-solid fa-lock"></i> Pay Securely
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Payment history table -->
+<div class="vr-gp-card">
+    <div style="margin-bottom:14px;">
+        <div class="vr-gp-section-title">Payment History</div>
+        <div class="vr-gp-section-sub">Reservation payments, methods, and references</div>
+    </div>
+
+    @if (Model.Rows.Count == 0)
+    {
+        <div class="vr-gp-empty">
+            <div class="vr-gp-empty-icon"><i class="fa-regular fa-credit-card"></i></div>
+            No payments found. Payments will appear here after you make a booking.
+        </div>
+    }
+    else
+    {
+        <div class="vr-gp-table-wrap">
+            <table class="vr-gp-table">
+                <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Amount</th>
+                    <th>Reference</th>
+                    <th>Date</th>
+                    <th style="width:140px;text-align:right;">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="vrGpTableBody">
+                    <partial name="_PaymentsTableRows" model="Model.Rows" />
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    @if (!string.IsNullOrEmpty(stripePublishableKey))
+    {
+        <script src="https://js.stripe.com/v3/"></script>
+    }
+    <script>
+        (function() {
+            const elTotal = document.getElementById('vrGpTotalPaid');
+            const elCount = document.getElementById('vrGpCount');
+            const elTable = document.getElementById('vrGpTableBody');
+            const elBalanceDue = document.getElementById('vrGpBalanceDue');
+
+            const stripePublishableKey = '@stripePublishableKey';
+            const csrfToken = document.querySelector('#vrGpBalancePayForm input[name="__RequestVerificationToken"]')?.value;
+
+            const payPanel = document.getElementById('vrGpPayPanel');
+            const payResId = document.getElementById('vrGpPayResId');
+            const payAmount = document.getElementById('vrGpPayAmount');
+            const payCancel = document.getElementById('vrGpPayCancel');
+            const payConfirm = document.getElementById('vrGpPayConfirm');
+            const payError = document.getElementById('vrGpPayError');
+            const payErrorText = document.getElementById('vrGpPayErrorText');
+            const cardHost = document.getElementById('vrGpCardElement');
+
+            let stripe = null;
+            let card = null;
+            let selectedReservationId = null;
+
+            function showPayError(msg) {
+                if (!payError || !payErrorText) return;
+                payErrorText.textContent = msg || 'Payment failed.';
+                payError.style.display = '';
+            }
+
+            function clearPayError() {
+                if (!payError || !payErrorText) return;
+                payErrorText.textContent = '';
+                payError.style.display = 'none';
+            }
+
+            function ensureStripeMounted() {
+                if (!stripePublishableKey) return false;
+                if (!stripe) stripe = Stripe(stripePublishableKey);
+                if (!card) {
+                    const elements = stripe.elements();
+                    card = elements.create('card', { hidePostalCode: true });
+                    card.mount('#vrGpCardElement');
+                }
+                return true;
+            }
+
+            async function createBalancePaymentIntent(reservationId) {
+                const resp = await fetch('@Url.Action("CreateBalancePaymentIntent", "Guest")' + '?reservationId=' + encodeURIComponent(reservationId), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': csrfToken || ''
+                    }
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data?.message || 'Failed to initialize payment.');
+                return data;
+            }
+
+            async function confirmBalancePayment(paymentIntentId) {
+                const resp = await fetch('@Url.Action("ConfirmBalancePayment", "Guest")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': csrfToken || ''
+                    },
+                    body: JSON.stringify({ paymentIntentId: paymentIntentId })
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data?.message || 'Failed to confirm payment.');
+                return data;
+            }
+
+            function openPayPanel(reservationId) {
+                clearPayError();
+                selectedReservationId = reservationId;
+                if (payResId) payResId.textContent = '#' + reservationId;
+                if (payAmount) payAmount.textContent = '...';
+                if (payPanel) payPanel.style.display = '';
+                ensureStripeMounted();
+            }
+
+            function closePayPanel() {
+                clearPayError();
+                selectedReservationId = null;
+                if (payPanel) payPanel.style.display = 'none';
+            }
+
+            document.querySelectorAll('[data-pay-reservation]')?.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const rid = btn.getAttribute('data-pay-reservation');
+                    if (!rid) return;
+                    openPayPanel(rid);
+                });
+            });
+
+            payCancel?.addEventListener('click', closePayPanel);
+
+            payConfirm?.addEventListener('click', async () => {
+                clearPayError();
+
+                if (!selectedReservationId) {
+                    showPayError('Please select a reservation to pay.');
+                    return;
+                }
+
+                if (!stripePublishableKey) {
+                    showPayError('Online payments are not configured.');
+                    return;
+                }
+
+                if (!csrfToken) {
+                    showPayError('Security token missing. Please refresh the page.');
+                    return;
+                }
+
+                if (!ensureStripeMounted() || !stripe || !card) {
+                    showPayError('Unable to initialize payment form.');
+                    return;
+                }
+
+                payConfirm.disabled = true;
+                payConfirm.textContent = 'Processing...';
+
+                try {
+                    const intent = await createBalancePaymentIntent(selectedReservationId);
+                    if (payAmount) payAmount.textContent = intent.amount;
+
+                    const result = await stripe.confirmCardPayment(intent.clientSecret, {
+                        payment_method: {
+                            card: card,
+                            billing_details: {
+                                name: '@Model.GuestName',
+                                email: '@Model.GuestEmail'
+                            }
+                        }
+                    });
+
+                    if (result.error) throw new Error(result.error.message || 'Payment failed.');
+
+                    const paymentIntentId = result.paymentIntent?.id;
+                    if (!paymentIntentId) throw new Error('Payment was not confirmed.');
+
+                    await confirmBalancePayment(paymentIntentId);
+
+                    const rowBtn = document.querySelector('[data-pay-reservation="' + selectedReservationId + '"]');
+                    const tr = rowBtn ? rowBtn.closest('tr') : null;
+                    if (tr && elBalanceDue) {
+                        const balCell = tr.querySelector('td:nth-child(5)');
+                        const raw = (balCell?.textContent || '').replace(/[^0-9.\-]/g, '');
+                        const paidNow = Number(raw || '0');
+
+                        const current = (elBalanceDue.textContent || '').replace(/[^0-9.\-]/g, '');
+                        const curVal = Number(current || '0');
+                        const nextVal = Math.max(0, curVal - paidNow);
+                        elBalanceDue.textContent = '₱ ' + nextVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    }
+                    if (tr) tr.remove();
+
+                    closePayPanel();
+                    setTimeout(() => {
+                        refreshStats();
+                        refreshTable();
+                    }, 800);
+                } catch (e) {
+                    showPayError(e?.message || 'Payment failed.');
+                } finally {
+                    payConfirm.disabled = false;
+                    payConfirm.innerHTML = '<i class="fa-solid fa-lock"></i> Pay Securely';
+                }
+            });
+
+            async function refreshStats() {
+                try {
+                    const resp = await fetch('@Url.Action("PaymentsStats", "Guest")');
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (elTotal) elTotal.textContent = '₱ ' + data.totalPaid;
+                        if (elCount) elCount.textContent = data.count;
+                    }
+                } catch(e) {}
+            }
+
+            async function refreshTable() {
+                try {
+                    const resp = await fetch('@Url.Action("PaymentsTablePartial", "Guest")');
+                    if (resp.ok) {
+                        const html = await resp.text();
+                        if (elTable) elTable.innerHTML = html;
+                    }
+                } catch(e) {}
+            }
+
+            // Poll every 10 seconds
+            setInterval(() => {
+                refreshStats();
+                refreshTable();
+            }, 10000);
+        })();
+    </script>
+}

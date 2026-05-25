@@ -1,0 +1,243 @@
+@model ViaReservaERP.Models.GuestPortal.GuestReservationDetailsViewModel
+@{
+    ViewData["Title"] = $"Reservation #{Model.ReservationId}";
+    ViewData["PageSubtitle"] = Model.CompanyName;
+    Layout = "~/Views/Shared/_GuestLayout.cshtml";
+
+    string StatusBadge(string status)
+    {
+        var s = (status ?? "").Trim().ToLowerInvariant();
+        if (s.Contains("confirm") || s.Contains("active") || s.Contains("check")) return "vr-gp-badge vr-gp-badge-confirmed";
+        if (s.Contains("pend")) return "vr-gp-badge vr-gp-badge-pending";
+        if (s.Contains("cancel")) return "vr-gp-badge vr-gp-badge-cancelled";
+        if (s.Contains("complete") || s.Contains("done") || s.Contains("succeed")) return "vr-gp-badge vr-gp-badge-completed";
+        return "vr-gp-badge vr-gp-badge-default";
+    }
+}
+
+<!-- Back nav + title -->
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+    <a href="@Url.Action("Reservations","Guest")" class="vr-gp-iconbtn" style="width:36px;height:36px;font-size:0.85rem;">
+        <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <div>
+        <h1 class="vr-gp-section-title" style="font-size:1.3rem;">Reservation #@Model.ReservationId</h1>
+        <div class="vr-gp-section-sub">@Model.CompanyName</div>
+    </div>
+</div>
+
+<!-- Summary cards -->
+<div class="vr-gp-stats" style="margin-bottom:20px;">
+    <div class="vr-gp-card">
+        <div class="vr-gp-stat">
+            <div class="vr-gp-stat-icon vr-gp-stat-icon-teal"><i class="fa-solid fa-circle-info"></i></div>
+            <div class="vr-gp-stat-body">
+                <div class="vr-gp-stat-label">Status</div>
+                <div style="margin-top:6px;"><span class="@StatusBadge(Model.Status)" style="font-size:0.82rem;">@(string.IsNullOrWhiteSpace(Model.Status) ? "—" : Model.Status)</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="vr-gp-card">
+        <div class="vr-gp-stat">
+            <div class="vr-gp-stat-icon vr-gp-stat-icon-blue"><i class="fa-regular fa-calendar"></i></div>
+            <div class="vr-gp-stat-body">
+                <div class="vr-gp-stat-label">Check-in</div>
+                <div class="vr-gp-stat-value" style="font-size:1.1rem;">@(Model.CheckInDate?.ToString("MMM dd, yyyy") ?? "—")</div>
+            </div>
+        </div>
+    </div>
+    <div class="vr-gp-card">
+        <div class="vr-gp-stat">
+            <div class="vr-gp-stat-icon vr-gp-stat-icon-violet"><i class="fa-regular fa-calendar-xmark"></i></div>
+            <div class="vr-gp-stat-body">
+                <div class="vr-gp-stat-label">Check-out</div>
+                <div class="vr-gp-stat-value" style="font-size:1.1rem;">@(Model.CheckOutDate?.ToString("MMM dd, yyyy") ?? "—")</div>
+            </div>
+        </div>
+    </div>
+    <div class="vr-gp-card">
+        <div class="vr-gp-stat">
+            <div class="vr-gp-stat-icon vr-gp-stat-icon-gold"><i class="fa-solid fa-coins"></i></div>
+            <div class="vr-gp-stat-body">
+                <div class="vr-gp-stat-label">Total</div>
+                <div class="vr-gp-stat-value" style="font-size:1.1rem;">₱ @Model.TotalAmount.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick actions -->
+<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+    <a href="@Url.Action("Tracking","Guest", new { reservationId = Model.ReservationId })" class="vr-gp-btn vr-gp-btn-primary">
+        <i class="fa-solid fa-route"></i> Track Workflow
+    </a>
+    <a href="@Url.Action("Payments","Guest")" class="vr-gp-btn">
+        <i class="fa-regular fa-credit-card"></i> Payment History
+    </a>
+    @if (Model.CanCancel)
+    {
+        <form method="post" action="@Url.Action("CancelReservation","Guest", new { id = Model.ReservationId })" style="display:inline;">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="vr-gp-btn" style="color:#e11d48;border-color:rgba(225,29,72,0.25);" onclick="return confirm('Cancel reservation #@Model.ReservationId? A refund will be initiated if payment was made.')">
+                <i class="fa-regular fa-circle-xmark"></i> Cancel & Refund
+            </button>
+        </form>
+    }
+    @if (Model.CanExtendStay)
+    {
+        <button type="button" class="vr-gp-btn" style="color:#2563eb;border-color:rgba(37,99,235,0.25);" onclick="document.getElementById('extendModal').style.display='flex'">
+            <i class="fa-solid fa-calendar-plus"></i> Extend Stay
+        </button>
+    }
+    @if (Model.CanEarlyCheckOut)
+    {
+        <form method="post" action="@Url.Action("EarlyCheckOut","Guest", new { id = Model.ReservationId })" style="display:inline;">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="vr-gp-btn" style="color:#7c3aed;border-color:rgba(124,58,237,0.25);" onclick="return confirm('Early check-out from reservation #@Model.ReservationId? Unused nights will be refunded.')">
+                <i class="fa-solid fa-right-from-bracket"></i> Early Check-out
+            </button>
+        </form>
+    }
+</div>
+
+@if (Model.CanExtendStay)
+{
+    <!-- Extend Stay Modal -->
+    <div id="extendModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;">
+        <div class="vr-gp-card" style="max-width:400px;width:90%;margin:auto;padding:28px;">
+            <div class="vr-gp-section-title" style="margin-bottom:16px;"><i class="fa-solid fa-calendar-plus" style="color:#2563eb;margin-right:6px;"></i> Extend Stay</div>
+            <div class="vr-gp-section-sub" style="margin-bottom:16px;">Current check-out: <strong>@Model.CheckOutDate?.ToString("MMM dd, yyyy")</strong></div>
+            <form method="post" action="@Url.Action("ExtendStay","Guest", new { id = Model.ReservationId })">
+                @Html.AntiForgeryToken()
+                <div style="margin-bottom:16px;">
+                    <label style="font-weight:600;font-size:0.85rem;display:block;margin-bottom:6px;">New Check-out Date</label>
+                    <input type="date" name="newCheckOutDate" required min="@Model.CheckOutDate?.AddDays(1).ToString("yyyy-MM-dd")"
+                           style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.95rem;" />
+                </div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button type="button" class="vr-gp-btn" onclick="document.getElementById('extendModal').style.display='none'">Cancel</button>
+                    <button type="submit" class="vr-gp-btn vr-gp-btn-primary">Confirm Extension</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+<!-- Rooms -->
+<div class="vr-gp-card" style="margin-bottom:16px;">
+    <div style="margin-bottom:14px;">
+        <div class="vr-gp-section-title"><i class="fa-solid fa-bed" style="color:var(--gp-teal);margin-right:6px;"></i> Rooms</div>
+        <div class="vr-gp-section-sub">Rooms assigned to your reservation</div>
+    </div>
+    @if (Model.Rooms.Count == 0)
+    {
+        <div class="vr-gp-empty"><div class="vr-gp-empty-icon"><i class="fa-solid fa-bed"></i></div>No rooms assigned yet.</div>
+    }
+    else
+    {
+        <div class="vr-gp-table-wrap">
+            <table class="vr-gp-table">
+                <thead><tr><th>Room Number</th><th>Room Type</th><th style="text-align:right;">Price</th></tr></thead>
+                <tbody>
+                @foreach (var r in Model.Rooms)
+                {
+                    <tr>
+                        <td style="font-weight:600;">@(string.IsNullOrWhiteSpace(r.RoomNumber) ? "—" : r.RoomNumber)</td>
+                        <td>@(string.IsNullOrWhiteSpace(r.RoomType) ? "—" : r.RoomType)</td>
+                        <td style="text-align:right;font-weight:600;">₱ @r.Price.ToString("N2")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<!-- Services -->
+<div class="vr-gp-card" style="margin-bottom:16px;">
+    <div style="margin-bottom:14px;">
+        <div class="vr-gp-section-title"><i class="fa-solid fa-concierge-bell" style="color:var(--gp-amber);margin-right:6px;"></i> Services</div>
+        <div class="vr-gp-section-sub">Add-ons and special requests</div>
+    </div>
+    @if (Model.Services.Count == 0)
+    {
+        <div class="vr-gp-empty"><div class="vr-gp-empty-icon"><i class="fa-solid fa-concierge-bell"></i></div>No services selected.</div>
+    }
+    else
+    {
+        <div class="vr-gp-table-wrap">
+            <table class="vr-gp-table">
+                <thead><tr><th>Service</th><th>Qty</th><th style="text-align:right;">Price</th></tr></thead>
+                <tbody>
+                @foreach (var s in Model.Services)
+                {
+                    <tr>
+                        <td>@(string.IsNullOrWhiteSpace(s.ServiceName) ? "—" : s.ServiceName)</td>
+                        <td>@s.Quantity</td>
+                        <td style="text-align:right;font-weight:600;">₱ @s.Price.ToString("N2")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<!-- Billing Breakdown -->
+<div class="vr-gp-card" style="margin-bottom:16px;">
+    <div style="margin-bottom:14px;">
+        <div class="vr-gp-section-title"><i class="fa-solid fa-receipt" style="color:var(--gp-gold);margin-right:6px;"></i> Billing Breakdown</div>
+        <div class="vr-gp-section-sub">Tax and service charge details</div>
+    </div>
+    <div style="max-width: 400px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <span class="vr-gp-cell-muted">Subtotal:</span>
+            <span style="font-weight:600;">₱ @Model.Subtotal.ToString("N2")</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <span class="vr-gp-cell-muted">Service Charge (10%):</span>
+            <span style="font-weight:600;">₱ @Model.ServiceCharge.ToString("N2")</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <span class="vr-gp-cell-muted">VAT (12%):</span>
+            <span style="font-weight:600;">₱ @Model.TaxAmount.ToString("N2")</span>
+        </div>
+        <hr style="border:none; border-top:1px dashed #e2e8f0; margin:12px 0;" />
+        <div style="display:flex; justify-content:space-between;">
+            <span style="font-weight:700; font-size:1.05rem; color:var(--gp-navy);">Total Amount:</span>
+            <span style="font-weight:800; font-size:1.1rem; color:var(--gp-teal);">₱ @Model.TotalAmount.ToString("N2")</span>
+        </div>
+    </div>
+</div>
+
+<!-- Payments -->
+<div class="vr-gp-card">
+    <div style="margin-bottom:14px;">
+        <div class="vr-gp-section-title"><i class="fa-regular fa-credit-card" style="color:var(--gp-green);margin-right:6px;"></i> Payments</div>
+        <div class="vr-gp-section-sub">Receipts and payment status</div>
+    </div>
+    @if (Model.Payments.Count == 0)
+    {
+        <div class="vr-gp-empty"><div class="vr-gp-empty-icon"><i class="fa-regular fa-credit-card"></i></div>No payments found.</div>
+    }
+    else
+    {
+        <div class="vr-gp-table-wrap">
+            <table class="vr-gp-table">
+                <thead><tr><th>Method</th><th>Status</th><th style="text-align:right;">Amount</th><th>Reference</th><th>Date</th></tr></thead>
+                <tbody>
+                @foreach (var p in Model.Payments)
+                {
+                    <tr>
+                        <td>@p.PaymentMethod</td>
+                        <td>@p.Status</td>
+                        <td style="text-align:right;font-weight:600;">₱ @p.Amount.ToString("N2")</td>
+                        <td class="vr-gp-cell-muted" style="font-size:0.78rem;">@(string.IsNullOrWhiteSpace(p.StripePaymentIntentId) ? "—" : p.StripePaymentIntentId)</td>
+                        <td class="vr-gp-cell-muted">@p.CreatedAtUtc.ToString("MMM dd, yyyy HH:mm")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

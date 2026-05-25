@@ -1,0 +1,250 @@
+@model ViaReservaERP.Models.Admin.ReservationsViewModel
+@{
+    ViewData["Title"] = "Reservation Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Reservations Today</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalToday</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-calendar-day"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Total activity for today</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Pending</div>
+                    <div class="vr-sa-report-stat-value">@Model.PendingCount</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-clock"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Awaiting confirmation</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Check-ins Today</div>
+                    <div class="vr-sa-report-stat-value">@Model.CheckInsToday</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-right-to-bracket"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Guests arriving today</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Check-outs Today</div>
+                    <div class="vr-sa-report-stat-value">@Model.CheckOutsToday</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #6366f1; background: rgba(99, 102, 241, 0.08);"><i class="fa-solid fa-right-from-bracket"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Guests departing today</div>
+        </div>
+
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Filters</div>
+                <div class="vr-sa-panel-sub">Refine your reservation view by guest, status, or date range.</div>
+            </div>
+        </div>
+
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Search Guest</div>
+                <input class="vr-sa-filter-input" name="searchGuest" value="@Model.SearchGuest" placeholder="Name or email" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Status</div>
+                <select class="vr-sa-filter-input" name="statusFilter">
+                    <option value="">All Statuses</option>
+                    <option value="Pending" selected="@(Model.StatusFilter == "Pending")">Pending</option>
+                    <option value="Confirmed" selected="@(Model.StatusFilter == "Confirmed")">Confirmed</option>
+                    <option value="Checked In" selected="@(Model.StatusFilter == "Checked In")">Checked In</option>
+                    <option value="Checked Out" selected="@(Model.StatusFilter == "Checked Out")">Checked Out</option>
+                    <option value="Cancelled" selected="@(Model.StatusFilter == "Cancelled")">Cancelled</option>
+                </select>
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Start Date</div>
+                <input class="vr-sa-filter-input" type="date" name="startDate" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">End Date</div>
+                <input class="vr-sa-filter-input" type="date" name="endDate" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" />
+            </div>
+
+            <input type="hidden" name="sort" value="@Model.Sort" />
+            <input type="hidden" name="dir" value="@Model.Dir" />
+            <input type="hidden" name="page" value="1" />
+
+            <div class="vr-sa-filter" style="grid-column: 1 / -1;">
+                <div class="vr-sa-report-card-actions">
+                    <button type="submit" class="vr-sa-btn">Apply Filters</button>
+                    <a class="vr-sa-btn" href="@Url.Action("Reservations", "FrontDesk")">Reset</a>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Reservation Master List</div>
+                <div class="vr-sa-panel-sub">@Model.TotalRows reservations found in property records</div>
+            </div>
+            <div class="vr-sa-pill">Page @Model.Page of @Model.TotalPages</div>
+        </div>
+
+        @if (!Model.Rows.Any())
+        {
+            <div class="vr-sa-alert">
+                <div class="vr-sa-alert-title">No reservations found</div>
+                <div class="vr-sa-alert-sub">Try adjusting filters.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Guest Details</th>
+                            <th>Room Info</th>
+                            <th>Check In</th>
+                            <th>Check Out</th>
+                            <th class="vr-sa-cell-center">Status</th>
+                            <th style="width: 180px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var res in Model.Rows)
+                        {
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 500; color: #0b122d;">@res.Guest?.FullName</div>
+                                    <div class="vr-sa-cell-muted" style="font-size: 0.82rem;">@res.Guest?.Email</div>
+                                </td>
+                                <td>
+                                    @if (res.ReservationRooms.Any())
+                                    {
+                                        var roomsText = string.Join(", ", res.ReservationRooms
+                                            .Select(rr => rr.Room?.RoomNumber)
+                                            .Where(rn => !string.IsNullOrWhiteSpace(rn)));
+                                        <div style="font-weight: 500; color: #0b122d;">@(string.IsNullOrWhiteSpace(roomsText) ? "—" : roomsText)</div>
+                                    }
+                                    else
+                                    {
+                                        <span class="vr-sa-cell-muted" style="font-style: italic;">Unassigned</span>
+                                    }
+                                </td>
+                                <td class="vr-sa-cell-muted">@res.CheckInDate?.ToShortDateString()</td>
+                                <td class="vr-sa-cell-muted">@res.CheckOutDate?.ToShortDateString()</td>
+                                <td class="vr-sa-cell-center">
+                                    <div style="font-weight: 500; color: #475569;">@res.Status</div>
+                                </td>
+                                <td>
+                                    <div class="vr-sa-actions" style="gap: 4px;">
+                                        @if (res.Status == "Confirmed" || res.Status == "Pending")
+                                        {
+                                            <form method="post" action="@Url.Action("CheckIn", "FrontDesk", new { id = res.ReservationId })" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="vr-sa-iconbtn" title="Check In" style="color: #22c55e;">
+                                                    <i class="fa-solid fa-right-to-bracket"></i>
+                                                </button>
+                                            </form>
+                                            <form method="post" action="@Url.Action("CancelReservation", "FrontDesk", new { id = res.ReservationId })" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="vr-sa-iconbtn" title="Cancel & Refund" style="color: #ef4444;"
+                                                        onclick="return confirm('Cancel reservation #@res.ReservationId?')">
+                                                    <i class="fa-regular fa-circle-xmark"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (res.Status == "Checked In")
+                                        {
+                                            <form method="post" action="@Url.Action("CheckOut", "FrontDesk", new { id = res.ReservationId })" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="vr-sa-iconbtn" title="Check Out" style="color: #6366f1;">
+                                                    <i class="fa-solid fa-right-from-bracket"></i>
+                                                </button>
+                                            </form>
+                                            <button type="button" class="vr-sa-iconbtn" title="Extend Stay" style="color: #2563eb;"
+                                                    onclick="document.getElementById('fdExtend-@res.ReservationId').style.display='flex'">
+                                                <i class="fa-solid fa-calendar-plus"></i>
+                                            </button>
+                                            <form method="post" action="@Url.Action("EarlyCheckOut", "FrontDesk", new { id = res.ReservationId })" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="vr-sa-iconbtn" title="Early Check-out" style="color: #7c3aed;"
+                                                        onclick="return confirm('Early check-out #@res.ReservationId?')">
+                                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                    @if (res.Status == "Checked In")
+                                    {
+                                        <div id="fdExtend-@res.ReservationId" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;">
+                                            <div style="background:#fff;border-radius:12px;max-width:400px;width:90%;margin:auto;padding:28px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+                                                <div style="font-weight:700;font-size:1.05rem;margin-bottom:12px;color:#0b122d;">
+                                                    <i class="fa-solid fa-calendar-plus" style="color:#2563eb;margin-right:6px;"></i> Extend Stay — #@res.ReservationId
+                                                </div>
+                                                <div style="font-size:0.85rem;color:#64748b;margin-bottom:16px;">Current checkout: @res.CheckOutDate?.ToShortDateString()</div>
+                                                <form method="post" action="@Url.Action("ExtendStay", "FrontDesk", new { id = res.ReservationId })">
+                                                    @Html.AntiForgeryToken()
+                                                    <div style="margin-bottom:16px;">
+                                                        <label style="font-weight:600;font-size:0.85rem;display:block;margin-bottom:6px;">New Check-out Date</label>
+                                                        <input type="date" name="newCheckOutDate" required min="@res.CheckOutDate?.AddDays(1).ToString("yyyy-MM-dd")"
+                                                               style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;" />
+                                                    </div>
+                                                    <div style="display:flex;gap:8px;justify-content:flex-end;">
+                                                        <button type="button" class="vr-sa-btn" onclick="document.getElementById('fdExtend-@res.ReservationId').style.display='none'">Cancel</button>
+                                                        <button type="submit" class="vr-sa-btn" style="background:#2563eb;color:#fff;">Confirm</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="vr-sa-pagination">
+                <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.Page - 1) * Model.PageSize + 1, Model.TotalRows))–@(Math.Min(Model.Page * Model.PageSize, Model.TotalRows)) of @Model.TotalRows</div>
+                <div class="vr-sa-pagination-actions">
+                    @{
+                        var prev = Model.Page - 1;
+                        var next = Model.Page + 1;
+                    }
+                    <a class="vr-sa-pagebtn" href="@Url.Action("Reservations", "FrontDesk", new { searchGuest = Model.SearchGuest, statusFilter = Model.StatusFilter, startDate = Model.StartDate, endDate = Model.EndDate, sort = Model.Sort, dir = Model.Dir, pageSize = Model.PageSize, page = prev })" aria-disabled="@(Model.Page <= 1)">Previous</a>
+
+                    @for (var i = 1; i <= Model.TotalPages; i++)
+                    {
+                        if (Model.TotalPages > 8 && i > 3 && i < Model.TotalPages - 2 && Math.Abs(i - Model.Page) > 1)
+                        {
+                            if (i == 4 || i == Model.TotalPages - 3) { <span class="vr-sa-cell-muted px-2">...</span> }
+                            continue;
+                        }
+                        <a class="vr-sa-pagebtn @(i == Model.Page ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("Reservations", "FrontDesk", new { searchGuest = Model.SearchGuest, statusFilter = Model.StatusFilter, startDate = Model.StartDate, endDate = Model.EndDate, sort = Model.Sort, dir = Model.Dir, pageSize = Model.PageSize, page = i })">@i</a>
+                    }
+
+                    <a class="vr-sa-pagebtn" href="@Url.Action("Reservations", "FrontDesk", new { searchGuest = Model.SearchGuest, statusFilter = Model.StatusFilter, startDate = Model.StartDate, endDate = Model.EndDate, sort = Model.Sort, dir = Model.Dir, pageSize = Model.PageSize, page = next })" aria-disabled="@(Model.Page >= Model.TotalPages)">Next</a>
+                </div>
+            </div>
+        }
+    </section>
+</div>

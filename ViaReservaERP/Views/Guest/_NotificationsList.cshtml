@@ -1,0 +1,60 @@
+@model ViaReservaERP.Models.GuestPortal.GuestNotificationsViewModel
+
+@{
+    string TypeIcon(string type)
+    {
+        var t = (type ?? "").ToLowerInvariant();
+        if (t.Contains("reserv") || t.Contains("book")) return "fa-regular fa-calendar-check";
+        if (t.Contains("pay")) return "fa-regular fa-credit-card";
+        if (t.Contains("service")) return "fa-solid fa-concierge-bell";
+        return "fa-regular fa-bell";
+    }
+
+    string TypeColor(string type)
+    {
+        var t = (type ?? "").ToLowerInvariant();
+        if (t.Contains("reserv") || t.Contains("book")) return "var(--gp-teal)";
+        if (t.Contains("pay")) return "var(--gp-green)";
+        if (t.Contains("service")) return "var(--gp-amber)";
+        return "var(--gp-blue)";
+    }
+}
+
+@if (Model.Items.Count == 0)
+{
+    <div class="vr-gp-card">
+        <div class="vr-gp-empty" style="padding:48px 14px;">
+            <div class="vr-gp-empty-icon"><i class="fa-regular fa-bell-slash"></i></div>
+            You're all caught up! No notifications yet.
+        </div>
+    </div>
+}
+else
+{
+    <div style="display:grid;gap:8px;">
+        @foreach (var item in Model.Items)
+        {
+            <div class="vr-gp-card vr-gp-notif @(item.IsRead ? "" : "vr-gp-notif-unread")">
+                <div style="display:flex;gap:14px;align-items:flex-start;">
+                    <div style="width:40px;height:40px;border-radius:var(--gp-radius-sm);background:var(--gp-navy-03);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:@TypeColor(item.Type);font-size:0.95rem;">
+                        <i class="@TypeIcon(item.Type)"></i>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <span style="font-weight:600;color:var(--gp-navy);font-size:0.9rem;">@item.Title</span>
+                            @if (!item.IsRead)
+                            {
+                                <span style="width:7px;height:7px;border-radius:999px;background:var(--gp-blue);display:inline-block;"></span>
+                            }
+                            <span class="vr-gp-badge vr-gp-badge-default" style="font-size:0.68rem;">@item.Type</span>
+                        </div>
+                        <div style="margin-top:4px;font-size:0.84rem;color:var(--gp-navy-60);line-height:1.5;">@item.Message</div>
+                        <div style="margin-top:6px;font-size:0.75rem;color:var(--gp-navy-40);">
+                            <i class="fa-regular fa-clock" style="margin-right:3px;"></i> @item.CreatedAtUtc.ToString("MMM dd, yyyy · h:mm tt")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

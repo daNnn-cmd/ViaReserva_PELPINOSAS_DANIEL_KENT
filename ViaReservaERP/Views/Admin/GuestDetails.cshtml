@@ -1,0 +1,195 @@
+@model ViaReservaERP.Models.Admin.GuestDetailsViewModel
+@{
+    ViewData["Title"] = "Guest Profile";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <!-- Header with Back Button -->
+    <div class="vr-sa-reports-stats" style="grid-template-columns: 1fr auto;">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 700;">
+                    @(Model.Guest.FullName?.Substring(0, 1).ToUpper() ?? "G")
+                </div>
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Guest Profile</div>
+                    <div class="vr-sa-report-stat-value" style="font-size: 1.8rem;">@Model.Guest.FullName</div>
+                    <div class="vr-sa-pill" style="background: @(Model.LoyaltyTier == "Platinum" ? "rgba(139, 92, 246, 0.1)" : Model.LoyaltyTier == "Gold" ? "rgba(245, 158, 11, 0.1)" : "rgba(100, 116, 139, 0.1)"); color: @(Model.LoyaltyTier == "Platinum" ? "#8b5cf6" : Model.LoyaltyTier == "Gold" ? "#f59e0b" : "#64748b"); margin-top: 5px;">
+                        <i class="fa-solid fa-crown me-1"></i> @Model.LoyaltyTier Member
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Return to guest directory</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-btn vr-sa-btn-primary" href="@Url.Action("Guests", "Admin")"><i class="fa-solid fa-arrow-left me-1"></i> Back to Guests</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Card -->
+    <div class="vr-sa-reports-stats mt-4">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker">Lifetime Revenue</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.TotalSpent.ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-coins"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Total payments processed</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker">Stay History</div>
+                    <div class="vr-sa-report-stat-value">@Model.StayCount Stays</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #6366f1; background: rgba(99, 102, 241, 0.08);"><i class="fa-solid fa-bed"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Completed reservations</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker">Service Requests</div>
+                    <div class="vr-sa-report-stat-value">@Model.RecentRequests.Count Requests</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-concierge-bell"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Amenities and support</div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Guest Details Panel -->
+        <div class="col-lg-4">
+            <section class="vr-sa-panel h-100">
+                <div class="vr-sa-panel-head">
+                    <div class="vr-sa-panel-title">Contact Information</div>
+                </div>
+                <div class="p-4">
+                    <div class="mb-4">
+                        <label class="vr-sa-label" style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Email Address</label>
+                        <div style="font-weight: 600; color: #0b122d;">@(Model.Guest.Email ?? "No email provided")</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="vr-sa-label" style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Phone Number</label>
+                        <div style="font-weight: 600; color: #0b122d;">@(Model.Guest.Phone ?? "No phone provided")</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="vr-sa-label" style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Account Status</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width: 10px; height: 10px; border-radius: 50%; background: @(Model.Guest.IsActive ? "#22c55e" : "#ef4444");"></div>
+                            <span style="font-weight: 600; color: #0b122d;">@(Model.Guest.IsActive ? "Active" : "Inactive")</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="vr-sa-label" style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Joined Date</label>
+                        <div style="font-weight: 600; color: #0b122d;">@Model.Guest.CreatedAt.ToString("MMMM dd, yyyy")</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Recent Reservations -->
+        <div class="col-lg-8">
+            <section class="vr-sa-panel h-100">
+                <div class="vr-sa-panel-head">
+                    <div class="vr-sa-panel-title">Recent Reservations</div>
+                    <div class="vr-sa-panel-sub">History of guest stays and bookings</div>
+                </div>
+
+                @if (!Model.RecentReservations.Any())
+                {
+                    <div class="p-5 text-center vr-sa-cell-muted">No reservations found for this guest.</div>
+                }
+                else
+                {
+                    <div class="vr-sa-table-wrap vr-sa-table-modern">
+                        <table class="vr-sa-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Dates</th>
+                                    <th class="vr-sa-cell-center">Status</th>
+                                    <th class="vr-sa-cell-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var r in Model.RecentReservations)
+                                {
+                                    <tr>
+                                        <td class="vr-sa-cell-muted">#@r.ReservationId</td>
+                                        <td>
+                                            <div style="font-weight: 500; color: #0f172a;">@r.CheckInDate?.ToString("MMM dd") – @r.CheckOutDate?.ToString("MMM dd, yyyy")</div>
+                                        </td>
+                                        <td class="vr-sa-cell-center">
+                                            <div class="vr-sa-pill" style="background: @(r.Status == "Checked Out" ? "rgba(34, 197, 94, 0.1)" : r.Status == "Cancelled" ? "rgba(239, 68, 68, 0.1)" : "rgba(99, 102, 241, 0.1)"); color: @(r.Status == "Checked Out" ? "#22c55e" : r.Status == "Cancelled" ? "#ef4444" : "#6366f1");">
+                                                @r.Status
+                                            </div>
+                                        </td>
+                                        <td class="vr-sa-cell-right" style="font-weight: 700; color: #0b122d;">₱ @((r.TotalAmount ?? 0).ToString("N2"))</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+        </div>
+    </div>
+
+    <!-- Service History -->
+    <div class="mt-4">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div class="vr-sa-panel-title">Service Request History</div>
+                <div class="vr-sa-panel-sub">Amenities and guest services requested during stays</div>
+            </div>
+
+            @if (!Model.RecentRequests.Any())
+            {
+                <div class="p-5 text-center vr-sa-cell-muted">No service requests found.</div>
+            }
+            else
+            {
+                <div class="vr-sa-table-wrap vr-sa-table-modern">
+                    <table class="vr-sa-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Service</th>
+                                <th class="vr-sa-cell-center">Status</th>
+                                <th class="vr-sa-cell-right">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var sr in Model.RecentRequests)
+                            {
+                                <tr>
+                                    <td class="vr-sa-cell-muted">@sr.RequestDate.ToString("MMM dd, yyyy HH:mm")</td>
+                                    <td>
+                                        <div style="font-weight: 600; color: #0f172a;">@(sr.Service?.ServiceName ?? "Unknown Service")</div>
+                                    </td>
+                                    <td class="vr-sa-cell-center">
+                                        <div class="vr-sa-pill" style="background: @(sr.Status == "Completed" ? "rgba(34, 197, 94, 0.1)" : sr.Status == "Pending" ? "rgba(245, 158, 11, 0.1)" : "rgba(100, 116, 139, 0.1)"); color: @(sr.Status == "Completed" ? "#22c55e" : sr.Status == "Pending" ? "#f59e0b" : "#64748b");">
+                                            @sr.Status
+                                        </div>
+                                    </td>
+                                    <td class="vr-sa-cell-right" style="color: #64748b;">₱ @((sr.Service?.Price ?? 0).ToString("N2"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+</div>

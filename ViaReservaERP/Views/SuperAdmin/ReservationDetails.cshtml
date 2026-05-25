@@ -1,0 +1,248 @@
+@model ViaReservaERP.Models.SuperAdmin.ReservationDetailsViewModel
+@{
+    ViewData["Title"] = $"Reservation #{Model.ReservationId}";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Reservation ID</div>
+                    <div class="vr-sa-report-stat-value">#@Model.ReservationId</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-hashtag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">System reference</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Total Amount</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.TotalAmount.ToString("N0")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-peso-sign"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Captured revenue</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Status</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.ReservationStatus) ? "Pending" : Model.ReservationStatus)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-spinner"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Current workflow state</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Hotel Company</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.HotelCompany) ? "—" : Model.HotelCompany)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-hotel"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Tenant scope</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Related monitoring contexts</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" href="@Url.Action("ReservationPayment", "SuperAdmin", new { reservationId = Model.ReservationId })" title="Payment Tracking">Payment</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("ReservationServiceRequests", "SuperAdmin", new { reservationId = Model.ReservationId })" title="Service Requests">Services</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("ReservationAuditLogs", "SuperAdmin", new { reservationId = Model.ReservationId })" title="Audit History">Audit</a>
+                <a class="vr-sa-btn" href="@Url.Action("Reservations", "SuperAdmin")"><i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Details Overview</div>
+                <div class="vr-sa-panel-sub">Identity, dates, and assigned staff for reservation #@Model.ReservationId.</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="vr-sa-panels">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Reservation Summary</div>
+                    <div class="vr-sa-panel-sub">Hotel, dates, and reservation state.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid">
+                @{
+                    var resStatus = (Model.ReservationStatus ?? "").ToLower();
+                    var resClass = resStatus.Contains("confirmed") ? "vr-sa-status-success" :
+                                   resStatus.Contains("cancelled") ? "vr-sa-status-danger" :
+                                   resStatus.Contains("checked-in") ? "vr-sa-status-info" :
+                                   resStatus.Contains("checked-out") ? "vr-sa-status-neutral" : "vr-sa-status-warning";
+                }
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Reservation ID</div><div class="vr-sa-report-sub">System reference</div></div><div class="vr-sa-report-stat-value" style="font-weight: 600;">#@Model.ReservationId</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Hotel Company</div><div class="vr-sa-report-sub">Tenant scope</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.HotelCompany) ? "—" : Model.HotelCompany)</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Check-in Date</div><div class="vr-sa-report-sub">Arrival</div></div><div class="vr-sa-report-stat-value">@(Model.CheckInDate.HasValue ? Model.CheckInDate.Value.ToString("yyyy-MM-dd") : "—")</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Check-out Date</div><div class="vr-sa-report-sub">Departure</div></div><div class="vr-sa-report-stat-value">@(Model.CheckOutDate.HasValue ? Model.CheckOutDate.Value.ToString("yyyy-MM-dd") : "—")</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Booking Date</div><div class="vr-sa-report-sub">Created at (UTC)</div></div><div class="vr-sa-report-stat-value">@(Model.BookingDateUtc.HasValue ? Model.BookingDateUtc.Value.ToString("yyyy-MM-dd HH:mm") : "—")</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Reservation Status</div><div class="vr-sa-report-sub">Current workflow state</div></div><div class="vr-sa-report-stat-value"><span class="vr-sa-status-pill @resClass">@(string.IsNullOrWhiteSpace(Model.ReservationStatus) ? "Pending" : Model.ReservationStatus)</span></div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Total Amount</div><div class="vr-sa-report-sub">Total revenue capture</div></div><div class="vr-sa-report-stat-value" style="font-weight: 700; color: #0b122d;">₱ @Model.TotalAmount.ToString("N0")</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Assigned Staff</div><div class="vr-sa-report-sub">From related service requests</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.AssignedStaffSummary) ? "—" : Model.AssignedStaffSummary)</div></div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Guest Information</div>
+                    <div class="vr-sa-panel-sub">Identity and contact (read-only).</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid">
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Guest Name</div><div class="vr-sa-report-sub">Primary guest profile</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.GuestName) ? "—" : Model.GuestName)</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Email</div><div class="vr-sa-report-sub">Guest contact</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.GuestEmail) ? "—" : Model.GuestEmail)</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Phone</div><div class="vr-sa-report-sub">Guest contact</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.GuestPhone) ? "—" : Model.GuestPhone)</div></div>
+            </div>
+        </section>
+    </div>
+
+    <div class="vr-sa-panels" style="margin-top:14px;">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Room Details</div>
+                    <div class="vr-sa-panel-sub">Rooms assigned to this reservation.</div>
+                </div>
+            </div>
+
+            @if (Model.Rooms.Count == 0)
+            {
+                <div class="vr-sa-alert" style="margin-top:12px;">
+                    <div class="vr-sa-alert-title">No rooms assigned</div>
+                    <div class="vr-sa-alert-sub">This reservation currently has no room assignment records.</div>
+                </div>
+            }
+            else
+            {
+                <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                    <table class="vr-sa-table">
+                        <thead>
+                            <tr>
+                                <th>Room Number</th>
+                                <th>Room Type</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model.Rooms)
+                            {
+                                <tr>
+                                    <td>@(string.IsNullOrWhiteSpace(r.RoomNumber) ? "—" : r.RoomNumber)</td>
+                                    <td>@(string.IsNullOrWhiteSpace(r.RoomType) ? "—" : r.RoomType)</td>
+                                    <td>₱ @r.Price.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Special Requests</div>
+                    <div class="vr-sa-panel-sub">Derived from reservation services.</div>
+                </div>
+            </div>
+
+            @if (Model.SpecialRequests.Count == 0)
+            {
+                <div class="vr-sa-alert" style="margin-top:12px;">
+                    <div class="vr-sa-alert-title">No special requests</div>
+                    <div class="vr-sa-alert-sub">No reservation services were recorded.</div>
+                </div>
+            }
+            else
+            {
+                <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                    <table class="vr-sa-table">
+                        <thead>
+                            <tr>
+                                <th>Request</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var s in Model.SpecialRequests)
+                            {
+                                <tr>
+                                    <td>@(string.IsNullOrWhiteSpace(s.Item) ? "—" : s.Item)</td>
+                                    <td>@s.Quantity</td>
+                                    <td>₱ @s.Price.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Booking Timeline</div>
+                <div class="vr-sa-panel-sub">Audit trail events tied to reservation workflow (UTC).</div>
+            </div>
+        </div>
+
+        @if (Model.BookingTimeline.Count == 0)
+        {
+            <div class="vr-sa-alert" style="margin-top:12px;">
+                <div class="vr-sa-alert-title">No timeline events found</div>
+                <div class="vr-sa-alert-sub">No audit log entries are associated with this reservation yet.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Company</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var e in Model.BookingTimeline)
+                        {
+                            <tr>
+                                <td>@e.TimestampUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@(string.IsNullOrWhiteSpace(e.Action) ? "—" : e.Action)</td>
+                                <td>@(string.IsNullOrWhiteSpace(e.Actor) ? "System" : e.Actor)</td>
+                                <td>@(string.IsNullOrWhiteSpace(e.ActorRole) ? "—" : e.ActorRole)</td>
+                                <td>@(string.IsNullOrWhiteSpace(e.Company) ? "—" : e.Company)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+     </section>
+</div>

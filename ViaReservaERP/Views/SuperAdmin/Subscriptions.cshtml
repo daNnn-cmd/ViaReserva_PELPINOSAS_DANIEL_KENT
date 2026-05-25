@@ -1,0 +1,386 @@
+@model ViaReservaERP.Models.SuperAdmin.SubscriptionManagementViewModel
+@{
+    ViewData["Title"] = "Subscription Management";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Active Subscriptions</div>
+                    <div class="vr-sa-report-stat-value">@Model.ActiveSubscriptions</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-regular fa-credit-card"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Across all hotel companies</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">MRR</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.MonthlyRecurringRevenue.ToString("N0")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-sack-dollar"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Estimated monthly revenue</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Expiring</div>
+                    <div class="vr-sa-report-stat-value">@Model.ExpiringSubscriptions</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-hourglass-end"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Renewals due in 14 days</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Failed Billing</div>
+                    <div class="vr-sa-report-stat-value">@Model.FailedPayments</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.08);"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Collection action required</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Export Options</div>
+            <div class="vr-sa-reports-summary-sub">Download current view as PDF, CSV, or XLSX</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" title="PDF" href="@Url.Action("Subscriptions", "SuperAdminReports", new { format = "pdf" })">PDF</a>
+                <a class="vr-sa-export-btn" title="CSV" href="@Url.Action("Subscriptions", "SuperAdminReports", new { format = "csv" })">CSV</a>
+                <a class="vr-sa-export-btn" title="Excel" href="@Url.Action("Subscriptions", "SuperAdminReports", new { format = "xlsx" })">XLSX</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Filters</div>
+                <div class="vr-sa-panel-sub">Narrow down subscription monitoring by date range, granularity, and plan.</div>
+            </div>
+        </div>
+
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">View by</div>
+                <select class="vr-sa-filter-input" name="granularity" onchange="this.form.submit()">
+                    <option value="day" selected="@(Model.Granularity == "day")">Day</option>
+                    <option value="month" selected="@(Model.Granularity == "month")">Month</option>
+                    <option value="year" selected="@(Model.Granularity == "year")">Year</option>
+                </select>
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Start</div>
+                <input class="vr-sa-filter-input" type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">End</div>
+                <input class="vr-sa-filter-input" type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Plan</div>
+                <select class="vr-sa-filter-input" name="planId">
+                    <option value="" selected="@(Model.PlanId == null)">All plans</option>
+                    @foreach (var p in Model.Plans)
+                    {
+                        <option value="@p.PlanId" selected="@(Model.PlanId == p.PlanId)">@p.PlanName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="vr-sa-filter" style="grid-column: 1 / -1;">
+                <div class="vr-sa-report-card-actions">
+                    <button type="submit" class="vr-sa-btn">Apply Filters</button>
+                    <a class="vr-sa-btn" href="@Url.Action("Subscriptions", "SuperAdmin")">Reset</a>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Subscription Table</div>
+                <div class="vr-sa-panel-sub">Oversight of active company plans, renewals, and billing health.</div>
+            </div>
+            <div class="vr-sa-pill">Page @Model.Page of @Model.TotalPages</div>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>Company / Plan</th>
+                        <th>Cycle / Dates</th>
+                        <th class="text-center">Billing</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Amount Paid</th>
+                        <th style="width: 80px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Rows)
+                    {
+                        var payStatus = (r.PaymentStatus ?? "").ToLower();
+                        var payClass = payStatus.Contains("succeeded") || payStatus.Contains("paid") ? "vr-sa-status-success" :
+                                       payStatus.Contains("failed") ? "vr-sa-status-danger" :
+                                       payStatus.Contains("pending") ? "vr-sa-status-warning" : "vr-sa-status-neutral";
+
+                        var subStatus = (r.SubscriptionStatus ?? "").ToLower();
+                        var subClass = subStatus.Contains("active") ? "vr-sa-status-success" :
+                                       subStatus.Contains("cancelled") ? "vr-sa-status-danger" :
+                                       subStatus.Contains("trial") ? "vr-sa-status-info" :
+                                       subStatus.Contains("past_due") ? "vr-sa-status-warning" : "vr-sa-status-neutral";
+
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500; color: #0b122d;">@(string.IsNullOrWhiteSpace(r.CompanyName) ? "—" : r.CompanyName)</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">@(string.IsNullOrWhiteSpace(r.PlanName) ? "—" : r.PlanName)</div>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.9rem; color: #0b122d;">@(string.IsNullOrWhiteSpace(r.BillingCycle) ? "Manual" : r.BillingCycle)</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">Renew: @(r.RenewalDate.HasValue ? r.RenewalDate.Value.ToString("MMM dd, yyyy") : "—")</div>
+                            </td>
+                            <td class="text-center" style="font-weight: 500; color: #475569;">
+                                @r.PaymentStatus
+                            </td>
+                            <td class="text-center" style="font-weight: 500; color: #475569;">
+                                @r.SubscriptionStatus
+                            </td>
+                            <td class="text-end" style="font-weight: 600; color: #0b122d;">₱ @r.AmountPaid.ToString("N0")</td>
+                            <td>
+                                 <div class="vr-sa-actions">
+                                     <a class="vr-sa-iconbtn" href="@Url.Action("SubscriptionDetails", "SuperAdmin", new { id = r.SubscriptionId })" title="Details"><i class="fa-solid fa-eye"></i></a>
+                                     <a class="vr-sa-iconbtn" href="@Url.Action("SubscriptionBillingHistory", "SuperAdmin", new { id = r.SubscriptionId })" title="Billing History"><i class="fa-solid fa-receipt"></i></a>
+                                     <a class="vr-sa-iconbtn" href="@Url.Action("SubscriptionUsageReport", "SuperAdmin", new { id = r.SubscriptionId })" title="Usage Report"><i class="fa-solid fa-chart-line"></i></a>
+                                     <a class="vr-sa-iconbtn" href="@Url.Action("SubscriptionAuditLogs", "SuperAdmin", new { id = r.SubscriptionId })" title="Audit Logs"><i class="fa-solid fa-history"></i></a>
+                                 </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="vr-sa-pagination">
+            <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.Page - 1) * Model.PageSize + 1, Model.TotalRows))–@(Math.Min(Model.Page * Model.PageSize, Model.TotalRows)) of @Model.TotalRows</div>
+            <div class="vr-sa-pagination-actions">
+                @{
+                    var prev = Model.Page - 1;
+                    var next = Model.Page + 1;
+                }
+                <a class="vr-sa-pagebtn" href="@Url.Action("Subscriptions", "SuperAdmin", new { granularity = Model.Granularity, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), planId = Model.PlanId, pageSize = Model.PageSize, page = prev })" aria-disabled="@(Model.Page <= 1)">Previous</a>
+                @for (var i = 1; i <= Model.TotalPages; i++)
+                {
+                    <a class="vr-sa-pagebtn @(i == Model.Page ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("Subscriptions", "SuperAdmin", new { granularity = Model.Granularity, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), planId = Model.PlanId, pageSize = Model.PageSize, page = i })">@i</a>
+                }
+                <a class="vr-sa-pagebtn" href="@Url.Action("Subscriptions", "SuperAdmin", new { granularity = Model.Granularity, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), planId = Model.PlanId, pageSize = Model.PageSize, page = next })" aria-disabled="@(Model.Page >= Model.TotalPages)">Next</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Subscription Revenue Analytics</div>
+                <div class="vr-sa-panel-sub">MRR, new subscriptions, churn, plan distribution, and renewals.</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-chart-split" style="margin-top:12px;">
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Monthly Recurring Revenue</div>
+                <div id="vrSaSubMrr" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">New Subscriptions</div>
+                <div id="vrSaSubNew" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Churn (Cancelled)</div>
+                <div id="vrSaSubChurn" class="vr-sa-apex"></div>
+            </div>
+        </div>
+
+        <div class="vr-sa-chart-split" style="margin-top:14px;">
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Plan Distribution</div>
+                <div id="vrSaSubPlans" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Renewal Trends</div>
+                <div id="vrSaSubRenewals" class="vr-sa-apex"></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="vr-sa-panels" style="margin-top:14px;">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Failed Billing Alerts</div>
+                    <div class="vr-sa-panel-sub">Billing exceptions requiring investigation.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid" style="margin-top:12px;">
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Failed Stripe payments</div><div class="vr-sa-report-sub">Non-succeeded billing attempts</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.FailedStripePayments</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Expiring subscriptions</div><div class="vr-sa-report-sub">Next 14 days</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.ExpiringSubscriptions</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Overdue invoices</div><div class="vr-sa-report-sub">Not tracked in current schema</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.OverdueInvoices</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Cancelled renewals</div><div class="vr-sa-report-sub">Cancelled subscriptions</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.CancelledRenewals</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Trial expirations</div><div class="vr-sa-report-sub">Trial-tagged statuses</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.TrialExpirations</div></div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Subscription Workflow Tracker</div>
+                    <div class="vr-sa-panel-sub">Registration → plan selection → Stripe billing → activation → renewals → logs.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid" style="margin-top:12px;">
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Company Registration</div><div class="vr-sa-report-sub">Companies created in range</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.CompanyRegistrations</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Plan Selection</div><div class="vr-sa-report-sub">Subscriptions started in range</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.PlanSelections</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Stripe Payments</div><div class="vr-sa-report-sub">Stripe payment intents detected</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.StripePayments</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Subscription Activation</div><div class="vr-sa-report-sub">Active subscriptions</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.SubscriptionActivations</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Renewal Processing</div><div class="vr-sa-report-sub">Renewals/expiry dates in range</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.RenewalProcessing</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Billing Logs</div><div class="vr-sa-report-sub">Payments (non-reservation)</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.BillingLogs</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Audit Logging</div><div class="vr-sa-report-sub">Subscription/payments audit entries</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.AuditLogging</div></div>
+            </div>
+        </section>
+    </div>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Company Usage Monitoring</div>
+                <div class="vr-sa-panel-sub">Usage signals that justify plan tiers (read-only).</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th class="text-end">Users</th>
+                        <th class="text-end">Reservation Volume</th>
+                        <th class="text-end">Service Requests</th>
+                        <th class="text-end">Workflow Instances</th>
+                        <th class="text-end">Active Modules Used</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in Model.UsageRows)
+                    {
+                        <tr>
+                            <td>@u.CompanyName</td>
+                            <td class="text-end">@u.Users</td>
+                            <td class="text-end">@u.ReservationVolume</td>
+                            <td class="text-end">@u.ServiceRequests</td>
+                            <td class="text-end">@u.WorkflowInstances</td>
+                            <td class="text-end">@u.ActiveModulesUsed</td>
+                            <td>
+                                <a class="vr-sa-btn" href="@Url.Action("Companies", "SuperAdmin")">View Company</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+@{
+    var jsonOpts = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.1"></script>
+<script>
+    (function () {
+        if (!window.ApexCharts) return;
+
+        const palette = {
+            blue: '#1a2a6c',
+            burgundy: '#b21f1f',
+            text: '#1e293b',
+            grid: 'rgba(30, 41, 59, 0.10)',
+            muted: 'rgba(30, 41, 59, 0.62)'
+        };
+
+        function baseOptions() {
+            return {
+                chart: {
+                    toolbar: { show: false },
+                    foreColor: palette.muted,
+                    fontFamily: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial'
+                },
+                grid: { borderColor: palette.grid, strokeDashArray: 4, padding: { left: 6, right: 6 } },
+                legend: { position: 'bottom', fontWeight: 400, markers: { width: 8, height: 8, radius: 8 } },
+                tooltip: { theme: 'light' },
+                dataLabels: { enabled: false }
+            };
+        }
+
+        const mrr = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MrrAnalytics, jsonOpts));
+        const newSubs = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.NewSubscriptionsAnalytics, jsonOpts));
+        const churn = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChurnRateAnalytics, jsonOpts));
+        const plans = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PlanDistributionAnalytics, jsonOpts));
+        const renewals = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RenewalTrendsAnalytics, jsonOpts));
+
+        function lineChart(el, seriesName, cs, color) {
+            if (!el) return;
+            const opt = baseOptions();
+            opt.chart.type = 'line';
+            opt.chart.height = 210;
+            opt.stroke = { curve: 'smooth', width: 2 };
+            opt.series = [{ name: seriesName, data: (cs.datasets && cs.datasets[seriesName]) ? cs.datasets[seriesName] : (cs.labels || []).map(() => 0) }];
+            opt.colors = [color];
+            opt.xaxis = { categories: cs.labels || [] };
+            new ApexCharts(el, opt).render();
+        }
+
+        lineChart(document.querySelector('#vrSaSubMrr'), 'MRR', mrr, palette.blue);
+        lineChart(document.querySelector('#vrSaSubNew'), 'New Subscriptions', newSubs, '#0ea5e9');
+        lineChart(document.querySelector('#vrSaSubChurn'), 'Churn (Cancelled)', churn, palette.burgundy);
+
+        const plansEl = document.querySelector('#vrSaSubPlans');
+        if (plansEl) {
+            const opt = baseOptions();
+            opt.chart.type = 'bar';
+            opt.chart.height = 210;
+            opt.plotOptions = { bar: { borderRadius: 8, columnWidth: '58%' } };
+            opt.series = [{ name: 'Active Subscriptions', data: (plans.datasets && plans.datasets['Active Subscriptions']) ? plans.datasets['Active Subscriptions'] : (plans.labels || []).map(() => 0) }];
+            opt.xaxis = { categories: plans.labels || [] };
+            opt.colors = ['#22c55e'];
+            new ApexCharts(plansEl, opt).render();
+        }
+
+        const renewEl = document.querySelector('#vrSaSubRenewals');
+        if (renewEl) {
+            const opt = baseOptions();
+            opt.chart.type = 'area';
+            opt.chart.height = 210;
+            opt.stroke = { curve: 'smooth', width: 2 };
+            opt.fill = { type: 'solid', opacity: 0.10 };
+            opt.series = [{ name: 'Renewals', data: (renewals.datasets && renewals.datasets['Renewals']) ? renewals.datasets['Renewals'] : (renewals.labels || []).map(() => 0) }];
+            opt.xaxis = { categories: renewals.labels || [] };
+            opt.colors = ['#a855f7'];
+            new ApexCharts(renewEl, opt).render();
+        }
+    })();
+</script>
+}
+}

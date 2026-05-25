@@ -1,0 +1,64 @@
+@model ViaReservaERP.Models.SuperAdmin.AuditUserActivityHistoryViewModel
+@{
+    ViewData["Title"] = "User Activity History";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-head">
+        <div>
+            <div class="vr-sa-reports-title">User Activity History</div>
+            <div class="vr-sa-reports-sub">All logged activities by a specific user (read-only).</div>
+            <div class="vr-sa-audit-meta">Super Admin <span class="vr-sa-dot-sep">·</span> Audit Logs <span class="vr-sa-dot-sep">·</span> @Model.UserName <span class="vr-sa-dot-sep">·</span> @(string.IsNullOrWhiteSpace(Model.UserRole) ? "—" : Model.UserRole)</div>
+        </div>
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Audit drill-down</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-btn" href="@Url.Action("AuditLogs", "SuperAdmin")">Back</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Events</div>
+                <div class="vr-sa-panel-sub">Most recent user events (UTC).</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>Log ID</th>
+                        <th>Company</th>
+                        <th>Module</th>
+                        <th>Action</th>
+                        <th>IP</th>
+                        <th>Status</th>
+                        <th>Timestamp</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Rows)
+                    {
+                        <tr>
+                            <td>@r.AuditId</td>
+                            <td>@(string.IsNullOrWhiteSpace(r.Company) ? "—" : r.Company)</td>
+                            <td>@(string.IsNullOrWhiteSpace(r.Module) ? "—" : r.Module)</td>
+                            <td>@(string.IsNullOrWhiteSpace(r.ActionPerformed) ? "—" : r.ActionPerformed)</td>
+                            <td>@(string.IsNullOrWhiteSpace(r.IpAddress) ? "—" : r.IpAddress)</td>
+                            <td>@r.Status</td>
+                            <td>@r.TimestampUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td><a class="vr-sa-btn" href="@Url.Action("AuditLogDetails", "SuperAdmin", new { id = r.AuditId })">Details</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

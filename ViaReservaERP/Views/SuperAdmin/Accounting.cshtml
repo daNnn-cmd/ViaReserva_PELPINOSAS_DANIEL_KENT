@@ -1,0 +1,346 @@
+@model ViaReservaERP.Models.SuperAdmin.AccountingOverviewViewModel
+@{
+    ViewData["Title"] = "Accounting Overview";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Total Revenue</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.TotalRevenue.ToString("N0")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-peso-sign"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Gross income in range</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Net Profit</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.NetProfit.ToString("N0")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-chart-line"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">After refunds & expenses</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Refunds</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.Refunds.ToString("N0")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.08);"><i class="fa-solid fa-arrow-rotate-left"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Losses from reversals</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Failed Payments</div>
+                    <div class="vr-sa-report-stat-value">@Model.Alerts.FailedPayments</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-regular fa-credit-card"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Requires collection action</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Export Options</div>
+            <div class="vr-sa-reports-summary-sub">Download current view as PDF, CSV, or XLSX</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" title="PDF" href="@Url.Action("Accounting", "SuperAdminReports", new { format = "pdf" })">PDF</a>
+                <a class="vr-sa-export-btn" title="CSV" href="@Url.Action("Accounting", "SuperAdminReports", new { format = "csv" })">CSV</a>
+                <a class="vr-sa-export-btn" title="Excel" href="@Url.Action("Accounting", "SuperAdminReports", new { format = "xlsx" })">XLSX</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Filters</div>
+                <div class="vr-sa-panel-sub">Narrow down financial monitoring by date range, granularity, and company.</div>
+            </div>
+        </div>
+
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">View by</div>
+                <select class="vr-sa-filter-input" name="granularity" onchange="this.form.submit()">
+                    <option value="day" selected="@(Model.Granularity == "day")">Day</option>
+                    <option value="month" selected="@(Model.Granularity == "month")">Month</option>
+                    <option value="year" selected="@(Model.Granularity == "year")">Year</option>
+                </select>
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Start</div>
+                <input class="vr-sa-filter-input" type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">End</div>
+                <input class="vr-sa-filter-input" type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Company</div>
+                <select class="vr-sa-filter-input" name="companyId">
+                    <option value="" selected="@(Model.CompanyId == null)">All companies</option>
+                    @foreach (var c in Model.Companies)
+                    {
+                        <option value="@c.CompanyId" selected="@(Model.CompanyId == c.CompanyId)">@c.CompanyName</option>
+                    }
+                </select>
+            </div>
+
+            <input type="hidden" name="page" value="1" />
+            <input type="hidden" name="pageSize" value="@Model.PageSize" />
+
+            <div class="vr-sa-filter" style="grid-column: 1 / -1;">
+                <div class="vr-sa-report-card-actions">
+                    <button type="submit" class="vr-sa-btn">Apply Filters</button>
+                    <a class="vr-sa-btn" href="@Url.Action("Accounting", "SuperAdmin")">Reset</a>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Financial Transaction Table</div>
+                <div class="vr-sa-panel-sub">Read-only monitoring of all cross-module revenue and expense signals.</div>
+            </div>
+            <div class="vr-sa-pill">Page @Model.Page of @Model.TotalPages</div>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>Company / Module</th>
+                        <th>Type / Method</th>
+                        <th>Customer / Guest</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-center">Status</th>
+                        <th>Date</th>
+                        <th style="width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Transactions)
+                    {
+                        var status = (t.Status ?? "").ToLower();
+                        var statusClass = status.Contains("succeeded") || status.Contains("paid") ? "vr-sa-status-success" :
+                                         status.Contains("failed") || status.Contains("error") ? "vr-sa-status-danger" :
+                                         status.Contains("pending") ? "vr-sa-status-warning" :
+                                         status.Contains("refund") ? "vr-sa-status-info" : "vr-sa-status-neutral";
+
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500; color: #0b122d;">@(string.IsNullOrWhiteSpace(t.Company) ? "—" : t.Company)</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">@t.RelatedModule</div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 500; color: #0b122d;">@t.TransactionType</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">@t.PaymentMethod</div>
+                            </td>
+                            <td>@(string.IsNullOrWhiteSpace(t.CustomerOrGuest) ? "—" : t.CustomerOrGuest)</td>
+                            <td class="text-end" style="font-weight: 600; color: #0b122d;">₱ @t.Amount.ToString("N0")</td>
+                            <td class="text-center" style="font-weight: 500; color: #475569;">
+                                @t.Status
+                            </td>
+                            <td>
+                                <div style="font-size: 0.9rem; color: #0b122d;">@t.TransactionDateUtc.ToString("MMM dd, yyyy")</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">@t.TransactionDateUtc.ToString("HH:mm")</div>
+                            </td>
+                            <td>
+                                <div class="vr-sa-actions">
+                                    <a class="vr-sa-iconbtn" href="@Url.Action("TransactionDetails", "SuperAdmin", new { source = t.Source, id = t.Id })" title="Details"><i class="fa-solid fa-eye"></i></a>
+                                    <a class="vr-sa-iconbtn" href="@Url.Action("TransactionPaymentHistory", "SuperAdmin", new { source = t.Source, id = t.Id })" title="Payment History"><i class="fa-solid fa-credit-card"></i></a>
+                                    <a class="vr-sa-iconbtn" href="@Url.Action("TransactionLinkedReservation", "SuperAdmin", new { source = t.Source, id = t.Id })" title="Related Reservation"><i class="fa-solid fa-calendar-check"></i></a>
+                                    <a class="vr-sa-iconbtn" href="@Url.Action("TransactionAuditLogs", "SuperAdmin", new { source = t.Source, id = t.Id })" title="Audit Logs"><i class="fa-solid fa-history"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="vr-sa-pagination">
+            <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.Page - 1) * Model.PageSize + 1, Model.TotalRows))–@(Math.Min(Model.Page * Model.PageSize, Model.TotalRows)) of @Model.TotalRows</div>
+            <div class="vr-sa-pagination-actions">
+                @{
+                    var prev = Model.Page - 1;
+                    var next = Model.Page + 1;
+                }
+                <a class="vr-sa-pagebtn" href="@Url.Action("Accounting", "SuperAdmin", new { granularity = Model.Granularity, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), companyId = Model.CompanyId, pageSize = Model.PageSize, page = prev })" aria-disabled="@(Model.Page <= 1)">Previous</a>
+                @for (var i = 1; i <= Model.TotalPages; i++)
+                {
+                    <a class="vr-sa-pagebtn @(i == Model.Page ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("Accounting", "SuperAdmin", new { granularity = Model.Granularity, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), companyId = Model.CompanyId, pageSize = Model.PageSize, page = i })">@i</a>
+                }
+                <a class="vr-sa-pagebtn" href="@Url.Action("Accounting", "SuperAdmin", new { granularity = Model.Granularity, startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), companyId = Model.CompanyId, pageSize = Model.PageSize, page = next })" aria-disabled="@(Model.Page >= Model.TotalPages)">Next</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Revenue Breakdown</div>
+                <div class="vr-sa-panel-sub">Reservation, service, and subscription revenue trends.</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-chart-split" style="margin-top:12px;">
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Revenue by Module</div>
+                <div class="vr-sa-apex" id="vrSaAccountingRevenueBreakdown"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Revenue Growth</div>
+                <div class="vr-sa-apex" id="vrSaAccountingRevenueGrowth"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Yearly Financial Trends</div>
+                <div class="vr-sa-apex" id="vrSaAccountingYearlyTrends"></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="vr-sa-panels" style="margin-top:14px;">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Expense Monitoring</div>
+                    <div class="vr-sa-panel-sub">Operational and loss indicators (estimated from accounting records).</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid" style="margin-top:12px;">
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Operational Expenses</div><div class="vr-sa-report-sub">Expense-tagged transactions</div></div><div class="vr-sa-report-stat-value">₱ @Model.Expenses.OperationalExpenses.ToString("N0")</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Refund Losses</div><div class="vr-sa-report-sub">Refund-tagged payments</div></div><div class="vr-sa-report-stat-value">₱ @Model.Expenses.RefundLosses.ToString("N0")</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Service Operational Costs</div><div class="vr-sa-report-sub">Negative service-linked adjustments</div></div><div class="vr-sa-report-stat-value">₱ @Model.Expenses.ServiceOperationalCosts.ToString("N0")</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Company-level Expenses</div><div class="vr-sa-report-sub">Negative transaction amounts</div></div><div class="vr-sa-report-stat-value">₱ @Model.Expenses.CompanyLevelExpenses.ToString("N0")</div></div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Financial Alerts</div>
+                    <div class="vr-sa-panel-sub">Anomaly signals for Super Admin monitoring.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid" style="margin-top:12px;">
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Failed payments</div><div class="vr-sa-report-sub">Non-succeeded payment statuses</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.FailedPayments</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">High refund rate companies</div><div class="vr-sa-report-sub">Refund ratio >= 15%</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.HighRefundRateCompanies</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Suspicious transactions</div><div class="vr-sa-report-sub">Large adjustments flagged</div></div><div class="vr-sa-report-stat-value">@Model.Alerts.SuspiciousTransactions</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Revenue decline</div><div class="vr-sa-report-sub">Against previous period</div></div><div class="vr-sa-report-stat-value">@(Model.Alerts.RevenueDeclineAlerts > 0 ? "Flagged" : "OK")</div></div>
+            </div>
+        </section>
+    </div>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Accounting Workflow Tracking</div>
+                <div class="vr-sa-panel-sub">Guest booking → payment processing → service charges → accounting records → audit → reporting.</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-report-grid" style="margin-top:12px;">
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Reservation Payment</div><div class="vr-sa-report-sub">Succeeded reservation-linked payments</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.ReservationPayments</div></div>
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Service Charges</div><div class="vr-sa-report-sub">Service-linked transaction entries</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.ServiceCharges</div></div>
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Refund Processing</div><div class="vr-sa-report-sub">Refund-tagged payments</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.RefundProcessing</div></div>
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Financial Recording</div><div class="vr-sa-report-sub">Accounting transactions recorded</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.FinancialRecording</div></div>
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Audit Logging</div><div class="vr-sa-report-sub">Audit log entries for payments/transactions</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.AuditLogging</div></div>
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Reporting</div><div class="vr-sa-report-sub">Export/report generation signals</div></div><div class="vr-sa-report-stat-value">@Model.Workflow.Reporting</div></div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+@{
+    var jsonOpts = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.1"></script>
+<script>
+    (function () {
+        if (!window.ApexCharts) return;
+
+        const palette = {
+            blue: '#1a2a6c',
+            burgundy: '#b21f1f',
+            text: '#1e293b',
+            grid: 'rgba(30, 41, 59, 0.10)',
+            muted: 'rgba(30, 41, 59, 0.62)'
+        };
+
+        function baseOptions() {
+            return {
+                chart: {
+                    toolbar: { show: false },
+                    foreColor: palette.muted,
+                    fontFamily: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial'
+                },
+                grid: { borderColor: palette.grid, strokeDashArray: 4, padding: { left: 6, right: 6 } },
+                legend: { position: 'bottom', fontWeight: 400, markers: { width: 8, height: 8, radius: 8 } },
+                tooltip: { theme: 'light' },
+                dataLabels: { enabled: false }
+            };
+        }
+
+        const breakdown = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueBreakdownAnalytics, jsonOpts));
+        const growth = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueGrowthAnalytics, jsonOpts));
+        const yearly = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.YearlyTrendsAnalytics, jsonOpts));
+
+        function toSeries(cs) {
+            const series = [];
+            if (!cs || !cs.datasets) return series;
+            for (const key in cs.datasets) {
+                series.push({ name: key, data: cs.datasets[key] || [] });
+            }
+            return series;
+        }
+
+        const opt1 = baseOptions();
+        opt1.chart.type = 'area';
+        opt1.chart.height = 210;
+        opt1.series = toSeries(breakdown);
+        opt1.xaxis = { categories: breakdown.labels || [] };
+        opt1.dataLabels.enabled = false;
+        opt1.stroke = { curve: 'smooth', width: 2 };
+        opt1.fill = { type: 'solid', opacity: 0.10 };
+        if (!opt1.series || opt1.series.length === 0) opt1.series = [{ name: 'No Data', data: (breakdown.labels || []).map(() => 0) }];
+        new ApexCharts(document.querySelector('#vrSaAccountingRevenueBreakdown'), opt1).render();
+
+        const opt2 = baseOptions();
+        opt2.chart.type = 'line';
+        opt2.chart.height = 210;
+        opt2.series = toSeries(growth);
+        opt2.xaxis = { categories: growth.labels || [] };
+        opt2.dataLabels.enabled = false;
+        opt2.stroke = { curve: 'smooth', width: 2 };
+        if (!opt2.series || opt2.series.length === 0) opt2.series = [{ name: 'No Data', data: (growth.labels || []).map(() => 0) }];
+        new ApexCharts(document.querySelector('#vrSaAccountingRevenueGrowth'), opt2).render();
+
+        const opt3 = baseOptions();
+        opt3.chart.type = 'bar';
+        opt3.chart.height = 210;
+        opt3.plotOptions = { bar: { borderRadius: 8, columnWidth: '58%' } };
+        opt3.series = toSeries(yearly);
+        opt3.xaxis = { categories: yearly.labels || [] };
+        opt3.dataLabels.enabled = false;
+        if (!opt3.series || opt3.series.length === 0) opt3.series = [{ name: 'No Data', data: (yearly.labels || []).map(() => 0) }];
+        new ApexCharts(document.querySelector('#vrSaAccountingYearlyTrends'), opt3).render();
+    })();
+</script>
+}

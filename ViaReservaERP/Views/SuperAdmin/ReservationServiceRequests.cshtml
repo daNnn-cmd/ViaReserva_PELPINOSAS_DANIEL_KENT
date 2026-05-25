@@ -1,0 +1,127 @@
+@model ViaReservaERP.Models.SuperAdmin.ReservationServiceRequestsViewModel
+@{
+    ViewData["Title"] = "Service Requests";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Reservation ID</div>
+                    <div class="vr-sa-report-stat-value">#@Model.ReservationId</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-hashtag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Linked reservation</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Total Requests</div>
+                    <div class="vr-sa-report-stat-value">@Model.Rows.Count</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-bell-concierge"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Recorded for guest</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Pending</div>
+                    <div class="vr-sa-report-stat-value">@Model.Rows.Count(r => (r.Status ?? "").ToLower().Contains("pending") || (r.Status ?? "").ToLower().Contains("progress"))</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">In-flight workflow</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Guest</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.GuestName) ? "—" : Model.GuestName)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-user-tag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Identity scope</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Related monitoring contexts</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" href="@Url.Action("ReservationDetails", "SuperAdmin", new { id = Model.ReservationId })" title="Reservation Details">Details</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("ReservationPayment", "SuperAdmin", new { reservationId = Model.ReservationId })" title="Payment Tracking">Payment</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("ReservationAuditLogs", "SuperAdmin", new { reservationId = Model.ReservationId })" title="Audit Logs">Audit</a>
+                <a class="vr-sa-btn" href="@Url.Action("Reservations", "SuperAdmin")"><i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Service Pipeline Overview</div>
+                <div class="vr-sa-panel-sub">Workflow tracking for @(string.IsNullOrWhiteSpace(Model.GuestName) ? "guest" : Model.GuestName) at @(string.IsNullOrWhiteSpace(Model.HotelCompany) ? "property" : Model.HotelCompany).</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Service Pipeline</div>
+                <div class="vr-sa-panel-sub">Requests for <strong>@(string.IsNullOrWhiteSpace(Model.GuestName) ? "Unknown Guest" : Model.GuestName)</strong> at <strong>@(string.IsNullOrWhiteSpace(Model.HotelCompany) ? "Unknown Property" : Model.HotelCompany)</strong></div>
+            </div>
+        </div>
+
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="vr-sa-alert" style="margin-top:12px;">
+                <div class="vr-sa-alert-title">No service requests found</div>
+                <div class="vr-sa-alert-sub">No service request records exist for this guest under the same company scope.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Service Item</th>
+                            <th>Staff Assigned</th>
+                            <th class="text-center">Status</th>
+                            <th>Completion Date</th>
+                            <th>Internal Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Rows)
+                        {
+                            var status = (r.Status ?? "").ToLower();
+                            var statusClass = status.Contains("completed") || status.Contains("done") ? "vr-sa-status-success" :
+                                              status.Contains("pending") || status.Contains("progress") ? "vr-sa-status-warning" :
+                                              status.Contains("cancelled") ? "vr-sa-status-danger" : "vr-sa-status-neutral";
+
+                            <tr>
+                                <td style="font-weight: 500; color: #0b122d;">@(string.IsNullOrWhiteSpace(r.RequestedService) ? "—" : r.RequestedService)</td>
+                                <td>@(string.IsNullOrWhiteSpace(r.AssignedServiceStaff) ? "Unassigned" : r.AssignedServiceStaff)</td>
+                                <td class="text-center">
+                                    <span class="vr-sa-status-pill @statusClass">@(string.IsNullOrWhiteSpace(r.Status) ? "Pending" : r.Status)</span>
+                                </td>
+                                <td class="vr-sa-cell-muted">@(r.CompletionDateUtc.HasValue ? r.CompletionDateUtc.Value.ToString("yyyy-MM-dd") : "—")</td>
+                                <td class="vr-sa-cell-muted" style="font-size: 0.85rem;">@(string.IsNullOrWhiteSpace(r.Notes) ? "—" : r.Notes)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>
+</div>

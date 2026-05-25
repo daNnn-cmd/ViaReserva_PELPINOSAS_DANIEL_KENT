@@ -1,0 +1,69 @@
+@model ViaReservaERP.Models.GuestPortal.GuestNotificationsViewModel
+@{
+    ViewData["Title"] = "Notifications";
+    ViewData["PageSubtitle"] = "Reservation and service updates";
+    Layout = "~/Views/Shared/_GuestLayout.cshtml";
+
+    var unreadCount = Model?.Items?.Count(i => !i.IsRead) ?? 0;
+}
+
+<!-- Page header -->
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+    <div>
+        <h1 class="vr-gp-section-title" style="font-size:1.3rem;">Notifications</h1>
+        <div class="vr-gp-section-sub">Reservation updates, payment alerts, and service request notifications</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
+        <form method="post" action="@Url.Action("MarkAllAsRead", "Guest")" style="margin:0;">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="vr-gp-btn" style="padding:7px 14px;font-size:0.82rem;" @(unreadCount == 0 ? "disabled" : null)>
+                Mark All as Read
+            </button>
+        </form>
+        <div style="font-size:0.82rem;color:var(--gp-navy-40);">
+            <span id="vrGpUnreadCount">@unreadCount</span> unread
+        </div>
+    </div>
+</div>
+
+<div id="vrGpNotificationsList">
+    <partial name="_NotificationsList" model="Model" />
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const list = document.getElementById('vrGpNotificationsList');
+            const unreadEl = document.getElementById('vrGpUnreadCount');
+
+            async function refreshNotifications() {
+                try {
+                    const resp = await fetch('@Url.Action("NotificationsListPartial", "Guest")', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    if (!resp.ok) return;
+                    const html = await resp.text();
+                    if (list) list.innerHTML = html;
+                } catch (e) {
+                    // swallow
+                }
+            }
+
+            async function refreshUnread() {
+                try {
+                    const resp = await fetch('@Url.Action("NotificationsUnreadCount", "Guest")', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    if (!resp.ok) return;
+                    const data = await resp.json();
+                    if (unreadEl && data && typeof data.unread === 'number') {
+                        unreadEl.textContent = String(data.unread);
+                    }
+                } catch (e) {
+                    // swallow
+                }
+            }
+
+            setInterval(function () {
+                refreshNotifications();
+                refreshUnread();
+            }, 10000);
+        })();
+    </script>
+}

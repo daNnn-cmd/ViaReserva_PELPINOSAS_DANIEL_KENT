@@ -1,0 +1,226 @@
+@model List<ViaReservaERP.Models.ServiceStaff.AssignedServiceRequestRow>
+@{
+    ViewData["Title"] = "My Service Requests";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var toastMsg = TempData["ServiceStaffSuccessMessage"] as string;
+    var toastErr = TempData["ServiceStaffErrorMessage"] as string;
+    var toastStatus = (TempData["ToastStatus"] as string ?? "").ToLower();
+}
+
+<div class="vr-sa-reports" style="padding:0;">
+
+    <!-- Inline Status Toast (Status-Aware) -->
+    @if (!string.IsNullOrEmpty(toastMsg))
+    {
+        var toastColor = toastStatus switch {
+            "completed" => "#059669",
+            "in progress" => "#2563eb",
+            "assigned" => "#7c3aed",
+            "pending" => "#d97706",
+            _ => "#059669"
+        };
+        var toastBg = toastStatus switch {
+            "completed" => "linear-gradient(135deg,#ecfdf5,#d1fae5)",
+            "in progress" => "linear-gradient(135deg,#eff6ff,#dbeafe)",
+            "assigned" => "linear-gradient(135deg,#f5f3ff,#ede9fe)",
+            "pending" => "linear-gradient(135deg,#fffbeb,#fef3c7)",
+            _ => "linear-gradient(135deg,#ecfdf5,#d1fae5)"
+        };
+        var toastIcon = toastStatus switch {
+            "completed" => "fa-solid fa-circle-check",
+            "in progress" => "fa-solid fa-spinner fa-spin",
+            "assigned" => "fa-solid fa-user-check",
+            "pending" => "fa-solid fa-clock",
+            _ => "fa-solid fa-circle-check"
+        };
+        var toastLabel = toastStatus switch {
+            "completed" => "COMPLETED",
+            "in progress" => "IN PROGRESS",
+            "assigned" => "ASSIGNED",
+            "pending" => "PENDING",
+            _ => "UPDATED"
+        };
+
+        <div id="ssToast" style="background:@toastBg; border:1px solid @(toastColor)33; border-left:4px solid @toastColor; border-radius:12px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; gap:16px; animation:ssToastIn 0.4s cubic-bezier(0.16,1,0.3,1); position:relative; box-shadow:0 10px 25px -5px rgba(0,0,0,0.05);">
+            <div style="width:42px; height:42px; border-radius:10px; background:@toastColor; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px @(toastColor)44;">
+                <i class="@toastIcon" style="color:#fff; font-size:1.2rem;"></i>
+            </div>
+            <div style="flex:1;">
+                <div style="font-size:0.7rem; font-weight:800; letter-spacing:0.1em; color:@toastColor; margin-bottom:3px; text-transform:uppercase;">@toastLabel</div>
+                <div style="font-size:0.92rem; font-weight:600; color:#1e293b; line-height:1.4;">@toastMsg</div>
+            </div>
+            <button onclick="document.getElementById('ssToast').style.display='none'" style="background:none; border:none; cursor:pointer; color:#94a3b8; font-size:1.2rem; padding:8px; transition:color 0.2s;" onmouseover="this.style.color='#64748b'" onmouseout="this.style.color='#94a3b8'">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(toastErr))
+    {
+        <div id="ssToastErr" style="background:linear-gradient(135deg,#fef2f2,#fee2e2); border:1px solid rgba(239,68,68,0.15); border-left:4px solid #ef4444; border-radius:12px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; gap:16px; animation:ssToastIn 0.4s cubic-bezier(0.16,1,0.3,1); position:relative; box-shadow:0 10px 25px -5px rgba(0,0,0,0.05);">
+            <div style="width:42px; height:42px; border-radius:10px; background:#ef4444; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px rgba(239,68,68,0.3);">
+                <i class="fa-solid fa-triangle-exclamation" style="color:#fff; font-size:1.1rem;"></i>
+            </div>
+            <div style="flex:1;">
+                <div style="font-size:0.7rem; font-weight:800; letter-spacing:0.1em; color:#ef4444; margin-bottom:3px; text-transform:uppercase;">ERROR</div>
+                <div style="font-size:0.92rem; font-weight:600; color:#1e293b; line-height:1.4;">@toastErr</div>
+            </div>
+            <button onclick="document.getElementById('ssToastErr').style.display='none'" style="background:none; border:none; cursor:pointer; color:#94a3b8; font-size:1.2rem; padding:8px;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    }
+
+    <section class="vr-sa-panel" style="border-radius:16px; overflow:hidden; border:none; box-shadow:0 4px 20px rgba(0,0,0,0.04);">
+        <div class="vr-sa-panel-head" style="padding:24px 28px; background:#fff; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+            <div>
+                <div class="vr-sa-panel-title" style="font-size:1.2rem; font-weight:700; color:#0f172a;">Assigned Tasks</div>
+                <div class="vr-sa-panel-sub" style="font-size:0.88rem; color:#64748b;">Manage and update your assigned service requests.</div>
+            </div>
+            <div style="position: relative; flex:1; max-width:320px;">
+                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size:0.9rem;"></i>
+                <input type="text" id="vrSaSearchInput" class="vr-sa-filter-input" placeholder="Search guests, rooms, or services..." 
+                       style="padding:10px 16px 10px 42px; border-radius:10px; border:1px solid #e2e8f0; width:100%; font-size:0.9rem; transition:all 0.2s;" />
+            </div>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern">
+            <table class="vr-sa-table" style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f8fafc;">
+                        <th style="padding:16px 28px; text-align:left; font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #f1f5f9;">Guest / Service</th>
+                        <th style="padding:16px 28px; text-align:left; font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #f1f5f9;">Room</th>
+                        <th style="padding:16px 28px; text-align:left; font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #f1f5f9;">Status</th>
+                        <th style="padding:16px 28px; text-align:left; font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #f1f5f9;">Timeline</th>
+                        <th style="padding:16px 28px; text-align:right; font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #f1f5f9; width:280px;">Update Status</th>
+                    </tr>
+                </thead>
+                <tbody style="background:#fff;">
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr><td colspan="5" style="padding:60px; text-align:center; color:#94a3b8; font-style:italic;">No assigned requests found.</td></tr>
+                }
+                else
+                {
+                    foreach (var r in Model)
+                    {
+                        var statusLower = (r.Status ?? "").ToLower();
+                        var statusColor = statusLower switch {
+                            "completed" => "#059669",
+                            "in progress" => "#2563eb",
+                            "assigned" => "#7c3aed",
+                            "pending" => "#d97706",
+                            _ => "#64748b"
+                        };
+
+                        <tr style="border-bottom:1px solid #f1f5f9; transition:background 0.2s;" onmouseover="this.style.background='#fbfcfe'" onmouseout="this.style.background='#fff'">
+                            <td style="padding:20px 28px;">
+                                <div style="font-weight:700; color:#1e293b; font-size:0.95rem;">@(string.IsNullOrWhiteSpace(r.GuestName) ? "—" : r.GuestName)</div>
+                                <div style="font-size:0.82rem; color:#64748b; margin-top:2px;">@(string.IsNullOrWhiteSpace(r.ServiceName) ? "—" : r.ServiceName)</div>
+                            </td>
+                            <td style="padding:20px 28px;">
+                                <div style="font-size:0.9rem; color:#0f172a; font-weight:700;">@(string.IsNullOrWhiteSpace(r.RoomNumber) ? "—" : r.RoomNumber)</div>
+                            </td>
+                            <td style="padding:20px 28px;">
+                                <div style="font-size:0.9rem; font-weight:700; color:@statusColor;">
+                                    @r.Status
+                                </div>
+                            </td>
+                            <td style="padding:20px 28px;">
+                                <div style="font-size:0.88rem; color:#475569; display:flex; align-items:center; gap:6px;">
+                                    <i class="fa-regular fa-calendar" style="color:#94a3b8;"></i>
+                                    @r.RequestDateUtc.ToString("MMM dd, HH:mm")
+                                </div>
+                            </td>
+                            <td style="padding:20px 28px; text-align:right;">
+                                <form method="post" action="@Url.Action("UpdateStatus","ServiceStaff", new { id = r.RequestId })" style="display:flex; gap:10px; align-items:center; justify-content:flex-end;">
+                                    @Html.AntiForgeryToken()
+                                    <div style="position:relative; width:160px;">
+                                        <select name="status" class="vr-sa-filter-input" style="width:100%; padding:8px 12px; font-size:0.85rem; border-radius:8px; border:1px solid #e2e8f0; appearance:none; background-color:#fff; cursor:pointer;">
+                                            <option value="Pending" selected="@(string.Equals(r.Status, "Pending", StringComparison.OrdinalIgnoreCase))">Pending</option>
+                                            <option value="Assigned" selected="@(string.Equals(r.Status, "Assigned", StringComparison.OrdinalIgnoreCase))">Assigned</option>
+                                            <option value="In Progress" selected="@(string.Equals(r.Status, "In Progress", StringComparison.OrdinalIgnoreCase))">In Progress</option>
+                                            <option value="Completed" selected="@(string.Equals(r.Status, "Completed", StringComparison.OrdinalIgnoreCase))">Completed</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); pointer-events:none; font-size:0.7rem; color:#94a3b8;"></i>
+                                    </div>
+                                    <button type="submit" class="vr-sa-btn" style="padding:8px 16px; font-size:0.85rem; border-radius:8px; height:auto; min-width:auto; background:#1e293b; color:#fff; border:none; font-weight:600; cursor:pointer; transition:all 0.2s;">
+                                        Update
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<style>
+    @@keyframes ssToastIn {
+        from { opacity: 0; transform: translateY(-20px) scale(0.98); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .vr-sa-filter-input:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1) !important;
+        outline: none;
+    }
+    .vr-sa-btn:hover {
+        background: #334155 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .vr-sa-btn:active {
+        transform: translateY(0);
+    }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-dismiss toasts with smooth exit
+            const toast = document.getElementById('ssToast');
+            if (toast) {
+                setTimeout(function() {
+                    toast.style.transition = 'all 0.5s cubic-bezier(0.16,1,0.3,1)';
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-20px) scale(0.95)';
+                    setTimeout(() => { toast.style.display = 'none'; }, 500);
+                }, 5000);
+            }
+            const toastErr = document.getElementById('ssToastErr');
+            if (toastErr) {
+                setTimeout(function() {
+                    toastErr.style.transition = 'all 0.5s cubic-bezier(0.16,1,0.3,1)';
+                    toastErr.style.opacity = '0';
+                    toastErr.style.transform = 'translateY(-20px) scale(0.95)';
+                    setTimeout(() => { toastErr.style.display = 'none'; }, 500);
+                }, 6000);
+            }
+
+            // Enhanced search filter
+            const searchInput = document.getElementById('vrSaSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const filter = this.value.toLowerCase();
+                    const rows = document.querySelectorAll('.vr-sa-table tbody tr');
+                    
+                    rows.forEach(row => {
+                        if (row.cells.length === 1) return;
+                        const text = row.innerText.toLowerCase();
+                        if (text.includes(filter)) {
+                            row.style.display = '';
+                            row.style.animation = 'fadeIn 0.3s ease';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+}

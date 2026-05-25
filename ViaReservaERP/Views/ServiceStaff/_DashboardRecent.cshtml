@@ -1,0 +1,50 @@
+@model List<ViaReservaERP.Models.ServiceStaff.AssignedServiceRequestRow>
+
+<tbody>
+    @foreach (var r in Model)
+    {
+
+        <tr>
+            <td>
+                <div style="font-weight: 500; color: #0b122d;">@(string.IsNullOrWhiteSpace(r.GuestName) ? "—" : r.GuestName)</div>
+                <div style="font-size: 0.8rem; color: #64748b;">@(string.IsNullOrWhiteSpace(r.ServiceName) ? "—" : r.ServiceName)</div>
+            </td>
+            <td>
+                <div style="font-size: 0.9rem; color: #0b122d; font-weight: 700;">@(string.IsNullOrWhiteSpace(r.RoomNumber) ? "—" : r.RoomNumber)</div>
+            </td>
+            <td>
+                <div style="font-size: 0.9rem; font-weight: 800; color: #0b122d;">@r.Status</div>
+            </td>
+            <td>
+                <div style="font-size: 0.9rem; color: #0b122d;">@r.RequestDateUtc.ToString("MMM dd, HH:mm")</div>
+            </td>
+            <td>
+                <div class="vr-sa-actions">
+                    <form method="post" action="@Url.Action("UpdateStatus", "ServiceStaff")" style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@r.RequestId" />
+                        @if (r.Status == "Pending" || r.Status == "Assigned")
+                        {
+                            <input type="hidden" name="status" value="In Progress" />
+                            <button type="submit" class="vr-sa-iconbtn" title="Start Task" style="color: #3b82f6;"><i class="fa-solid fa-play"></i></button>
+                        }
+                        else if (r.Status == "In Progress")
+                        {
+                            <input type="hidden" name="status" value="Completed" />
+                            <button type="submit" class="vr-sa-iconbtn" title="Complete Task" style="color: #22c55e;"><i class="fa-solid fa-check"></i></button>
+                        }
+                    </form>
+                </div>
+            </td>
+        </tr>
+    }
+
+    @if (Model.Count == 0)
+    {
+        <tr>
+            <td colspan="5" class="text-center py-5">
+                <div class="vr-sa-cell-muted">No assigned requests yet.</div>
+            </td>
+        </tr>
+    }
+</tbody>

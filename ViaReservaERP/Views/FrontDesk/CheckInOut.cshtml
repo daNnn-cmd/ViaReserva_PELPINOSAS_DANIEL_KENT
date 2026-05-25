@@ -1,0 +1,254 @@
+@model ViaReservaERP.Models.FrontDesk.CheckInOutViewModel
+@{
+    ViewData["Title"] = "Check-in/out";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <section class="vr-sa-panel vr-sa-reports-filters mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Operational Date</div>
+                <div class="vr-sa-panel-sub">Select a date to manage arrivals and departures.</div>
+            </div>
+        </div>
+
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Date</div>
+                <input class="vr-sa-filter-input" type="date" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter" style="grid-column: 1 / -1;">
+                <div class="vr-sa-report-card-actions">
+                    <button type="submit" class="vr-sa-btn">Load</button>
+                    <a class="vr-sa-btn" href="@Url.Action("CheckInOut", "FrontDesk")">Today</a>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <div class="row g-4">
+        <div class="col-12">
+            <section class="vr-sa-panel h-100">
+                <div class="vr-sa-panel-head">
+                    <div>
+                        <div class="vr-sa-panel-title">Arrivals</div>
+                        <div class="vr-sa-panel-sub">Check in guests scheduled for @Model.Date.ToString("MMM dd")</div>
+                    </div>
+                </div>
+
+                <div class="vr-sa-table-wrap vr-sa-table-modern">
+                    <table class="vr-sa-table">
+                        <thead>
+                            <tr>
+                                <th>Guest & Reservation</th>
+                                <th>Room</th>
+                                <th>Stay Dates</th>
+                                <th class="vr-sa-cell-center">Status</th>
+                                <th style="width: 160px;">Control</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model.Arrivals)
+                            {
+                                var room = r.ReservationRooms?.FirstOrDefault()?.Room?.RoomNumber;
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 700; color: #0f172a;">@r.Guest?.FullName</div>
+                                        <div class="vr-sa-cell-muted" style="font-size: 0.82rem;">Reservation #@r.ReservationId</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 700; color: #0b122d;">@(string.IsNullOrWhiteSpace(room) ? "—" : room)</div>
+                                    </td>
+                                    <td class="vr-sa-cell-muted">
+                                        <div style="font-weight: 600; color: #475569;">@r.CheckInDate?.ToString("MMM dd") -> @r.CheckOutDate?.ToString("MMM dd")</div>
+                                        <div style="font-size: 0.75rem;">@r.CheckInDate?.ToString("yyyy-MM-dd")</div>
+                                    </td>
+                                    <td class="vr-sa-cell-center">
+                                        <div style="font-weight: 500; color: @(r.Status == "Checked In" ? "#22c55e" : r.Status == "Cancelled" ? "#ef4444" : "#f59e0b");">
+                                            @(r.Status ?? "Pending")
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="vr-sa-actions" style="justify-content: flex-end;">
+                                            @if (r.Status == "Confirmed" || r.Status == "Pending")
+                                            {
+                                                <form method="post" action="@Url.Action("CheckIn", "FrontDesk", new { id = r.ReservationId })" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="vr-sa-btn" style="height: 36px; padding: 0 12px;">Check In</button>
+                                                </form>
+                                                <form method="post" action="@Url.Action("CancelReservation", "FrontDesk", new { id = r.ReservationId })" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="vr-sa-iconbtn" title="Cancel & Refund" style="color: #ef4444;" onclick="return confirm('Cancel reservation #@r.ReservationId?')">
+                                                        <i class="fa-regular fa-circle-xmark"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <span class="vr-sa-cell-muted">—</span>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                            @if (!Model.Arrivals.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="vr-sa-cell-muted" style="text-align:center; padding: 18px;">No arrivals.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12">
+            <section class="vr-sa-panel h-100">
+                <div class="vr-sa-panel-head">
+                    <div>
+                        <div class="vr-sa-panel-title">In-House</div>
+                        <div class="vr-sa-panel-sub">Guests currently checked in</div>
+                    </div>
+                </div>
+
+                <div class="vr-sa-table-wrap vr-sa-table-modern">
+                    <table class="vr-sa-table">
+                        <thead>
+                            <tr>
+                                <th>Guest & Reservation</th>
+                                <th>Room</th>
+                                <th>Stay Dates</th>
+                                <th class="vr-sa-cell-center">Status</th>
+                                <th style="width: 160px;">Control</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model.InHouse)
+                            {
+                                var room = r.ReservationRooms?.FirstOrDefault()?.Room?.RoomNumber;
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 700; color: #0f172a;">@r.Guest?.FullName</div>
+                                        <div class="vr-sa-cell-muted" style="font-size: 0.82rem;">Reservation #@r.ReservationId</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 700; color: #0b122d;">@(string.IsNullOrWhiteSpace(room) ? "—" : room)</div>
+                                    </td>
+                                    <td class="vr-sa-cell-muted">
+                                        <div style="font-weight: 600; color: #475569;">@r.CheckInDate?.ToString("MMM dd") -> @r.CheckOutDate?.ToString("MMM dd")</div>
+                                        <div style="font-size: 0.75rem;">@r.CheckOutDate?.ToString("yyyy-MM-dd")</div>
+                                    </td>
+                                    <td class="vr-sa-cell-center">
+                                        <div style="font-weight: 500; color: #22c55e;">@(r.Status ?? "Checked In")</div>
+                                    </td>
+                                    <td>
+                                        <div class="vr-sa-actions" style="justify-content: flex-end; gap: 4px;">
+                                            <form method="post" action="@Url.Action("CheckOut", "FrontDesk", new { id = r.ReservationId })" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="vr-sa-btn" style="height: 36px; padding: 0 12px;">Check Out</button>
+                                            </form>
+                                            <button type="button" class="vr-sa-iconbtn" title="Extend Stay" style="color: #2563eb;"
+                                                    onclick="document.getElementById('extendModal-@r.ReservationId').style.display='flex'">
+                                                <i class="fa-solid fa-calendar-plus"></i>
+                                            </button>
+                                            <form method="post" action="@Url.Action("EarlyCheckOut", "FrontDesk", new { id = r.ReservationId })" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="vr-sa-iconbtn" title="Early Check-out" style="color: #7c3aed;"
+                                                        onclick="return confirm('Early check-out reservation #@r.ReservationId? Unused nights will be refunded.')">
+                                                    <i class="fa-solid fa-right-from-bracket"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        <!-- Inline Extend Modal -->
+                                        <div id="extendModal-@r.ReservationId" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;">
+                                            <div style="background:#fff;border-radius:12px;max-width:400px;width:90%;margin:auto;padding:28px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+                                                <div style="font-weight:700;font-size:1.05rem;margin-bottom:12px;color:#0b122d;">
+                                                    <i class="fa-solid fa-calendar-plus" style="color:#2563eb;margin-right:6px;"></i> Extend Stay — #@r.ReservationId
+                                                </div>
+                                                <div style="font-size:0.85rem;color:#64748b;margin-bottom:16px;">Current checkout: @r.CheckOutDate?.ToString("MMM dd, yyyy")</div>
+                                                <form method="post" action="@Url.Action("ExtendStay", "FrontDesk", new { id = r.ReservationId })">
+                                                    @Html.AntiForgeryToken()
+                                                    <div style="margin-bottom:16px;">
+                                                        <label style="font-weight:600;font-size:0.85rem;display:block;margin-bottom:6px;">New Check-out Date</label>
+                                                        <input type="date" name="newCheckOutDate" required min="@r.CheckOutDate?.AddDays(1).ToString("yyyy-MM-dd")"
+                                                               style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.95rem;" />
+                                                    </div>
+                                                    <div style="display:flex;gap:8px;justify-content:flex-end;">
+                                                        <button type="button" class="vr-sa-btn" onclick="document.getElementById('extendModal-@r.ReservationId').style.display='none'">Cancel</button>
+                                                        <button type="submit" class="vr-sa-btn" style="background:#2563eb;color:#fff;">Confirm</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                            @if (!Model.InHouse.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="vr-sa-cell-muted" style="text-align:center; padding: 18px;">No in-house stays.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12">
+            <section class="vr-sa-panel h-100">
+                <div class="vr-sa-panel-head">
+                    <div>
+                        <div class="vr-sa-panel-title">Departures</div>
+                        <div class="vr-sa-panel-sub">Guests scheduled for checkout @Model.Date.ToString("MMM dd")</div>
+                    </div>
+                </div>
+
+                <div class="vr-sa-table-wrap vr-sa-table-modern">
+                    <table class="vr-sa-table">
+                        <thead>
+                            <tr>
+                                <th>Guest & Reservation</th>
+                                <th>Room</th>
+                                <th>Stay Dates</th>
+                                <th class="vr-sa-cell-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model.Departures)
+                            {
+                                var room = r.ReservationRooms?.FirstOrDefault()?.Room?.RoomNumber;
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 700; color: #0f172a;">@r.Guest?.FullName</div>
+                                        <div class="vr-sa-cell-muted" style="font-size: 0.82rem;">Reservation #@r.ReservationId</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 700; color: #0b122d;">@(string.IsNullOrWhiteSpace(room) ? "—" : room)</div>
+                                    </td>
+                                    <td class="vr-sa-cell-muted">
+                                        <div style="font-weight: 600; color: #475569;">@r.CheckInDate?.ToString("MMM dd") -> @r.CheckOutDate?.ToString("MMM dd")</div>
+                                        <div style="font-size: 0.75rem;">@r.CheckOutDate?.ToString("yyyy-MM-dd")</div>
+                                    </td>
+                                    <td class="vr-sa-cell-center">
+                                        <div style="font-weight: 500; color: @(r.Status == "Checked Out" ? "#22c55e" : r.Status == "Checked In" ? "#f59e0b" : "#64748b");">
+                                            @(r.Status ?? "")
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                            @if (!Model.Departures.Any())
+                            {
+                                <tr>
+                                    <td colspan="4" class="vr-sa-cell-muted" style="text-align:center; padding: 18px;">No departures.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>

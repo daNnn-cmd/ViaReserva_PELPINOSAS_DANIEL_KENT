@@ -1,0 +1,115 @@
+## Ignore Visual Studio temporary files, build results, and
+## user-specific settings
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (MonoDevelop/ActiveState ActiveGo)
+*.userprefs
+
+# Mono auto generated files
+*.pidb
+
+# Nesting profiles
+*.nestingprofiles
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio 2015/2017/2019/2022 cache directory
+.vs/
+# Generated files
+Generated\ Files/
+
+# MSTest test Results
+[Test]Result*/
+[Build]Context*/
+
+# NUnit
+/*.VisualState.xml
+
+# Build Office Add-ins
+~*
+
+# ReSharper is a .NET coding add-in
+_ReSharper*/
+*.[ReSharper].user
+*.DotSettings.user
+
+# JustCode printer preferences file
+.JustCode
+
+# TeamCity build version control directory
+.teamcity/
+
+# DotCover is a Code Coverage Tool
+*.dotCover
+
+# AxoCover code coverage values
+.axoCover/*
+!.axoCover/settings.json
+
+# Coverlet code coverage results
+ecreport.json
+coverage.json
+coverage.cobertura.xml
+
+# Visual Studio image cache
+ImageLibrary/
+
+# Nuget Packages
+*.nupkg
+# The packages folder can be ignored because of Package Restore
+**/[Pp]ackages/*
+# except build/, which is used as an MSBuild target.
+!**/[Pp]ackages/build/
+# Uncomment if necessary:
+# !**/[Pp]ackages/buildTransitive/
+# If using NuGet legacy packages.config, manual exclusion is required
+# !**/[Pp]ackages/repositories.config
+
+# NuGet Symbol Source Packages
+*.snupkg
+
+# BROWSER LINK
+.browserlink
+
+# Microsoft Fakes
+FakesAssemblies/
+
+# GhostDoc Local backup folder
+*~backup
+
+# Node.js / Webpack
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# Databases
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Operating System Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store

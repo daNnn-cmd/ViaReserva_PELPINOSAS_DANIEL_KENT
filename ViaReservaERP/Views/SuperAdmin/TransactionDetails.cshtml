@@ -1,0 +1,89 @@
+@model ViaReservaERP.Models.SuperAdmin.TransactionDetailsViewModel
+@{
+    ViewData["Title"] = "Transaction Details";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Transaction ID</div>
+                    <div class="vr-sa-report-stat-value">#@Model.Id</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-hashtag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">@Model.Source reference</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Amount</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.Amount.ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-money-bill-wave"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Recorded value</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Status</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.Status) ? "—" : Model.Status)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-spinner"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Processing state</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Property</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.CompanyName) ? "—" : Model.CompanyName)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-hotel"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Tenant scope</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Related monitoring contexts</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" href="@Url.Action("TransactionPaymentHistory", "SuperAdmin", new { source = Model.Source, id = Model.Id })" title="Payment History">History</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("TransactionAuditLogs", "SuperAdmin", new { source = Model.Source, id = Model.Id })" title="Audit Logs">Audit</a>
+                @if (Model.ReservationId.HasValue)
+                {
+                    <a class="vr-sa-export-btn" href="@Url.Action("TransactionLinkedReservation", "SuperAdmin", new { source = Model.Source, id = Model.Id })" title="Linked Reservation">Res</a>
+                }
+                <a class="vr-sa-btn" href="@Url.Action("Accounting", "SuperAdmin")"><i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Transaction Overview</div>
+                <div class="vr-sa-panel-sub">Financial record details and provider context for @Model.Source #@Model.Id.</div>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Description</div>
+                <div class="vr-sa-panel-sub">Record summary / narrative.</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-audit-sub">@(string.IsNullOrWhiteSpace(Model.Description) ? "—" : Model.Description)</div>
+    </section>
+</div>

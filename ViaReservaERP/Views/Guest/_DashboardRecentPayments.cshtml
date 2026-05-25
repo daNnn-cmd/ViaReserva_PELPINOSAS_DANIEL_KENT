@@ -1,0 +1,13 @@
+@model List<ViaReservaERP.Models.GuestPortal.PaymentRow>
+
+@foreach (var p in Model)
+{
+    <tr>
+        <td style="font-weight:600;">#@p.PaymentId</td>
+        <td class="vr-gp-cell-muted">@(p.ReservationId.HasValue ? $"#{p.ReservationId}" : "—")</td>
+        <td>@p.PaymentMethod</td>
+        <td>@p.Status</td>
+        <td style="text-align:right;font-weight:600;">₱ @p.Amount.ToString("N2")</td>
+        <td class="vr-gp-cell-muted">@p.CreatedAtUtc.ToString("MMM dd, HH:mm")</td>
+    </tr>
+}

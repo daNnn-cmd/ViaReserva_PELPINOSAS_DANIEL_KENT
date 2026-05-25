@@ -1,0 +1,412 @@
+@model ViaReservaERP.Models.SuperAdmin.ReportsAnalyticsViewModel
+@{
+    ViewData["Title"] = "Reports & Analytics";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Total Revenue</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.TotalRevenue.ToString("N0")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-peso-sign"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Succeeded payments</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Total Reservations</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalReservations</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-calendar-check"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Across all tenants</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Active Subscriptions</div>
+                    <div class="vr-sa-report-stat-value">@Model.ActiveSubscriptions</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-regular fa-credit-card"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Platform SaaS billing</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Compliance Score</div>
+                    <div class="vr-sa-report-stat-value">@((Model.ComplianceScore * 100m).ToString("0.0"))%</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-shield-halved"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Inverse of incident ratio</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Export Options</div>
+            <div class="vr-sa-reports-summary-sub">Global executive report</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" title="PDF" href="@Url.Action("Revenue", "SuperAdminReports", new { format = "pdf" })">PDF</a>
+                <a class="vr-sa-export-btn" title="CSV" href="@Url.Action("Revenue", "SuperAdminReports", new { format = "csv" })">CSV</a>
+                <a class="vr-sa-export-btn" title="Excel" href="@Url.Action("Revenue", "SuperAdminReports", new { format = "xlsx" })">XLSX</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Filters</div>
+                <div class="vr-sa-panel-sub">Filter executive analytics by date range and company.</div>
+            </div>
+        </div>
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Start</div>
+                <input class="vr-sa-filter-input" type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">End</div>
+                <input class="vr-sa-filter-input" type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Company</div>
+                <select class="vr-sa-filter-input" name="companyId">
+                    <option value="" selected="@(Model.CompanyId == null)">All companies</option>
+                    @foreach (var c in Model.Companies)
+                    {
+                        <option value="@c.CompanyId" selected="@(Model.CompanyId == c.CompanyId)">@c.CompanyName</option>
+                    }
+                </select>
+            </div>
+            <div class="vr-sa-filter" style="align-self:end;">
+                <button class="vr-sa-btn" type="submit">Apply</button>
+            </div>
+        </form>
+    </section>
+
+
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Executive Analytics</div>
+                <div class="vr-sa-panel-sub">Operational, financial, subscription, workflow and compliance trends.</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-chart-split" style="margin-top:12px;">
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Revenue trend</div>
+                <div id="vrSaRptRevenue" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">New subscriptions</div>
+                <div id="vrSaRptNewSubs" class="vr-sa-apex"></div>
+            </div>
+        </div>
+
+        <div class="vr-sa-chart-split" style="margin-top:14px;">
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Subscription churn</div>
+                <div id="vrSaRptChurn" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Workflow volume</div>
+                <div id="vrSaRptWorkflow" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Compliance trend</div>
+                <div id="vrSaRptCompliance" class="vr-sa-apex"></div>
+            </div>
+        </div>
+
+        <div class="vr-sa-chart-split" style="margin-top:14px;">
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Plan distribution</div>
+                <div id="vrSaRptPlans" class="vr-sa-apex"></div>
+            </div>
+            <div class="vr-sa-chart">
+                <div class="vr-sa-mini-title">Module activity distribution</div>
+                <div id="vrSaRptModules" class="vr-sa-apex"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Multi-Tenant Company Performance Ranking</div>
+                <div class="vr-sa-panel-sub">Comparative analysis of hotel companies by revenue, guest satisfaction, and growth.</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>Company Name</th>
+                        <th class="text-end">Performance / Volume</th>
+                        <th class="text-end">Ratings / Growth</th>
+                        <th class="text-center">Efficiency</th>
+                        <th class="text-center">Status</th>
+                        <th style="width: 80px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.CompanyRankings)
+                    {
+                        var subStatus = (r.SubscriptionStatus ?? "").ToLower();
+                        var subClass = subStatus.Contains("active") ? "vr-sa-status-success" :
+                                       subStatus.Contains("trial") ? "vr-sa-status-info" :
+                                       subStatus.Contains("past_due") ? "vr-sa-status-warning" : "vr-sa-status-neutral";
+
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500; color: #0b122d;">@r.CompanyName</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">Tier: @(subStatus.ToUpper())</div>
+                            </td>
+                            <td class="text-end">
+                                <div style="font-weight: 600; color: #0b122d;">₱ @r.Revenue.ToString("N0")</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">@r.Reservations bookings</div>
+                            </td>
+                            <td class="text-end">
+                                <div style="font-weight: 500; color: #0b122d;"><i class="fa-solid fa-star text-warning me-1"></i> @r.GuestRating.ToString("0.0")</div>
+                                <div style="font-size: 0.8rem; color: #22c55e;">+@((r.GrowthRate * 100m).ToString("0.0"))% growth</div>
+                            </td>
+                            <td class="text-center">
+                                <div style="font-weight: 600; color: #0b122d;">@((r.WorkflowEfficiency * 100m).ToString("0.0"))%</div>
+                                <div style="height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 4px; overflow: hidden;">
+                                    <div style="width: @((r.WorkflowEfficiency * 100m).ToString("0"))%; height: 100%; background: #3b82f6;"></div>
+                                </div>
+                            </td>
+                            <td class="text-center" style="font-weight: 500; color: #475569;">
+                                @r.SubscriptionStatus
+                            </td>
+                            <td>
+                                <div class="vr-sa-actions">
+                                    <a class="vr-sa-iconbtn" href="@Url.Action("Accounting", "SuperAdmin", new { companyId = r.CompanyName })" title="Revenue Details"><i class="fa-solid fa-peso-sign"></i></a>
+                                    <a class="vr-sa-iconbtn" href="@Url.Action("Subscriptions", "SuperAdmin", new { companyId = r.CompanyName })" title="Billing Status"><i class="fa-solid fa-credit-card"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="vr-sa-panel" style="margin-top:14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Forecasting / Trend Analysis</div>
+                <div class="vr-sa-panel-sub">High-level projections derived from current range signals.</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-cards" style="margin-top:12px;">
+            <div class="vr-sa-card">
+                <div class="vr-sa-card-top"><div><div class="vr-sa-card-kicker">Expected monthly revenue</div><div class="vr-sa-card-value">₱ @Model.Forecast.ExpectedMonthlyRevenue.ToString("N0")</div></div><div class="vr-sa-card-icon" style="color: #22c55e;"><i class="fa-solid fa-chart-line"></i></div></div>
+                <div class="vr-sa-card-foot">Scaled from selected range</div>
+            </div>
+            <div class="vr-sa-card">
+                <div class="vr-sa-card-top"><div><div class="vr-sa-card-kicker">Reservation demand forecast</div><div class="vr-sa-card-value">@Model.Forecast.ReservationDemandForecast.ToString("N0")</div></div><div class="vr-sa-card-icon" style="color: #8b5cf6;"><i class="fa-solid fa-brain"></i></div></div>
+                <div class="vr-sa-card-foot">Projected monthly reservation volume</div>
+            </div>
+            <div class="vr-sa-card">
+                <div class="vr-sa-card-top"><div><div class="vr-sa-card-kicker">Subscription renewal forecast</div><div class="vr-sa-card-value">@Model.Forecast.SubscriptionRenewalForecast.ToString("0.0")</div></div><div class="vr-sa-card-icon" style="color: #0ea5e9;"><i class="fa-solid fa-arrows-rotate"></i></div></div>
+                <div class="vr-sa-card-foot">Estimated renewal pressure (signal)</div>
+            </div>
+            <div class="vr-sa-card">
+                <div class="vr-sa-card-top"><div><div class="vr-sa-card-kicker">Operational growth trend</div><div class="vr-sa-card-value">@((Model.Forecast.OperationalGrowthTrend * 100m).ToString("0.0"))%</div></div><div class="vr-sa-card-icon" style="color: #c9a227;"><i class="fa-solid fa-hotel"></i></div></div>
+                <div class="vr-sa-card-foot">Baseline trend estimate</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="vr-sa-reports-grid">
+        <div class="vr-sa-reports-col">
+            <div class="vr-sa-report-card">
+                <div class="vr-sa-report-card-head">
+                    <div>
+                        <div class="vr-sa-report-card-title">Reservation Reports</div>
+                        <div class="vr-sa-report-card-sub">Reservations, status, date range, and totals</div>
+                    </div>
+                    <div class="vr-sa-report-card-meta">Last generated: —</div>
+                </div>
+                <div class="vr-sa-report-card-actions">
+                    <a class="vr-sa-icon-export" title="PDF" href="@Url.Action("Reservations", "SuperAdminReports", new { format = "pdf" })">PDF</a>
+                    <a class="vr-sa-icon-export" title="Excel" href="@Url.Action("Reservations", "SuperAdminReports", new { format = "xlsx" })">XLSX</a>
+                    <a class="vr-sa-icon-export" title="CSV" href="@Url.Action("Reservations", "SuperAdminReports", new { format = "csv" })">CSV</a>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-card">
+                <div class="vr-sa-report-card-head">
+                    <div>
+                        <div class="vr-sa-report-card-title">Subscription Reports</div>
+                        <div class="vr-sa-report-card-sub">Subscriptions, plans, renewals and expiry status</div>
+                    </div>
+                    <div class="vr-sa-report-card-meta">Last generated: —</div>
+                </div>
+                <div class="vr-sa-report-card-actions">
+                    <a class="vr-sa-icon-export" title="PDF" href="@Url.Action("Subscriptions", "SuperAdminReports", new { format = "pdf" })">PDF</a>
+                    <a class="vr-sa-icon-export" title="Excel" href="@Url.Action("Subscriptions", "SuperAdminReports", new { format = "xlsx" })">XLSX</a>
+                    <a class="vr-sa-icon-export" title="CSV" href="@Url.Action("Subscriptions", "SuperAdminReports", new { format = "csv" })">CSV</a>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-card">
+                <div class="vr-sa-report-card-head">
+                    <div>
+                        <div class="vr-sa-report-card-title">Audit Reports</div>
+                        <div class="vr-sa-report-card-sub">System changes with user and IP traceability</div>
+                    </div>
+                    <div class="vr-sa-report-card-meta">Last generated: —</div>
+                </div>
+                <div class="vr-sa-report-card-actions">
+                    <a class="vr-sa-icon-export" title="PDF" href="@Url.Action("Audit", "SuperAdminReports", new { format = "pdf" })">PDF</a>
+                    <a class="vr-sa-icon-export" title="Excel" href="@Url.Action("Audit", "SuperAdminReports", new { format = "xlsx" })">XLSX</a>
+                    <a class="vr-sa-icon-export" title="CSV" href="@Url.Action("Audit", "SuperAdminReports", new { format = "csv" })">CSV</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="vr-sa-reports-col">
+            <div class="vr-sa-report-card">
+                <div class="vr-sa-report-card-head">
+                    <div>
+                        <div class="vr-sa-report-card-title">Revenue Reports</div>
+                        <div class="vr-sa-report-card-sub">Payments, revenue sources, and status overview</div>
+                    </div>
+                    <div class="vr-sa-report-card-meta">Last generated: —</div>
+                </div>
+                <div class="vr-sa-report-card-actions">
+                    <a class="vr-sa-icon-export" title="PDF" href="@Url.Action("Revenue", "SuperAdminReports", new { format = "pdf" })">PDF</a>
+                    <a class="vr-sa-icon-export" title="Excel" href="@Url.Action("Revenue", "SuperAdminReports", new { format = "xlsx" })">XLSX</a>
+                    <a class="vr-sa-icon-export" title="CSV" href="@Url.Action("Revenue", "SuperAdminReports", new { format = "csv" })">CSV</a>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-card">
+                <div class="vr-sa-report-card-head">
+                    <div>
+                        <div class="vr-sa-report-card-title">Financial Reports</div>
+                        <div class="vr-sa-report-card-sub">Income, expenses, and monthly profit breakdown</div>
+                    </div>
+                    <div class="vr-sa-report-card-meta">Last generated: —</div>
+                </div>
+                <div class="vr-sa-report-card-actions">
+                    <a class="vr-sa-icon-export" title="PDF" href="@Url.Action("Financial", "SuperAdminReports", new { format = "pdf" })">PDF</a>
+                    <a class="vr-sa-icon-export" title="Excel" href="@Url.Action("Financial", "SuperAdminReports", new { format = "xlsx" })">XLSX</a>
+                    <a class="vr-sa-icon-export" title="CSV" href="@Url.Action("Financial", "SuperAdminReports", new { format = "csv" })">CSV</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+@{
+    var jsonOpts = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.1"></script>
+<script>
+    (function () {
+        if (!window.ApexCharts) return;
+
+        const palette = {
+            blue: '#1e1b4b',
+            burgundy: '#b21f1f',
+            emerald: '#10b981',
+            gold: '#c9a227',
+            grid: 'rgba(30, 41, 59, 0.05)',
+            muted: '#64748b'
+        };
+
+        function baseOptions() {
+            return {
+                chart: {
+                    toolbar: { show: false },
+                    foreColor: palette.muted,
+                    fontFamily: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial'
+                },
+                grid: { borderColor: palette.grid, strokeDashArray: 4, padding: { left: 6, right: 6 } },
+                legend: { position: 'bottom', fontWeight: 400, markers: { width: 8, height: 8, radius: 8 } },
+                tooltip: { theme: 'light' },
+                dataLabels: { enabled: false }
+            };
+        }
+
+        const rev = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueTrends, jsonOpts));
+        const refd = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RefundTrends, jsonOpts));
+        const newSubs = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SubscriptionTrends, jsonOpts));
+        const churn = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SubscriptionChurnTrends, jsonOpts));
+        const wf = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.WorkflowTrends, jsonOpts));
+        const comp = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ComplianceTrends, jsonOpts));
+        const plans = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PlanDistribution, jsonOpts));
+        const mods = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ModuleActivityDistribution, jsonOpts));
+
+        function series1(cs, name) {
+            if (cs && cs.datasets && cs.datasets[name]) return cs.datasets[name];
+            return (cs && cs.labels) ? cs.labels.map(() => 0) : [];
+        }
+
+        function renderLine(el, cs, name, color) {
+            if (!el) return;
+            const opt = baseOptions();
+            opt.chart.type = 'line';
+            opt.chart.height = 240;
+            opt.stroke = { curve: 'smooth', width: 2.5 };
+            opt.series = [{ name: name, data: series1(cs, name) }];
+            opt.colors = [color];
+            opt.xaxis = { categories: cs.labels || [] };
+            new ApexCharts(el, opt).render();
+        }
+
+        function renderArea(el, cs, name, color) {
+            if (!el) return;
+            const opt = baseOptions();
+            opt.chart.type = 'area';
+            opt.chart.height = 240;
+            opt.stroke = { curve: 'smooth', width: 2.5 };
+            opt.fill = { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.05 } };
+            opt.series = [{ name: name, data: series1(cs, name) }];
+            opt.colors = [color];
+            opt.xaxis = { categories: cs.labels || [] };
+            new ApexCharts(el, opt).render();
+        }
+
+        function renderBar(el, cs, name, color) {
+            if (!el) return;
+            const opt = baseOptions();
+            opt.chart.type = 'bar';
+            opt.chart.height = 240;
+            opt.plotOptions = { bar: { borderRadius: 6, columnWidth: '60%' } };
+            opt.series = [{ name: name, data: series1(cs, name) }];
+            opt.colors = [color];
+            opt.xaxis = { categories: cs.labels || [] };
+            new ApexCharts(el, opt).render();
+        }
+
+        renderArea(document.querySelector('#vrSaRptRevenue'), rev, 'Revenue', palette.emerald);
+        renderBar(document.querySelector('#vrSaRptNewSubs'), newSubs, 'New Subscriptions', '#0ea5e9');
+        renderBar(document.querySelector('#vrSaRptChurn'), churn, 'Churn', '#f97316');
+        renderLine(document.querySelector('#vrSaRptWorkflow'), wf, 'Workflow Volume', '#22c55e');
+        renderLine(document.querySelector('#vrSaRptCompliance'), comp, 'Compliance', '#a855f7');
+        renderBar(document.querySelector('#vrSaRptPlans'), plans, 'Active', '#06b6d4');
+        renderBar(document.querySelector('#vrSaRptModules'), mods, 'Events', '#64748b');
+    })();
+</script>
+}

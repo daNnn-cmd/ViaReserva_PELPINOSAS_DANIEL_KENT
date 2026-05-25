@@ -1,0 +1,112 @@
+@model ViaReservaERP.Models.Admin.AccountingDashboardViewModel
+@{
+    ViewData["Title"] = "Accounting Folio";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="vr-sa-card" style="border-bottom: 4px solid #10b981;">
+            <div class="vr-sa-card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="vr-sa-ico vr-sa-ico-green"><i class="fa-solid fa-vault"></i></div>
+                    <span class="text-success" style="font-weight: 700;">+12.5%</span>
+                </div>
+                <div class="vr-sa-card-val">₱ @Model.TotalRevenue.ToString("N2")</div>
+                <div class="vr-sa-card-label">Total Settled Revenue</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="vr-sa-card" style="border-bottom: 4px solid #f59e0b;">
+            <div class="vr-sa-card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="vr-sa-ico vr-sa-ico-orange"><i class="fa-solid fa-hourglass-half"></i></div>
+                </div>
+                <div class="vr-sa-card-val">₱ @Model.PendingPayments.ToString("N2")</div>
+                <div class="vr-sa-card-label">Pending Guest Balances</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="vr-sa-card" style="border-bottom: 4px solid #3b82f6;">
+            <div class="vr-sa-card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="vr-sa-ico vr-sa-ico-blue"><i class="fa-solid fa-file-invoice"></i></div>
+                </div>
+                <div class="vr-sa-card-val">@Model.RecentPayments.Count</div>
+                <div class="vr-sa-card-label">Payments Processed (MTD)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div class="vr-sa-panel-title">Accounting Ledger</div>
+                <div class="vr-sa-panel-sub">Recent financial transactions and operational costs</div>
+            </div>
+            <div class="vr-sa-table-wrap mt-4">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Reference</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th class="text-end">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in Model.RecentTransactions)
+                        {
+                            <tr>
+                                <td class="vr-sa-cell-muted">@t.TransactionDate.ToString("MMM dd, yyyy")</td>
+                                <td style="font-weight: 600;">#@t.ReferenceId</td>
+                                <td class="vr-sa-cell-main">@t.Description</td>
+                                <td>
+                                    <span class="vr-sa-badge @(t.Type == "Income" ? "vr-sa-badge-active" : "vr-sa-badge-danger")">
+                                        @t.Type
+                                    </span>
+                                </td>
+                                <td class="text-end" style="font-weight: 700; color: @(t.Type == "Income" ? "#10b981" : "#ef4444");">
+                                    @(t.Type == "Income" ? "+" : "-") ₱ @t.Amount?.ToString("N2")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div class="vr-sa-panel-title">Recent Payments</div>
+            </div>
+            <div class="mt-4">
+                @foreach (var p in Model.RecentPayments)
+                {
+                    <div class="d-flex align-items-center p-3 mb-3" style="background: rgba(15, 23, 42, 0.02); border-radius: 12px; border: 1px solid rgba(15, 23, 42, 0.05);">
+                        <div class="vr-sa-ico vr-sa-ico-slate me-3" style="width: 40px; height: 40px; font-size: 1rem;">
+                            <i class="fa-solid fa-credit-card"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div style="font-weight: 700; color: #1e293b; font-size: 0.9rem;">₱ @p.Amount?.ToString("N2")</div>
+                            <div class="vr-sa-cell-muted" style="font-size: 0.75rem;">@p.PaymentMethod — @p.CreatedAt.ToString("g")</div>
+                        </div>
+                        <span class="vr-sa-badge vr-sa-badge-active" style="font-size: 0.65rem;">@p.Status</span>
+                    </div>
+                }
+            </div>
+            <div class="d-grid mt-4">
+                <a href="@Url.Action("Reports", "Admin")" class="vr-sa-btn w-100" style="justify-content: center;">
+                    <i class="fa-solid fa-file-export me-2"></i> View Full Reports
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

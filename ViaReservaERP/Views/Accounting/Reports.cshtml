@@ -1,0 +1,324 @@
+@model ViaReservaERP.Models.Accounting.AccountantReportsViewModel
+@{
+    ViewData["Title"] = "Financial Reports";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <!-- Date Filtering Panel -->
+    <div class="vr-sa-panel mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Reports Overview</div>
+                <div class="vr-sa-panel-sub">Analyze property performance and financial summaries</div>
+            </div>
+        </div>
+
+        <form method="get" class="p-4 pt-0">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <div class="vr-sa-filter-label" style="font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Start Date</div>
+                    <input class="vr-sa-input" type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" style="height: 42px;" />
+                </div>
+                <div class="col-md-4">
+                    <div class="vr-sa-filter-label" style="font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">End Date</div>
+                    <input class="vr-sa-input" type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" style="height: 42px;" />
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="vr-sa-btn vr-sa-btn-primary flex-fill" style="height: 42px;">Apply Filter</button>
+                    <a class="vr-sa-btn flex-fill d-flex align-items-center justify-content-center" href="@Url.Action("Reports", "Accounting")" style="height: 42px;">Reset</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Financial Performance Stats -->
+    <div class="vr-sa-reports-stats mb-4">
+        <div class="vr-sa-report-stat" style="border-bottom: 3px solid #10b981;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Revenue</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.Revenue.ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.08);"><i class="fa-solid fa-vault"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Total payments processed</div>
+        </div>
+
+        <div class="vr-sa-report-stat" style="border-bottom: 3px solid #3b82f6;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Gross Income</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.TotalIncome.ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-arrow-trend-up"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Operational inflows</div>
+        </div>
+
+        <div class="vr-sa-report-stat" style="border-bottom: 3px solid #ef4444;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Operational Expense</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.TotalExpense.ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.08);"><i class="fa-solid fa-arrow-trend-down"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Property expenditures</div>
+        </div>
+
+        <div class="vr-sa-report-stat" style="border-bottom: 3px solid #c9a227;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Net Result</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.Net.ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #c9a227; background: rgba(201, 162, 39, 0.08);"><i class="fa-solid fa-scale-balanced"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Bottom line performance</div>
+        </div>
+
+        <div class="vr-sa-report-stat" style="border-bottom: 3px solid #64748b;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Total VAT (12%)</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.TotalTax.ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #64748b; background: rgba(100, 116, 139, 0.08);"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Total taxes collected</div>
+        </div>
+
+        <div class="vr-sa-report-stat" style="border-bottom: 3px solid #64748b;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Service Charge (10%)</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.TotalServiceCharge.ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #64748b; background: rgba(100, 116, 139, 0.08);"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Hospitality service fees</div>
+        </div>
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Export Options</div>
+            <div class="vr-sa-reports-summary-sub">Download financial report</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" title="PDF" href="@Url.Action("ExportFinancials", "Accounting", new { startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), format = "pdf" })">PDF</a>
+                <a class="vr-sa-export-btn" title="Excel" href="@Url.Action("ExportFinancials", "Accounting", new { startDate = Model.StartDate.ToString("yyyy-MM-dd"), endDate = Model.EndDate.ToString("yyyy-MM-dd"), format = "xlsx" })">XLSX</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Trends -->
+    <section class="vr-sa-panel mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Business Intelligence Trends</div>
+                <div class="vr-sa-panel-sub">Visualizing revenue and operational volume over the selected period</div>
+            </div>
+        </div>
+        <div class="p-4 pt-0">
+            <div class="vr-sa-chart-split">
+                <div class="vr-sa-chart">
+                    <div class="vr-sa-mini-title">Revenue Growth</div>
+                    <div id="vrAccountantRptRevenue" class="vr-sa-apex"></div>
+                </div>
+                <div class="vr-sa-chart">
+                    <div class="vr-sa-mini-title">Booking Volume</div>
+                    <div id="vrAccountantRptBookings" class="vr-sa-apex"></div>
+                </div>
+                <div class="vr-sa-chart">
+                    <div class="vr-sa-mini-title">Service Requests</div>
+                    <div id="vrAccountantRptServices" class="vr-sa-apex"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Forecasting -->
+    <section class="vr-sa-panel mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Performance Forecasting</div>
+                <div class="vr-sa-panel-sub">Estimated projections based on current period velocity</div>
+            </div>
+        </div>
+        <div class="p-4 pt-0">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="vr-sa-card">
+                        <div class="vr-sa-card-top">
+                            <div>
+                                <div class="vr-sa-card-kicker">Projected Monthly Revenue</div>
+                                <div class="vr-sa-card-value">₱ @Model.Forecast.ProjectedRevenue.ToString("N2")</div>
+                            </div>
+                            <div class="vr-sa-card-icon" style="color: #10b981;"><i class="fa-solid fa-chart-line"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="vr-sa-card">
+                        <div class="vr-sa-card-top">
+                            <div>
+                                <div class="vr-sa-card-kicker">Projected Reservations</div>
+                                <div class="vr-sa-card-value">@Model.Forecast.ProjectedReservations</div>
+                            </div>
+                            <div class="vr-sa-card-icon" style="color: #3b82f6;"><i class="fa-solid fa-calendar-check"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="vr-sa-card">
+                        <div class="vr-sa-card-top">
+                            <div>
+                                <div class="vr-sa-card-kicker">Estimated Growth Velocity</div>
+                                <div class="vr-sa-card-value">@((Model.Forecast.GrowthRate * 100m).ToString("0.0"))%</div>
+                            </div>
+                            <div class="vr-sa-card-icon" style="color: #f59e0b;"><i class="fa-solid fa-gauge-high"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Operations Snapshot & Master List -->
+    <div class="row g-4">
+        <div class="col-lg-12">
+            <section class="vr-sa-panel h-100">
+                <div class="vr-sa-panel-head">
+                    <div>
+                        <div class="vr-sa-panel-title">Recent Transactions</div>
+                        <div class="vr-sa-panel-sub">Property-wide financial inflows and outflows</div>
+                    </div>
+                    <div class="vr-sa-pill">Latest 25 Entries</div>
+                </div>
+
+                <div class="vr-sa-table-wrap vr-sa-table-modern">
+                    <table class="vr-sa-table">
+                        <thead>
+                            <tr>
+                                <th>Transaction Date</th>
+                                <th class="vr-sa-cell-center">Type</th>
+                                <th>Description / Reference</th>
+                                <th class="vr-sa-cell-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in Model.Recent)
+                            {
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 500; color: #0b122d;">@t.TransactionDate.ToString("MMM dd, yyyy")</div>
+                                        <div class="vr-sa-cell-muted" style="font-size: 0.82rem;">@t.TransactionDate.ToString("hh:mm tt")</div>
+                                    </td>
+                                    <td class="vr-sa-cell-center">
+                                        <div style="font-weight: 500; color: #475569; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.025em;">@t.Type</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 500; color: #0b122d;">@t.Description</div>
+                                        @if (!string.IsNullOrWhiteSpace(t.ReferenceId?.ToString()))
+                                        {
+                                            <div class="vr-sa-cell-muted" style="font-size: 0.82rem;">REF: #@t.ReferenceId (@t.ReferenceType)</div>
+                                        }
+                                    </td>
+                                    <td class="vr-sa-cell-right">
+                                        <div style="font-weight: 800; color: @(t.Type == "Income" ? "#10b981" : "#ef4444"); font-size: 0.95rem;">
+                                            @(t.Type == "Income" ? "+" : "-") ₱ @t.Amount?.ToString("N2")
+                                        </div>
+                                        @if (t.TaxAmount > 0 || t.ServiceCharge > 0)
+                                        {
+                                            <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">
+                                                VAT: ₱@t.TaxAmount?.ToString("N2") | SC: ₱@t.ServiceCharge?.ToString("N2")
+                                            </div>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            @if (!Model.Recent.Any())
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <div class="vr-sa-cell-muted">
+                                            <i class="fa-solid fa-receipt mb-3 d-block" style="font-size: 2rem; opacity: 0.2;"></i>
+                                            No transactions found for the selected range.
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+@{
+    var jsonOpts = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.1"></script>
+<script>
+    (function () {
+        if (!window.ApexCharts) return;
+
+        const palette = {
+            blue: '#1e1b4b',
+            gold: '#c9a227',
+            emerald: '#10b981',
+            grid: 'rgba(30, 41, 59, 0.05)',
+            muted: '#64748b'
+        };
+
+        function baseOptions() {
+            return {
+                chart: {
+                    toolbar: { show: false },
+                    foreColor: palette.muted,
+                    fontFamily: 'Inter, system-ui, sans-serif'
+                },
+                grid: { borderColor: palette.grid, strokeDashArray: 4 },
+                legend: { position: 'bottom' },
+                tooltip: { theme: 'light' },
+                dataLabels: { enabled: false }
+            };
+        }
+
+        const rev = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueAnalytics, jsonOpts));
+        const res = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ReservationAnalytics, jsonOpts));
+        const svc = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ServiceAnalytics, jsonOpts));
+
+        function renderArea(el, cs, name, color) {
+            if (!document.querySelector(el)) return;
+            const opt = baseOptions();
+            opt.chart.type = 'area';
+            opt.chart.height = 240;
+            opt.stroke = { curve: 'smooth', width: 2.5 };
+            opt.fill = { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.05 } };
+            opt.series = [{ name: name, data: cs.datasets[Object.keys(cs.datasets)[0]] }];
+            opt.colors = [color];
+            opt.xaxis = { categories: cs.labels || [] };
+            new ApexCharts(document.querySelector(el), opt).render();
+        }
+
+        function renderBar(el, cs, name, color) {
+            if (!document.querySelector(el)) return;
+            const opt = baseOptions();
+            opt.chart.type = 'bar';
+            opt.chart.height = 240;
+            opt.plotOptions = { bar: { borderRadius: 6, columnWidth: '60%' } };
+            opt.series = [{ name: name, data: cs.datasets[Object.keys(cs.datasets)[0]] }];
+            opt.colors = [color];
+            opt.xaxis = { categories: cs.labels || [] };
+            new ApexCharts(document.querySelector(el), opt).render();
+        }
+
+        renderArea('#vrAccountantRptRevenue', rev, 'Revenue (₱)', palette.emerald);
+        renderBar('#vrAccountantRptBookings', res, 'Bookings', palette.blue);
+        renderBar('#vrAccountantRptServices', svc, 'Service Requests', palette.gold);
+    })();
+</script>
+}
+</div>

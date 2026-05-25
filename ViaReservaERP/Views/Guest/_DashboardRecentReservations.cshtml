@@ -1,0 +1,14 @@
+@model List<ViaReservaERP.Models.GuestPortal.ReservationRow>
+
+@foreach (var r in Model)
+{
+    <tr>
+        <td class="vr-gp-cell-muted">@r.CheckInDate?.ToString("MMM dd") → @r.CheckOutDate?.ToString("MMM dd")</td>
+        <td>@(string.IsNullOrWhiteSpace(r.RoomNumber) ? "—" : r.RoomNumber)</td>
+        <td>@r.Status</td>
+        <td style="text-align:right;font-weight:600;">₱ @r.TotalAmount.ToString("N2")</td>
+        <td>
+            <a class="vr-gp-link" href="@Url.Action("ReservationDetails","Guest", new { id = r.ReservationId })">Details</a>
+        </td>
+    </tr>
+}

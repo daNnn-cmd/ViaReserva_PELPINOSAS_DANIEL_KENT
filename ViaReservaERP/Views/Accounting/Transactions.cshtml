@@ -1,0 +1,204 @@
+@model ViaReservaERP.Models.Accounting.AccountantTransactionsViewModel
+@{
+    ViewData["Title"] = "Transactions";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+
+
+    <section class="vr-sa-panel mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">New Entry</div>
+                <div class="vr-sa-panel-sub">Transactions are company-scoped and audit logged.</div>
+            </div>
+        </div>
+
+        <div class="p-4 pt-0">
+            <form method="post" action="@Url.Action("CreateTransaction", "Accounting")" class="mt-4">
+                @Html.AntiForgeryToken()
+
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <label class="vr-sa-label">Type</label>
+                        <select class="vr-sa-input" name="Type" required>
+                            <option value="Income" selected="@(Model.New.Type == "Income")">Income</option>
+                            <option value="Expense" selected="@(Model.New.Type == "Expense")">Expense</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="vr-sa-label">Date</label>
+                        <input class="vr-sa-input" type="date" name="TransactionDate" value="@Model.New.TransactionDate.ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="vr-sa-label">Amount</label>
+                        <input class="vr-sa-input" type="number" step="0.01" min="0.01" name="Amount" value="@Model.New.Amount" required />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="vr-sa-label">Reference Id (optional)</label>
+                        <input class="vr-sa-input" type="number" name="ReferenceId" value="@Model.New.ReferenceId" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="vr-sa-label">Reference Type (optional)</label>
+                        <input class="vr-sa-input" name="ReferenceType" value="@Model.New.ReferenceType" placeholder="e.g. Reservation, ServiceRequest" />
+                    </div>
+                    <div class="col-md-8">
+                        <label class="vr-sa-label">Description</label>
+                        <input class="vr-sa-input" name="Description" value="@Model.New.Description" placeholder="What is this for?" />
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-5 pt-4 border-top">
+                    <button type="submit" class="vr-sa-btn vr-sa-btn-primary px-5" style="height: 48px; font-weight: 700;">
+                        <i class="fa-solid fa-floppy-disk me-2"></i> Record
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="vr-sa-panel vr-sa-reports-filters mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Filters</div>
+                <div class="vr-sa-panel-sub">Filter ledger by type and date range.</div>
+            </div>
+        </div>
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Type</div>
+                <select class="vr-sa-filter-input" name="type">
+                    <option value="" selected="@(string.IsNullOrWhiteSpace(Model.FilterType))">All</option>
+                    <option value="Income" selected="@(Model.FilterType == "Income")">Income</option>
+                    <option value="Expense" selected="@(Model.FilterType == "Expense")">Expense</option>
+                </select>
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Start</div>
+                <input class="vr-sa-filter-input" type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">End</div>
+                <input class="vr-sa-filter-input" type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter" style="grid-column: 1 / -1;">
+                <div class="vr-sa-report-card-actions">
+                    <button type="submit" class="vr-sa-btn">Apply Filters</button>
+                    <a class="vr-sa-btn" href="@Url.Action("Transactions", "Accounting")">Reset</a>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <!-- Master List -->
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Accounting Ledger</div>
+                <div class="vr-sa-panel-sub">Permanent record of property-wide financial activities</div>
+            </div>
+            <div class="vr-sa-pill">@Model.TotalRows Entries Total</div>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>Transaction Date</th>
+                        <th>Reference Details</th>
+                        <th>Ledger Description</th>
+                        <th class="vr-sa-cell-center">Type</th>
+                        <th class="vr-sa-cell-right">Net Amount</th>
+                        <th style="width: 100px;" class="vr-sa-cell-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Rows)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500; color: #0b122d;">@t.TransactionDate.ToString("MMM dd, yyyy")</div>
+                                <div class="vr-sa-cell-muted" style="font-size: 0.82rem;">@t.TransactionDate.ToString("hh:mm tt")</div>
+                            </td>
+                            <td>
+                                @if (t.ReferenceId.HasValue)
+                                {
+                                    <div style="font-weight: 500; color: #0b122d;">#@t.ReferenceId</div>
+                                    <div class="vr-sa-cell-muted" style="font-size: 0.82rem;">@t.ReferenceType</div>
+                                }
+                                else
+                                {
+                                    <span class="vr-sa-cell-muted" style="font-size: 0.82rem;">Manual Entry</span>
+                                }
+                            </td>
+                            <td>
+                                <div style="font-weight: 500; color: #0b122d;">@t.Description</div>
+                            </td>
+                            <td class="vr-sa-cell-center">
+                                <div style="font-weight: 500; color: #475569; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.025em;">@t.Type</div>
+                            </td>
+                            <td class="vr-sa-cell-right">
+                                <div style="font-weight: 800; color: @(t.Type == "Income" ? "#10b981" : "#ef4444"); font-size: 0.95rem;">
+                                    @(t.Type == "Income" ? "+" : "-") ₱ @t.Amount?.ToString("N2")
+                                </div>
+                                @if (t.TaxAmount > 0 || t.ServiceCharge > 0)
+                                {
+                                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">
+                                        Includes VAT: ₱@t.TaxAmount?.ToString("N2")<br/>
+                                        SC: ₱@t.ServiceCharge?.ToString("N2")
+                                    </div>
+                                }
+                            </td>
+                            <td class="vr-sa-cell-center">
+                                <div class="vr-sa-actions">
+                                    <a class="vr-sa-iconbtn" title="View Audit Trail" href="@Url.Action("AuditLogs", "Accounting", new { search = t.Description })">
+                                        <i class="fa-solid fa-magnifying-glass-chart"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Rows.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="vr-sa-cell-muted">
+                                    <i class="fa-solid fa-receipt mb-3 d-block" style="font-size: 2rem; opacity: 0.2;"></i>
+                                    No ledger entries found for the selected criteria.
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <div class="vr-sa-pagination" style="margin-top: 14px;">
+                <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.Page - 1) * Model.PageSize + 1, Model.TotalRows))–@(Math.Min(Model.Page * Model.PageSize, Model.TotalRows)) of @Model.TotalRows</div>
+                <div class="vr-sa-pagination-actions">
+                    @{
+                        var prev = Model.Page - 1;
+                        var next = Model.Page + 1;
+                    }
+                    <a class="vr-sa-pagebtn" href="@Url.Action("Transactions", "Accounting", new { type = Model.FilterType, startDate = Model.StartDate, endDate = Model.EndDate, pageSize = Model.PageSize, page = prev })" aria-disabled="@(Model.Page <= 1)">Previous</a>
+
+                    @for (var i = 1; i <= Model.TotalPages; i++)
+                    {
+                        if (Model.TotalPages > 8 && i > 3 && i < Model.TotalPages - 2 && Math.Abs(i - Model.Page) > 1)
+                        {
+                            if (i == 4 || i == Model.TotalPages - 3) { <span class="vr-sa-cell-muted px-2">...</span> }
+                            continue;
+                        }
+                        <a class="vr-sa-pagebtn @(i == Model.Page ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("Transactions", "Accounting", new { type = Model.FilterType, startDate = Model.StartDate, endDate = Model.EndDate, pageSize = Model.PageSize, page = i })">@i</a>
+                    }
+
+                    <a class="vr-sa-pagebtn" href="@Url.Action("Transactions", "Accounting", new { type = Model.FilterType, startDate = Model.StartDate, endDate = Model.EndDate, pageSize = Model.PageSize, page = next })" aria-disabled="@(Model.Page >= Model.TotalPages)">Next</a>
+                </div>
+            </div>
+        }
+    </section>
+</div>

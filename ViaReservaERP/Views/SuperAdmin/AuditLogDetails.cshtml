@@ -1,0 +1,101 @@
+@model ViaReservaERP.Models.SuperAdmin.AuditLogDetailsViewModel
+@{
+    ViewData["Title"] = "Log Details";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Event Timestamp</div>
+                    <div class="vr-sa-report-stat-value" style="font-size: 1.25rem;">@Model.TimestampUtc.ToString("MMM dd, yyyy")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-clock"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">@Model.TimestampUtc.ToString("HH:mm:ss") UTC</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Actor</div>
+                    <div class="vr-sa-report-stat-value" style="font-size: 1.25rem;">@(string.IsNullOrWhiteSpace(Model.UserName) ? "System" : Model.UserName)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-user-shield"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">@(string.IsNullOrWhiteSpace(Model.UserRole) ? "Automated" : Model.UserRole)</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Target Module</div>
+                    <div class="vr-sa-report-stat-value" style="font-size: 1.25rem;">@(string.IsNullOrWhiteSpace(Model.Module) ? "General" : Model.Module)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-layer-group"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Scope: @(string.IsNullOrWhiteSpace(Model.CompanyName) ? "Platform" : Model.CompanyName)</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Audit ID</div>
+                    <div class="vr-sa-report-stat-value" style="font-size: 1.25rem;">#@Model.AuditId</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-hashtag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Immutable Record</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Return to listing</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-btn" href="@Url.Action("AuditLogs", "SuperAdmin")"><i class="fa-solid fa-arrow-left me-2"></i> Back to Logs</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel" style="margin-top: 14px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Operational Context</div>
+                <div class="vr-sa-panel-sub">Network origin, device metadata, and entity targeting.</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-report-grid" style="margin-top:12px;">
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Action Type</div><div class="vr-sa-report-sub">Standardized event</div></div><div class="vr-sa-report-stat-value" style="color: #0b122d;">@(string.IsNullOrWhiteSpace(Model.Action) ? "—" : Model.Action)</div></div>
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Affected Entity</div><div class="vr-sa-report-sub">Database table</div></div><div class="vr-sa-report-stat-value" style="color: #0b122d;">@(string.IsNullOrWhiteSpace(Model.TableName) ? "—" : Model.TableName)</div></div>
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Record Reference</div><div class="vr-sa-report-sub">Primary key</div></div><div class="vr-sa-report-stat-value" style="color: #0b122d;">@(Model.RecordId.HasValue ? Model.RecordId.Value.ToString() : "—")</div></div>
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">IP Address</div><div class="vr-sa-report-sub">Client network</div></div><div class="vr-sa-report-stat-value" style="color: #0b122d;">@(string.IsNullOrWhiteSpace(Model.IpAddress) ? "—" : Model.IpAddress)</div></div>
+            <div class="vr-sa-report-row" style="grid-column: span 2;"><div><div class="vr-sa-report-title">User Agent</div><div class="vr-sa-report-sub">Device &amp; Browser Fingerprint</div></div><div class="vr-sa-report-stat-value" style="color: #64748b; font-size: 0.9rem; font-weight: 400;">@(string.IsNullOrWhiteSpace(Model.UserAgent) ? "—" : Model.UserAgent)</div></div>
+        </div>
+    </section>
+
+    <div class="vr-sa-panels" style="margin-top:14px;">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Initial State</div>
+                    <div class="vr-sa-panel-sub">Snapshot prior to the change</div>
+                </div>
+            </div>
+            <div class="vr-sa-codeblock" style="margin-top:12px; font-family: 'JetBrains Mono', 'Cascadia Code', monospace; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.85rem; color: #334155; white-space:pre-wrap;">@(string.IsNullOrWhiteSpace(Model.OldValues) ? "No previous state recorded" : Model.OldValues)</div>
+        </section>
+        
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Final State</div>
+                    <div class="vr-sa-panel-sub">Snapshot after the change</div>
+                </div>
+            </div>
+            <div class="vr-sa-codeblock" style="margin-top:12px; font-family: 'JetBrains Mono', 'Cascadia Code', monospace; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.85rem; color: #0f172a; white-space:pre-wrap;">@(string.IsNullOrWhiteSpace(Model.NewValues) ? "No updated state recorded" : Model.NewValues)</div>
+        </section>
+    </div>
+</div>

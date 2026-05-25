@@ -1,0 +1,144 @@
+@model ViaReservaERP.Models.Accounting.AccountantAuditLogsViewModel
+@{
+    ViewData["Title"] = "Accounting Audit Logs";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <section class="vr-sa-panel vr-sa-reports-filters mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Audit Trail Filters</div>
+                <div class="vr-sa-panel-sub">Accounting-related events (transactions, payments, accounting).</div>
+            </div>
+        </div>
+
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Search</div>
+                <input class="vr-sa-filter-input" name="search" value="@Model.Search" placeholder="User, action or module" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Start Date</div>
+                <input class="vr-sa-filter-input" type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">End Date</div>
+                <input class="vr-sa-filter-input" type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <div class="vr-sa-filter" style="grid-column: 1 / -1;">
+                <div class="vr-sa-report-card-actions">
+                    <button type="submit" class="vr-sa-btn">Apply Filters</button>
+                    <a class="vr-sa-btn" href="@Url.Action("AuditLogs", "Accounting")">Reset</a>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head mb-4">
+            <div>
+                <div class="vr-sa-panel-title">Audit Stream</div>
+                <div class="vr-sa-panel-sub">Latest 200 entries within range.</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>User / Role</th>
+                        <th>Module</th>
+                        <th>Action</th>
+                        <th style="width: 400px;">Data Changes (Old -> New)</th>
+                        <th class="text-center">Status</th>
+                        <th>Timestamp</th>
+                        <th style="width: 80px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Rows)
+                    {
+
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500; color: #0b122d;">@(string.IsNullOrWhiteSpace(r.UserName) ? "System" : r.UserName)</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">@(string.IsNullOrWhiteSpace(r.UserRole) ? "Automated" : r.UserRole)</div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 600; color: #0b122d; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.025em;">@r.Module</div>
+                            </td>
+                            <td style="font-weight: 500; color: #0b122d;">@r.Action</td>
+                            <td>
+                                <div class="vr-sa-audit-diff">
+                                    @if (!string.IsNullOrWhiteSpace(r.OldValues))
+                                    {
+                                        <div class="vr-sa-audit-val old" title="Old Values">
+                                            <span class="vr-sa-audit-label">OLD</span>
+                                            <code>@r.OldValues</code>
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(r.NewValues))
+                                    {
+                                        <div class="vr-sa-audit-val new" title="New Values">
+                                            <span class="vr-sa-audit-label">NEW</span>
+                                            <code>@r.NewValues</code>
+                                        </div>
+                                    }
+                                    @if (string.IsNullOrWhiteSpace(r.OldValues) && string.IsNullOrWhiteSpace(r.NewValues))
+                                    {
+                                        <div style="color: #94a3b8; font-style: italic; font-size: 0.8rem;">No data changes recorded.</div>
+                                    }
+                                </div>
+                            </td>
+                            <td class="text-center" style="color: #0b122d; font-weight: 500;">
+                                @r.Status
+                            </td>
+                            <td>
+                                <div style="font-size: 0.9rem; color: #0b122d;">@r.Timestamp.ToString("MMM dd, yyyy")</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">@r.Timestamp.ToString("HH:mm:ss")</div>
+                            </td>
+                            <td>
+                                <div class="vr-sa-actions">
+                                    <button type="button" class="vr-sa-iconbtn" data-bs-toggle="collapse" data-bs-target="#audit-@r.AuditId" title="View Details"><i class="fa-solid fa-magnifying-glass-chart"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="collapse" id="audit-@r.AuditId">
+                            <td colspan="7" class="bg-light p-3">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="p-3 bg-white rounded border border-light">
+                                            <div class="small fw-bold text-uppercase text-muted mb-2">Previous State</div>
+                                            <code class="small text-break">@(string.IsNullOrWhiteSpace(r.OldValues) ? "{ \"data\": \"none\" }" : r.OldValues)</code>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="p-3 bg-white rounded border border-light">
+                                            <div class="small fw-bold text-uppercase text-muted mb-2">New State</div>
+                                            <code class="small text-break text-success">@(string.IsNullOrWhiteSpace(r.NewValues) ? "{ \"data\": \"none\" }" : r.NewValues)</code>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <div class="small text-muted">
+                                            <i class="fa-solid fa-network-wired me-1"></i> Origin IP: @r.IpAddress
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Rows.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="vr-sa-cell-muted">No audit logs found for the selected range.</div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

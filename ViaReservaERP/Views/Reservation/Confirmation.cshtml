@@ -1,0 +1,65 @@
+@{
+    ViewData["Title"] = "Booking Confirmation";
+}
+
+<div class="vr-book">
+    <div class="vr-book-container">
+        <div class="vr-book-header">
+            <div class="vr-book-brand">
+                <img src="~/img/viareserva-logo.png" alt="ViaReserva" class="vr-book-logo" />
+                <div>
+                    <div class="vr-book-kicker">Confirmation</div>
+                    <h1 class="vr-book-title">Booking confirmed</h1>
+                </div>
+            </div>
+
+            <a class="vr-book-link" href="@Url.Action("Index", "Home")">Back to home</a>
+        </div>
+
+        <div class="vr-book-grid">
+            <div>
+                <div class="vr-book-card">
+                    <div class="vr-book-muted" style="font-weight:800;">Reservation</div>
+                    <div class="vr-book-section-title">#@ViewData["ReservationId"]</div>
+                    <div class="vr-book-muted" style="margin-top:6px;">@ViewData["Company"]</div>
+
+                    <div class="vr-book-card" style="background:#f8fafc;border-color:rgba(15,23,42,0.08);margin-top:14px;">
+                        <div class="vr-book-fields" style="margin-top:0;">
+                            <div>
+                                <div class="vr-book-summary-label">Payment status</div>
+                                <div class="vr-book-summary-value">@ViewData["PaymentStatus"]</div>
+                            </div>
+                            <div>
+                                <div class="vr-book-summary-label">Amount</div>
+                                <div class="vr-book-summary-value">₱@(((decimal)(ViewData["Amount"] ?? 0m)).ToString("N2"))</div>
+                            </div>
+                            <div>
+                                <div class="vr-book-summary-label">Email</div>
+                                <div class="vr-book-summary-sub">@ViewData["Email"]</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vr-book-actions">
+                        <a class="vr-book-btn vr-book-btn-primary" href="@Url.Action("Dashboard", "Guest")">Go to Guest Portal</a>
+                    </div>
+                </div>
+            </div>
+
+            <aside>
+                <div class="vr-book-summary">
+                    <div>
+                        <div class="vr-book-muted" style="font-weight:800;">Next steps</div>
+                        <div class="vr-book-section-title">What happens now</div>
+                    </div>
+
+                    <div class="vr-book-card" style="background:#f8fafc;border-color:rgba(15,23,42,0.08);margin-top:14px;">
+                        - You can view your reservation in the Guest Portal.
+                        <div style="margin-top:8px;">- Service requests and workflow tracking will update automatically.</div>
+                        <div style="margin-top:8px;">- A receipt can be downloaded from Payments history.</div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</div>

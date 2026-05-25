@@ -1,0 +1,1894 @@
+@using ViaReservaERP.Models
+@model ViaReservaERP.Models.Reservations.BookReservationViewModel
+@{
+    ViewData["Title"] = "Book Reservation";
+    ViewData["PageSubtitle"] = "Find your perfect stay";
+    var bookingUiDataJson = ViewData["BookingUiDataJson"] as string ?? "{}";
+    var stripePublishableKey = ViewData["StripePublishableKey"] as string ?? string.Empty;
+    var currentUserEmail = User?.Identity?.IsAuthenticated == true ? (User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? string.Empty) : string.Empty;
+    var isAuthenticated = User?.Identity?.IsAuthenticated == true;
+    var isGuest = isAuthenticated && User.HasRoleId(6);
+    if (isGuest)
+    {
+        Layout = "~/Views/Shared/_GuestLayout.cshtml";
+        ViewData["BodyClass"] = "";
+    }
+    else
+    {
+        ViewData["BodyClass"] = "vr-book-body";
+    }
+}
+
+<style>
+    /* Premium SaaS overrides for Booking Page */
+    :root {
+        --vr-navy: #0f2d57;
+        --vr-gold: #c5a365;
+        --vr-blue: #1e40af;
+        --vr-light: #f8fafc;
+    }
+    .vr-book-body {
+        background-color: var(--vr-light);
+        font-family: 'Inter', sans-serif;
+    }
+    .vr-book {
+        padding: 40px 20px 80px;
+        min-height: 100vh;
+    }
+    .vr-book-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    /* Header */
+    .vr-book-header {
+        background: linear-gradient(135deg, var(--vr-navy) 0%, var(--vr-blue) 100%);
+        border-radius: 20px;
+        padding: 40px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(15,45,87,0.15);
+        display: flex;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .vr-book-header::after {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        background: url('/img/login-bg-modern.png') no-repeat center center;
+        background-size: cover;
+        opacity: 0.15;
+        mix-blend-mode: overlay;
+        pointer-events: none;
+    }
+    .vr-book-brand {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        position: relative;
+        z-index: 2;
+    }
+    .vr-book-logo {
+        height: 60px;
+        background: white;
+        padding: 10px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .vr-book-kicker {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 800;
+        color: var(--vr-gold);
+        margin-bottom: 5px;
+    }
+    .vr-book-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 0;
+
+
+
+
+    /* Service Card Specifics */
+    .vr-service-card {
+        padding: 12px 20px !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        min-height: 80px;
+        gap: 15px;
+        border: 2px solid #e2e8f0;
+    }
+    .vr-service-icon {
+        width: 45px;
+        height: 45px;
+        background: #f1f5f9;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: var(--vr-gold);
+        transition: background 0.3s;
+    }
+    .vr-book-option-selected .vr-service-icon {
+        background: rgba(197,163,101,0.15);
+    }
+    .vr-service-body {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: left;
+    }
+
+
+        font-weight: 800;
+        margin: 0;
+        color: white;
+    }
+    /* Grid Layout */
+    .vr-book-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 30px;
+        align-items: start;
+    }
+    /* Cards */
+    .vr-book-card {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(15,45,87,0.05);
+        border: 1px solid rgba(15,45,87,0.05);
+        margin-bottom: 20px;
+    }
+    /* Progress Bar */
+    .vr-book-progress {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .vr-book-progress-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--vr-navy);
+        margin-top: 5px;
+    }
+    .vr-book-pills {
+        display: flex;
+        gap: 8px;
+    }
+    .vr-book-pill {
+        min-width: 78px;
+        height: 44px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        background: var(--vr-light);
+        color: #64748b;
+        transition: all 0.3s;
+        border: 1px solid rgba(15,45,87,0.10);
+        flex-direction: column;
+        line-height: 1.1;
+        cursor: pointer;
+        user-select: none;
+    }
+    .vr-book-pill .vr-book-pill-num {
+        font-size: 0.85rem;
+        font-weight: 900;
+    }
+    .vr-book-pill .vr-book-pill-label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        opacity: 0.9;
+    }
+    .vr-book-pill-active {
+        background: var(--vr-navy);
+        color: white;
+        box-shadow: 0 4px 10px rgba(15,45,87,0.2);
+        border-color: rgba(15,45,87,0.25);
+    }
+    .vr-book-pill-complete {
+        background: rgba(34,197,94,0.10);
+        color: #16a34a;
+        border-color: rgba(34,197,94,0.25);
+        box-shadow: none;
+    }
+    .vr-book-pill-disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+    /* Typography */
+    .vr-book-section-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--vr-navy);
+    }
+    .vr-book-muted {
+        color: #64748b;
+        font-size: 0.95rem;
+    }
+    /* Options (Hotels, Rooms, Services) */
+    .vr-book-select-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+    .vr-book-option {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .vr-book-option:hover {
+        border-color: rgba(197,163,101,0.5);
+        background: #fdfcfa;
+        transform: translateY(-2px);
+    }
+    .vr-book-option-selected {
+        border-color: var(--vr-navy);
+        background: #f8fafc;
+        box-shadow: 0 4px 15px rgba(15,45,87,0.08);
+    }
+    .vr-book-option-title {
+        font-weight: 700;
+        color: var(--vr-navy);
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+    }
+    .vr-book-option-sub {
+        color: #64748b;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+    /* Image Card Specifics */
+    .vr-image-card {
+        padding: 0;
+        overflow: hidden;
+        flex-direction: column;
+        align-items: stretch;
+        min-height: 220px;
+        border: 2px solid #e2e8f0;
+    }
+    .vr-card-img-wrap {
+        height: 160px;
+        position: relative;
+        overflow: hidden;
+    }
+    .vr-card-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s;
+    }
+    .vr-image-card:hover .vr-card-img-wrap img {
+        transform: scale(1.05);
+    }
+    .vr-card-img-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(15,45,87,0.85) 0%, rgba(15,45,87,0.3) 50%, transparent 100%);
+    }
+    .vr-card-img-title {
+        position: absolute;
+        bottom: 15px;
+        left: 15px;
+        right: 15px;
+        color: white;
+        font-weight: 800;
+        font-size: 1.15rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .vr-card-img-price {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: var(--vr-gold);
+        color: var(--vr-navy);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: 800;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .vr-card-body-simple {
+        padding: 15px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background: white;
+    }
+    .vr-room-card-tag {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #64748b;
+        background: #f1f5f9;
+        padding: 4px 10px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+    }
+    .vr-book-option-selected {
+        border-color: var(--vr-gold);
+        background: #fdfcfa;
+        box-shadow: 0 8px 25px rgba(197,163,101,0.15);
+    }
+    .vr-book-option-selected .vr-card-img-overlay {
+        background: linear-gradient(to top, var(--vr-navy) 0%, rgba(15,45,87,0.4) 100%);
+    }
+    /* Forms */
+    .vr-book-fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+    }
+    .vr-book-field label {
+        font-weight: 600;
+        color: var(--vr-navy);
+        margin-bottom: 8px;
+        display: block;
+    }
+    .vr-book-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+        font-family: inherit;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .vr-book-input:focus {
+        outline: none;
+        border-color: var(--vr-gold);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(197,163,101,0.2);
+    }
+    /* Buttons */
+    .vr-book-actions {
+        margin-top: 30px;
+        display: flex;
+        justify-content: flex-end;
+    }
+    .vr-book-btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .vr-book-btn-primary {
+        background: var(--vr-navy);
+        color: white;
+    }
+    .vr-book-btn-primary:hover {
+        background: var(--vr-blue);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(15,45,87,0.2);
+    }
+    .vr-book-btn-danger {
+        background: var(--vr-gold);
+        color: var(--vr-navy);
+    }
+    .vr-book-btn-danger:hover {
+        background: #d4b57b;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(197,163,101,0.3);
+    }
+    .vr-book-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    .vr-book-page-indicator {
+        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 800;
+        align-self: center;
+        margin: 0 6px;
+    }
+    .vr-book-page-dots {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+    }
+    .vr-book-page-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        border: 1px solid rgba(15,45,87,0.10);
+        cursor: pointer;
+    }
+    .vr-book-page-dot-active {
+        background: var(--vr-navy);
+        border-color: rgba(15,45,87,0.25);
+    }
+    .vr-book-link {
+        color: var(--vr-gold);
+        background: none;
+        border: none;
+        font-weight: 700;
+        text-decoration: underline;
+        cursor: pointer;
+        padding: 0;
+    }
+    .vr-book-link:hover {
+        color: #d4b57b;
+    }
+    /* Sidebar Summary */
+    .vr-book-summary {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(15,45,87,0.05);
+        border: 1px solid rgba(15,45,87,0.05);
+        position: sticky;
+        top: 20px;
+    }
+    .vr-book-summary-badge {
+        background: rgba(197,163,101,0.1);
+        color: var(--vr-gold);
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+    .vr-book-summary-row {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #e2e8f0;
+    }
+    .vr-book-summary-label {
+        font-weight: 800;
+        color: var(--vr-navy);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    .vr-book-summary-value {
+        font-weight: 700;
+        color: #334155;
+        font-size: 1.05rem;
+    }
+    .vr-book-summary-sub {
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+    @@media (max-width: 992px) {
+        .vr-book-grid {
+            grid-template-columns: 1fr;
+        }
+        .vr-book-summary {
+            position: relative;
+            top: 0;
+        }
+        .vr-book-fields {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="vr-book">
+    <div class="vr-book-container">
+        <div class="vr-book-header">
+            <div class="vr-book-brand">
+                <img src="~/img/viareserva-logo.png" alt="ViaReserva" class="vr-book-logo" />
+                <div>
+                    <div class="vr-book-kicker">Booking</div>
+                    <h1 class="vr-book-title">Book your stay</h1>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="vr-book-grid">
+            <div>
+                <div class="vr-book-card">
+                    <div class="vr-book-progress">
+                        <div>
+                            <div class="vr-book-muted" style="font-weight:800;">Progress</div>
+                            <div id="bkStepTitle" class="vr-book-progress-title">Step 1: Choose a hotel</div>
+                        </div>
+
+                        <div class="vr-book-pills" aria-label="Steps">
+                            <div id="bkStepPill1" class="vr-book-pill vr-book-pill-active" role="button" tabindex="0" data-step="1">
+                                <div class="vr-book-pill-num">1</div>
+                                <div class="vr-book-pill-label">Hotel</div>
+                            </div>
+                            <div id="bkStepPill2" class="vr-book-pill" role="button" tabindex="0" data-step="2">
+                                <div class="vr-book-pill-num">2</div>
+                                <div class="vr-book-pill-label">Room</div>
+                            </div>
+                            <div id="bkStepPill3" class="vr-book-pill" role="button" tabindex="0" data-step="3">
+                                <div class="vr-book-pill-num">3</div>
+                                <div class="vr-book-pill-label">Extras</div>
+                            </div>
+                            <div id="bkStepPill4" class="vr-book-pill" role="button" tabindex="0" data-step="4">
+                                <div class="vr-book-pill-num">4</div>
+                                <div class="vr-book-pill-label">Guest</div>
+                            </div>
+                            <div id="bkStepPill5" class="vr-book-pill" role="button" tabindex="0" data-step="5">
+                                <div class="vr-book-pill-num">5</div>
+                                <div class="vr-book-pill-label">Review</div>
+                            </div>
+                            <div id="bkStepPill6" class="vr-book-pill" role="button" tabindex="0" data-step="6">
+                                <div class="vr-book-pill-num">6</div>
+                                <div class="vr-book-pill-label">Payment</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="bkForm" style="margin-top:14px;" asp-action="Book" asp-controller="Reservation" method="post">
+                    @Html.AntiForgeryToken()
+
+                    @if (!ViewContext.ModelState.IsValid)
+                    {
+                        <div class="vr-book-card" style="background:#fef2f2;border-color:#fca5a5;margin-bottom:14px;">
+                            <div style="font-weight:800;color:#dc2626;margin-bottom:6px;">Booking Error</div>
+                            <div asp-validation-summary="All" class="text-danger" style="font-size:14px;"></div>
+                        </div>
+                    }
+
+                    <input asp-for="CompanyId" id="bkCompanyId" type="hidden" />
+
+                    <input type="hidden" id="bkSelectedRoomTypeId" name="SelectedRoomTypeId" />
+                    <input asp-for="SelectedRoomId" id="bkSelectedRoomId" type="hidden" />
+                    <input type="hidden" id="bkSelectedRoomTypePrice" name="SelectedRoomTypePrice" />
+                    <input asp-for="SelectedServicesJson" id="bkSelectedServicesJson" type="hidden" />
+                    <input asp-for="StripePaymentIntentId" id="bkStripePaymentIntentId" type="hidden" />
+                    <input asp-for="DemoPayment" id="bkDemoPayment" type="hidden" />
+
+                    <section id="bkStep1" class="vr-book-card">
+                        <div class="vr-book-muted" style="font-weight:800;">Hotel selection</div>
+                        <div class="vr-book-section-title">Pick where you want to stay</div>
+                        <div class="vr-book-muted" style="margin-top:6px;">Choose dates first to check room availability across our hotels.</div>
+
+                        <div class="vr-book-fields" style="margin-top:12px;">
+                            <div class="vr-book-field">
+                                <label asp-for="CheckInDate">Check-in</label>
+                                <input asp-for="CheckInDate" id="bkCheckIn" class="vr-book-input" />
+                                <span asp-validation-for="CheckInDate" class="text-danger"></span>
+                            </div>
+                            <div class="vr-book-field">
+                                <label asp-for="CheckOutDate">Check-out</label>
+                                <input asp-for="CheckOutDate" id="bkCheckOut" class="vr-book-input" />
+                                <span asp-validation-for="CheckOutDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div id="bkAvailHint" class="vr-book-muted" style="margin-top:10px;">Select dates to load availability.</div>
+                        <div id="bkAvailError" class="vr-hidden text-danger" style="margin-top:10px;"></div>
+
+                        <div id="bkHotels" class="vr-book-select-grid"></div>
+                        <div id="bkHotelsPagination" class="d-flex gap-2 justify-content-center mt-3" style="display:none;"></div>
+
+                        <div style="margin-top:10px;">
+                            <span asp-validation-for="CompanyId" class="text-danger"></span>
+                        </div>
+                    </section>
+
+                    <section id="bkStep2" class="vr-book-card vr-hidden" style="margin-top:14px;">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                            <div>
+                                <div class="vr-book-muted" style="font-weight:800;">Room selection</div>
+                                <div class="vr-book-section-title">Choose your room</div>
+                                <div id="bkSelectedHotelIndicator" class="vr-hidden" style="margin-top: 4px; font-size: 0.9rem; color: #64748b; font-weight: 600;">
+                                    Selected Property: <span id="bkSelectedHotelName" style="color: var(--vr-navy); font-weight: 800;"></span>
+                                </div>
+
+                                <div class="vr-book-muted" style="margin-top:6px;">Prices are per night. Availability is based on rooms marked Available.</div>
+                            </div>
+                            <button type="button" id="bkBackToHotels" class="vr-book-link">Change hotel</button>
+                        </div>
+
+                        <div id="bkRooms" class="vr-book-select-grid"></div>
+
+                        <div id="bkRoomsEmpty" class="vr-book-card vr-hidden" style="margin-top:14px;background:#f8fafc;border-color:rgba(15,23,42,0.08);">
+                            No available rooms found for this hotel.
+                        </div>
+                    </section>
+
+                    <section id="bkStep3" class="vr-book-card vr-hidden" style="margin-top:14px;">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                            <div>
+                                <div class="vr-book-muted" style="font-weight:800;">Optional services</div>
+                                <div class="vr-book-section-title">Add services to enhance your stay</div>
+                                <div class="vr-book-muted" style="margin-top:6px;">Services depend on the selected hotel.</div>
+                            </div>
+                            <button type="button" id="bkBackToRooms" class="vr-book-link">Back</button>
+                        </div>
+
+                        <div id="bkServices" class="vr-book-select-grid"></div>
+
+                        <div id="bkServicesEmpty" class="vr-hidden" style="margin-top:14px;">
+                            No services configured for this hotel.
+                        </div>
+
+                        <div class="vr-book-actions">
+                            <button type="button" id="bkToGuest" class="vr-book-btn vr-book-btn-primary">Continue</button>
+                        </div>
+                    </section>
+
+                    <section id="bkStep4" class="vr-book-card vr-hidden" style="margin-top:14px;">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                            <div>
+                                <div class="vr-book-muted" style="font-weight:800;">Guest information</div>
+                                <div class="vr-book-section-title">Tell us who’s staying</div>
+                                <div class="vr-book-muted" style="margin-top:6px;">We’ll create (or verify) your guest account during booking.</div>
+                            </div>
+                            <button type="button" id="bkBackToServices" class="vr-book-link">Back</button>
+                        </div>
+
+                        <div class="vr-book-fields">
+                            <div class="vr-book-field">
+                                <label asp-for="FullName"></label>
+                                <input asp-for="FullName" class="vr-book-input" autocomplete="name" />
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+
+                            <div class="vr-book-field">
+                                <label asp-for="Email"></label>
+                                <input asp-for="Email" class="vr-book-input" autocomplete="email" inputmode="email" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+
+                            <div class="vr-book-field">
+                                <label asp-for="Phone"></label>
+                                <input asp-for="Phone" class="vr-book-input" autocomplete="tel" />
+                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            </div>
+
+                            <div class="vr-book-field">
+                                <label asp-for="Password"></label>
+                                <input asp-for="Password" class="vr-book-input" type="password" autocomplete="new-password" />
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="vr-book-actions">
+                            <button type="button" id="bkToDates" class="vr-book-btn vr-book-btn-primary">Continue</button>
+                        </div>
+                    </section>
+
+                    <section id="bkStep5" class="vr-book-card vr-hidden" style="margin-top:14px;">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                            <div>
+                                <div class="vr-book-muted" style="font-weight:800;">Review</div>
+                                <div class="vr-book-section-title">Review your details</div>
+                                <div class="vr-book-muted" style="margin-top:6px;">Continue to payment on the next step.</div>
+                            </div>
+                            <button type="button" id="bkBackToGuest" class="vr-book-link">Back</button>
+                        </div>
+
+                        <div class="vr-book-fields" style="margin-top:18px; grid-template-columns: 1.2fr 0.8fr;">
+                            <div class="vr-book-card" style="background:#f8fafc;border-color:rgba(15,23,42,0.08);margin-bottom:0;">
+                                <div class="vr-book-muted" style="font-weight:800;">Booking details</div>
+
+                                <div class="vr-book-fields" style="margin-top:10px; grid-template-columns: 1fr 1fr;">
+                                    <div>
+                                        <div class="vr-book-summary-label">Hotel</div>
+                                        <div id="bkStep5Hotel" class="vr-book-summary-value"></div>
+                                        <div id="bkStep5HotelAddress" class="vr-book-summary-sub"></div>
+                                    </div>
+                                    <div>
+                                        <div class="vr-book-summary-label">Room</div>
+                                        <div id="bkStep5Room" class="vr-book-summary-value"></div>
+                                        <div id="bkStep5RoomMeta" class="vr-book-summary-sub"></div>
+                                    </div>
+                                    <div>
+                                        <div class="vr-book-summary-label">Dates</div>
+                                        <div id="bkStep5Dates" class="vr-book-summary-value"></div>
+                                        <div id="bkStep5Nights" class="vr-book-summary-sub"></div>
+                                    </div>
+                                    <div>
+                                        <div class="vr-book-summary-label">Services</div>
+                                        <div id="bkStep5Services" class="vr-book-summary-sub"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="vr-book-card" style="background:#f8fafc;border-color:rgba(15,23,42,0.08);margin-bottom:0;">
+                                <div class="vr-book-muted" style="font-weight:800;">Price summary</div>
+
+                                <div style="margin-top:10px;">
+                                    <div style="display:flex; justify-content:space-between; gap:12px;">
+                                        <div class="vr-book-summary-sub">Room</div>
+                                        <div id="bkStep5RoomTotal" style="font-weight:900;color:#0b122d;"></div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; gap:12px; margin-top:6px;">
+                                        <div class="vr-book-summary-sub">Services</div>
+                                        <div id="bkStep5ServicesTotal" style="font-weight:900;color:#0b122d;"></div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; gap:12px; margin-top:6px;">
+                                        <div class="vr-book-summary-sub">Subtotal</div>
+                                        <div id="bkStep5Subtotal" style="font-weight:700;color:#334155;"></div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; gap:12px; margin-top:6px;">
+                                        <div class="vr-book-summary-sub">Service Charge (10%)</div>
+                                        <div id="bkStep5ServiceCharge" style="font-weight:700;color:#334155;"></div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; gap:12px; margin-top:6px;">
+                                        <div class="vr-book-summary-sub">VAT (12%)</div>
+                                        <div id="bkStep5Tax" style="font-weight:700;color:#334155;"></div>
+                                    </div>
+
+                                    <div style="border-top:1px solid #e2e8f0; margin-top:12px; padding-top:12px; display:flex; justify-content:space-between; gap:12px;">
+                                        <div style="font-weight:900;color:#334155;">Total</div>
+                                        <div id="bkStep5GrandTotal" style="font-weight:950;color:#0b122d;"></div>
+                                    </div>
+
+                                    <div id="bkStep5TotalNote" class="vr-book-summary-sub" style="margin-top:6px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="vr-book-card" style="background:#f8fafc;border-color:rgba(15,23,42,0.08);margin-top:14px;">
+                            <div class="vr-book-muted" style="font-weight:800;">Guest details</div>
+                            <div class="vr-book-fields" style="margin-top:10px; grid-template-columns: 1fr 1fr;">
+                                <div>
+                                    <div class="vr-book-summary-label">Full name</div>
+                                    <div id="bkStep5GuestName" class="vr-book-summary-value"></div>
+                                </div>
+                                <div>
+                                    <div class="vr-book-summary-label">Email</div>
+                                    <div id="bkStep5GuestEmail" class="vr-book-summary-value"></div>
+                                </div>
+                                <div>
+                                    <div class="vr-book-summary-label">Phone</div>
+                                    <div id="bkStep5GuestPhone" class="vr-book-summary-value"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="vr-book-actions">
+                            <button type="button" id="bkToReview" class="vr-book-btn vr-book-btn-primary">Continue to payment</button>
+                        </div>
+                    </section>
+
+                    <section id="bkStep6" class="vr-book-card vr-hidden" style="margin-top:14px;">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                            <div>
+                                <div class="vr-book-muted" style="font-weight:800;">Summary</div>
+                                <div class="vr-book-section-title">Confirm your booking</div>
+                                <div class="vr-book-muted" style="margin-top:6px;">Double-check your details before confirming.</div>
+                            </div>
+                            <button type="button" id="bkBackToDates" class="vr-book-link">Back</button>
+                        </div>
+
+                        <div class="vr-book-card" style="background:#f8fafc;border-color:rgba(15,23,42,0.08);margin-top:12px;">
+                            <div class="vr-book-fields" style="margin-top:0;">
+                                <div>
+                                    <div class="vr-book-summary-label">Hotel</div>
+                                    <div id="bkReviewHotel" class="vr-book-summary-value"></div>
+                                    <div id="bkReviewHotelAddress" class="vr-book-summary-sub"></div>
+                                </div>
+                                <div>
+                                    <div class="vr-book-summary-label">Room</div>
+                                    <div id="bkReviewRoom" class="vr-book-summary-value"></div>
+                                    <div id="bkReviewRoomMeta" class="vr-book-summary-sub"></div>
+                                </div>
+                                <div>
+                                    <div class="vr-book-summary-label">Dates</div>
+                                    <div id="bkReviewDates" class="vr-book-summary-value"></div>
+                                </div>
+                                <div>
+                                    <div class="vr-book-summary-label">Services</div>
+                                    <div id="bkReviewServices" class="vr-book-summary-sub"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="vr-book-card" style="background:#f1f5f9;border-color:rgba(15,23,42,0.12);margin-top:12px;">
+                            <div class="vr-book-muted" style="font-weight:800;">Billing Summary</div>
+                            <div style="margin-top:10px;">
+                                <div style="display:flex; justify-content:space-between; gap:12px;">
+                                    <div class="vr-book-summary-sub">Room Total</div>
+                                    <div id="bkReviewRoomTotal" style="font-weight:900;color:#0b122d;"></div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; gap:12px; margin-top:6px;">
+                                    <div class="vr-book-summary-sub">Services Total</div>
+                                    <div id="bkReviewServicesTotal" style="font-weight:900;color:#0b122d;"></div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; gap:12px; margin-top:6px;">
+                                    <div class="vr-book-summary-sub">Subtotal</div>
+                                    <div id="bkReviewSubtotal" style="font-weight:700;color:#334155;"></div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; gap:12px; margin-top:6px;">
+                                    <div class="vr-book-summary-sub">Service Charge (10%)</div>
+                                    <div id="bkReviewServiceCharge" style="font-weight:700;color:#334155;"></div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; gap:12px; margin-top:6px;">
+                                    <div class="vr-book-summary-sub">VAT (12%)</div>
+                                    <div id="bkReviewTax" style="font-weight:700;color:#334155;"></div>
+                                </div>
+
+                                <div style="border-top:1px solid #cbd5e1; margin-top:12px; padding-top:12px; display:flex; justify-content:space-between; gap:12px;">
+                                    <div style="font-weight:900;color:#334155;">Grand Total</div>
+                                    <div id="bkReviewGrandTotal" style="font-weight:950;color:#0b122d;font-size:1.2rem;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-top:12px;"></div>
+
+                        <div class="vr-book-card" style="background:#f8fafc;border-color:rgba(15,23,42,0.08);margin-top:12px;">
+                            <div class="vr-book-muted" style="font-weight:800;">Payment</div>
+                            @if (string.IsNullOrEmpty(stripePublishableKey))
+                            {
+                                <div class="vr-book-muted" style="margin-top:6px;">No online payment required. Your reservation will be confirmed immediately.</div>
+                                <div id="bkPaymentOk" class="vr-hidden" style="margin-top:12px;color:#0f766e;font-weight:800;">Finalizing booking...</div>
+                            }
+                            else
+                            {
+                                <div class="vr-book-muted" style="margin-top:6px;">Pay securely using Stripe. Your reservation will be created only after payment succeeds.</div>
+                                <div id="bkPaymentError" class="vr-hidden text-danger" style="margin-top:12px;"></div>
+                                <div id="bkPaymentOk" class="vr-hidden" style="margin-top:12px;color:#0f766e;font-weight:800;">Payment verified. Finalizing booking...</div>
+                                <div style="margin-top:12px;">
+                                    <div id="bkCardElement" class="vr-book-input" style="padding-top:14px;padding-bottom:14px;"></div>
+                                </div>
+                            }
+                        </div>
+
+                        @if (string.IsNullOrEmpty(stripePublishableKey))
+                        {
+                            <button id="bkPayAndConfirm" type="button" class="vr-book-btn vr-book-btn-primary" style="width:100%;margin-top:14px;padding:12px 14px;">
+                                Confirm Booking
+                            </button>
+                        }
+                        else
+                        {
+                            <button id="bkPayAndConfirm" type="button" class="vr-book-btn vr-book-btn-danger" style="width:100%;margin-top:14px;padding:12px 14px;">
+                                Pay &amp; Confirm booking
+                            </button>
+                        }
+                    </section>
+                </form>
+            </div>
+
+            
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    @if (!string.IsNullOrEmpty(stripePublishableKey))
+    {
+        <script src="https://js.stripe.com/v3/"></script>
+    }
+
+    <script>
+        // Booking UI data is preloaded from the server so we can run the flow without page reloads.
+        const bookingData = @Html.Raw(bookingUiDataJson);
+        const stripePublishableKey = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(stripePublishableKey));
+        const isAuthenticated = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(isAuthenticated));
+        const currentUserEmail = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(currentUserEmail));
+
+        (function () {
+            const steps = [
+                { id: 'bkStep1', title: 'Step 1: Choose a hotel' },
+                { id: 'bkStep2', title: 'Step 2: Select a room' },
+                { id: 'bkStep3', title: 'Step 3: Add services (optional)' },
+                { id: 'bkStep4', title: 'Step 4: Guest information' },
+                { id: 'bkStep5', title: 'Step 5: Review your details' },
+                { id: 'bkStep6', title: 'Step 6: Review & confirm' }
+            ];
+
+            const els = {
+                stepTitle: document.getElementById('bkStepTitle'),
+                companyId: document.getElementById('bkCompanyId'),
+                hotels: document.getElementById('bkHotels'),
+                rooms: document.getElementById('bkRooms'),
+                roomsEmpty: document.getElementById('bkRoomsEmpty'),
+                services: document.getElementById('bkServices'),
+                servicesEmpty: document.getElementById('bkServicesEmpty'),
+                selectedRoomTypeId: document.getElementById('bkSelectedRoomTypeId'),
+                selectedRoomId: document.getElementById('bkSelectedRoomId'),
+                selectedRoomTypePrice: document.getElementById('bkSelectedRoomTypePrice'),
+                selectedServicesJson: document.getElementById('bkSelectedServicesJson'),
+                summaryHotel: document.getElementById('bkSummaryHotel'),
+                summaryHotelSub: document.getElementById('bkSummaryHotelSub'),
+                summaryRoom: document.getElementById('bkSummaryRoom'),
+                summaryRoomSub: document.getElementById('bkSummaryRoomSub'),
+                summaryServices: document.getElementById('bkSummaryServices'),
+                summaryDates: document.getElementById('bkSummaryDates'),
+                summaryTotal: document.getElementById('bkSummaryTotal'),
+                summaryTotalNote: document.getElementById('bkSummaryTotalNote'),
+                reviewHotel: document.getElementById('bkReviewHotel'),
+                reviewHotelAddress: document.getElementById('bkReviewHotelAddress'),
+                reviewRoom: document.getElementById('bkReviewRoom'),
+                reviewRoomMeta: document.getElementById('bkReviewRoomMeta'),
+                reviewDates: document.getElementById('bkReviewDates'),
+                reviewServices: document.getElementById('bkReviewServices'),
+                checkIn: document.getElementById('bkCheckIn'),
+                checkOut: document.getElementById('bkCheckOut'),
+                availHint: document.getElementById('bkAvailHint'),
+                availError: document.getElementById('bkAvailError'),
+                payAndConfirm: document.getElementById('bkPayAndConfirm'),
+                stripePaymentIntentId: document.getElementById('bkStripePaymentIntentId'),
+                paymentError: document.getElementById('bkPaymentError'),
+                paymentOk: document.getElementById('bkPaymentOk'),
+                selectedHotelIndicator: document.getElementById('bkSelectedHotelIndicator'),
+                selectedHotelName: document.getElementById('bkSelectedHotelName')
+
+            };
+
+            if (isAuthenticated && currentUserEmail) {
+                const emailEl = document.querySelector('[name="Email"]');
+                if (emailEl) {
+                    emailEl.value = currentUserEmail;
+                    emailEl.setAttribute('readonly', 'readonly');
+                }
+            }
+            const STORAGE_KEY = 'vr_booking_state';
+
+            const state = {
+                step: 1,
+                companyId: null,
+                roomTypeId: null,
+                roomId: null,
+                roomTypeName: null,
+                roomNumber: null,
+                roomPrice: 0,
+                services: [],
+                company: null,
+                availability: bookingData
+            };
+
+            function saveState() {
+                const data = {
+                    step: state.step,
+                    companyId: state.companyId,
+                    roomTypeId: state.roomTypeId,
+                    roomId: state.roomId,
+                    roomTypeName: state.roomTypeName,
+                    roomNumber: state.roomNumber,
+                    roomPrice: state.roomPrice,
+                    services: state.services,
+                    company: state.company,
+                    checkIn: els.checkIn?.value,
+                    checkOut: els.checkOut?.value,
+                    fullName: document.querySelector('[name="FullName"]')?.value,
+                    email: document.querySelector('[name="Email"]')?.value,
+                    phone: document.querySelector('[name="Phone"]')?.value,
+                    availability: state.availability
+                };
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            }
+
+            function loadState() {
+                const raw = sessionStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                try {
+                    const data = JSON.parse(raw);
+                    state.step = data.step || 1;
+                    state.companyId = data.companyId;
+                    state.roomTypeId = data.roomTypeId;
+                    state.roomId = data.roomId;
+                    state.roomTypeName = data.roomTypeName;
+                    state.roomNumber = data.roomNumber;
+                    state.roomPrice = data.roomPrice || 0;
+                    state.services = data.services || [];
+                    state.company = data.company;
+                    if (data.availability) state.availability = data.availability;
+
+                    if (data.checkIn && els.checkIn) els.checkIn.value = data.checkIn;
+                    if (data.checkOut && els.checkOut) els.checkOut.value = data.checkOut;
+                    if (data.fullName) {
+                        const el = document.querySelector('[name="FullName"]');
+                        if (el) el.value = data.fullName;
+                    }
+                    if (data.email) {
+                        const el = document.querySelector('[name="Email"]');
+                        if (el && !el.readOnly) el.value = data.email;
+                    }
+                    if (data.phone) {
+                        const el = document.querySelector('[name="Phone"]');
+                        if (el) el.value = data.phone;
+                    }
+
+                    if (state.companyId) {
+                        if (els.companyId) els.companyId.value = String(state.companyId);
+                        renderRooms(state.companyId);
+                        if (state.company && els.selectedHotelName && els.selectedHotelIndicator) {
+                            els.selectedHotelName.textContent = state.company.name;
+                            els.selectedHotelIndicator.classList.remove('vr-hidden');
+                        }
+
+                        renderServices(state.companyId);
+                    }
+                    if (state.roomId && els.selectedRoomId) els.selectedRoomId.value = String(state.roomId);
+                    if (state.roomTypeId && els.selectedRoomTypeId) els.selectedRoomTypeId.value = String(state.roomTypeId);
+                    if (state.roomPrice && els.selectedRoomTypePrice) els.selectedRoomTypePrice.value = String(state.roomPrice);
+                    if (state.services.length > 0 && els.selectedServicesJson) els.selectedServicesJson.value = JSON.stringify(state.services);
+
+                } catch (e) {
+                    console.error('Failed to load booking state', e);
+                }
+            }
+
+            function peso(value) {
+                const num = Number(value) || 0;
+                return '₱' + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function nights() {
+                if (!els.checkIn?.value || !els.checkOut?.value) return 0;
+                const ci = new Date(els.checkIn.value + 'T00:00:00');
+                const co = new Date(els.checkOut.value + 'T00:00:00');
+                const diff = (co - ci) / (1000 * 60 * 60 * 24);
+                return Number.isFinite(diff) ? Math.max(0, Math.floor(diff)) : 0;
+            }
+
+            function total() {
+                const n = nights();
+                const roomTotal = (Number(state.roomPrice) || 0) * n;
+                const servicesTotal = state.services.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+                const subtotal = roomTotal + servicesTotal;
+                const serviceCharge = Math.round((subtotal * 0.10) * 100) / 100;
+                const taxAmount = Math.round(((subtotal + serviceCharge) * 0.12) * 100) / 100;
+                const grandTotal = subtotal + serviceCharge + taxAmount;
+                return {
+                    nights: n,
+                    roomTotal,
+                    servicesTotal,
+                    subtotal,
+                    serviceCharge,
+                    taxAmount,
+                    grandTotal
+                };
+            }
+
+            function setStep(step) {
+                state.step = step;
+                for (let i = 1; i <= 6; i++) {
+                    const section = document.getElementById('bkStep' + i);
+                    if (!section) continue;
+                    section.classList.toggle('vr-hidden', i !== step);
+
+                    const pill = document.getElementById('bkStepPill' + i);
+                    if (pill) {
+                        const isComplete = i < step;
+                        const isActive = i === step;
+                        const isLocked = i > step;
+
+                        pill.classList.toggle('vr-book-pill-complete', isComplete);
+                        pill.classList.toggle('vr-book-pill-active', isActive);
+                        pill.classList.toggle('vr-book-pill-disabled', isLocked);
+                        pill.setAttribute('aria-current', isActive ? 'step' : 'false');
+                    }
+                }
+
+                if (els.stepTitle) {
+                    els.stepTitle.textContent = steps[step - 1]?.title ?? '';
+                }
+
+                if (step === 5) {
+                    fillStep5();
+                }
+
+                if (step === 6) {
+                    fillReview();
+                }
+
+                saveState();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            function roomAvailabilityCount(companyId, roomTypeId) {
+                const row = (state.availability.roomAvailability || []).find(r => r.companyId === companyId && r.roomTypeId === roomTypeId);
+                return row ? (row.availableCount || 0) : 0;
+            }
+
+            function renderHotels(page = 1) {
+                const scrollY = window.scrollY;
+                els.hotels.innerHTML = '';
+                const paginationEl = document.getElementById('bkHotelsPagination');
+                if (paginationEl) {
+                    paginationEl.innerHTML = '';
+                    paginationEl.style.display = 'none';
+                }
+
+                const allCompanies = state.availability.companies || [];
+                const perPage = 4;
+                const totalPages = Math.ceil(allCompanies.length / perPage);
+                
+                const start = (page - 1) * perPage;
+                const pagedCompanies = allCompanies.slice(start, start + perPage);
+
+                pagedCompanies.forEach(c => {
+                    const card = document.createElement('button');
+                    card.type = 'button';
+                    card.className = 'vr-book-option vr-image-card';
+                    if (state.companyId === c.companyId) {
+                        card.classList.add('vr-book-option-selected');
+                    }
+                    card.dataset.companyId = c.companyId;
+
+                    const safeAddress = (c.address || '').trim();
+                    const subtitle = safeAddress ? safeAddress : 'Select to view rooms & services';
+
+                    card.innerHTML = `
+                        <div class="vr-card-img-wrap">
+                            <img src="/img/login-bg-modern.png" alt="" />
+                            <div class="vr-card-img-overlay"></div>
+                            <div class="vr-card-img-title">${escapeHtml(c.name)}</div>
+                        </div>
+                        <div class="vr-card-body-simple">
+                            <div class="vr-book-option-sub"><i class="fa-solid fa-location-dot me-1"></i>${escapeHtml(subtitle)}</div>
+                        </div>
+                    `;
+
+                    card.addEventListener('click', function () {
+                        selectHotel(c.companyId);
+                    });
+
+                    els.hotels.appendChild(card);
+                });
+
+                if (totalPages > 1 && paginationEl) {
+                    paginationEl.style.display = 'flex';
+                    paginationEl.style.flexDirection = 'column';
+                    paginationEl.style.alignItems = 'center';
+
+                    const topRow = document.createElement('div');
+                    topRow.style.display = 'flex';
+                    topRow.style.gap = '10px';
+                    topRow.style.alignItems = 'center';
+
+                    const prevBtn = document.createElement('button');
+                    prevBtn.type = 'button';
+                    prevBtn.className = 'vr-book-btn vr-book-btn-primary';
+                    prevBtn.textContent = 'Prev';
+                    prevBtn.disabled = page === 1;
+                    prevBtn.onclick = (e) => {
+                        e?.preventDefault?.();
+                        renderHotels(page - 1);
+                        window.scrollTo({ top: scrollY, behavior: 'auto' });
+                    };
+                    topRow.appendChild(prevBtn);
+
+                    const indicator = document.createElement('div');
+                    indicator.className = 'vr-book-page-indicator';
+                    indicator.textContent = `Page ${page} of ${totalPages}`;
+                    topRow.appendChild(indicator);
+
+                    const nextBtn = document.createElement('button');
+                    nextBtn.type = 'button';
+                    nextBtn.className = 'vr-book-btn vr-book-btn-primary';
+                    nextBtn.textContent = 'Next';
+                    nextBtn.disabled = page === totalPages;
+                    nextBtn.onclick = (e) => {
+                        e?.preventDefault?.();
+                        renderHotels(page + 1);
+                        window.scrollTo({ top: scrollY, behavior: 'auto' });
+                    };
+                    topRow.appendChild(nextBtn);
+
+                    paginationEl.appendChild(topRow);
+
+                    const dots = document.createElement('div');
+                    dots.className = 'vr-book-page-dots';
+                    for (let i = 1; i <= totalPages; i++) {
+                        const dot = document.createElement('button');
+                        dot.type = 'button';
+                        dot.className = 'vr-book-page-dot' + (i === page ? ' vr-book-page-dot-active' : '');
+                        dot.setAttribute('aria-label', `Go to page ${i}`);
+                        dot.onclick = (e) => {
+                            e?.preventDefault?.();
+                            renderHotels(i);
+                            window.scrollTo({ top: scrollY, behavior: 'auto' });
+                        };
+                        dots.appendChild(dot);
+                    }
+                    paginationEl.appendChild(dots);
+                }
+
+                window.scrollTo({ top: scrollY, behavior: 'auto' });
+            }
+
+            function renderRooms(companyId) {
+                els.rooms.innerHTML = '';
+                const roomTypes = state.availability.roomTypes || [];
+                const availableRooms = (state.availability.roomAvailability || []).filter(r => r.companyId === companyId);
+
+                els.roomsEmpty.classList.toggle('vr-hidden', availableRooms.length > 0);
+                if (availableRooms.length === 0) return;
+
+                availableRooms.forEach(room => {
+                    const rt = roomTypes.find(t => t.roomTypeId === room.roomTypeId);
+                    if (!rt) return;
+
+                    const card = document.createElement('button');
+                    card.type = 'button';
+                    card.className = 'vr-book-option vr-image-card';
+                    if (state.roomId === room.roomId) {
+                        card.classList.add('vr-book-option-selected');
+                    }
+                    card.dataset.roomId = room.roomId;
+                    card.innerHTML = `
+                        <div class="vr-card-img-wrap">
+                            <img src="/img/room-bg-modern.png" alt="" />
+                            <div class="vr-card-img-overlay"></div>
+                            <div class="vr-card-img-title">Room ${escapeHtml(room.roomNumber)}</div>
+                            <div class="vr-card-img-price">${peso(rt.basePrice)} <span style="font-size: 0.7rem; opacity: 0.8;">/ night</span></div>
+                        </div>
+                        <div class="vr-card-body-simple">
+                            <div class="vr-book-option-sub" style="font-weight:700; color: var(--vr-navy);">${escapeHtml(rt.typeName)}</div>
+                            <div class="vr-room-card-footer" style="margin-top: 6px;">
+                                <span class="vr-room-card-tag"><i class="fa-solid fa-users me-1"></i> ${capacityLabel(rt.typeName)}</span>
+                            </div>
+                        </div>
+                    `;
+
+                    card.addEventListener('click', function () {
+                        selectRoom(room, rt);
+                    });
+
+                    els.rooms.appendChild(card);
+                });
+            }
+
+            function renderServices(companyId) {
+                els.services.innerHTML = '';
+                const services = (state.availability.services || []).filter(s => s.companyId === companyId);
+                els.servicesEmpty.classList.toggle('vr-hidden', services.length > 0);
+                if (services.length === 0) return;
+
+                services.forEach(s => {
+                    const id = 'svc_' + s.serviceId;
+                    const wrapper = document.createElement('label');
+                    wrapper.className = 'vr-book-option vr-service-card';
+                    const isSelected = state.services.some(svc => svc.serviceId === s.serviceId);
+                    if (isSelected) wrapper.classList.add('vr-book-option-selected');
+
+                    wrapper.innerHTML = `
+                        <div class="vr-service-icon">
+                            <i class="fa-solid fa-bell-concierge"></i>
+                        </div>
+                        <div class="vr-service-body">
+                            <div class="vr-book-option-title">${escapeHtml(s.name)}</div>
+                            <div class="vr-book-option-sub">Optional add-on</div>
+                        </div>
+                        <div style="text-align: right; min-width: 100px;">
+                            <div class="vr-book-option-title" style="color: var(--vr-navy); font-size: 1rem; margin-bottom: 6px;">${peso(s.price)}</div>
+                            <input id="${id}" type="checkbox" ${isSelected ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--vr-gold);" />
+                        </div>
+                    `;
+
+                    const checkbox = wrapper.querySelector('input');
+                    checkbox.addEventListener('change', function () {
+                        toggleService(s, checkbox.checked);
+                        wrapper.classList.toggle('vr-book-option-selected', checkbox.checked);
+                    });
+
+                    els.services.appendChild(wrapper);
+                });
+            }
+
+            function escapeHtml(value) {
+                return String(value ?? '')
+                    .replaceAll('&', '&amp;')
+                    .replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;')
+                    .replaceAll('"', '&quot;')
+                    .replaceAll("'", '&#039;');
+            }
+
+            function capacityLabel(typeName) {
+                const t = String(typeName || '').toLowerCase();
+                if (t.includes('suite')) return '4 guests';
+                if (t.includes('deluxe')) return '3 guests';
+                return '2 guests';
+            }
+
+            function selectHotel(companyId) {
+                state.companyId = companyId;
+                state.company = (state.availability.companies || []).find(c => c.companyId === companyId) || null;
+                if (state.company && els.selectedHotelName && els.selectedHotelIndicator) {
+                    els.selectedHotelName.textContent = state.company.name;
+                    els.selectedHotelIndicator.classList.remove('vr-hidden');
+                }
+
+                state.roomId = null;
+                state.roomNumber = null;
+                state.roomTypeId = null;
+                state.roomTypeName = null;
+                state.roomPrice = 0;
+                state.services = [];
+
+                if (els.companyId) els.companyId.value = String(companyId);
+                if (els.selectedRoomId) els.selectedRoomId.value = '';
+                if (els.selectedRoomTypeId) els.selectedRoomTypeId.value = '';
+                if (els.selectedRoomTypePrice) els.selectedRoomTypePrice.value = '';
+                if (els.selectedServicesJson) els.selectedServicesJson.value = '[]';
+
+                renderRooms(companyId);
+                renderServices(companyId);
+                updateSummary();
+                setStep(2);
+
+                markSelected('#bkHotels .vr-book-option', (btn) => Number(btn.dataset.companyId) === companyId);
+            }
+
+            function selectRoom(room, rt) {
+                state.roomId = room.roomId;
+                state.roomNumber = room.roomNumber;
+                state.roomTypeId = rt.roomTypeId;
+                state.roomTypeName = rt.typeName;
+                state.roomPrice = rt.basePrice || 0;
+
+                if (els.selectedRoomId) els.selectedRoomId.value = String(room.roomId);
+                if (els.selectedRoomTypeId) els.selectedRoomTypeId.value = String(rt.roomTypeId);
+                if (els.selectedRoomTypePrice) els.selectedRoomTypePrice.value = String(state.roomPrice);
+
+                updateSummary();
+                setStep(3);
+
+                markSelected('#bkRooms .vr-book-option', (btn) => Number(btn.dataset.roomId) === room.roomId);
+            }
+
+            function markSelected(selector, predicate) {
+                document.querySelectorAll(selector).forEach(el => {
+                    const isSelected = predicate(el);
+                    el.classList.toggle('vr-book-option-selected', isSelected);
+                });
+            }
+
+            function toggleService(service, enabled) {
+                const existing = state.services.find(s => s.serviceId === service.serviceId);
+                if (enabled && !existing) {
+                    state.services.push({ serviceId: service.serviceId, name: service.name, price: service.price });
+                }
+                if (!enabled && existing) {
+                    state.services = state.services.filter(s => s.serviceId !== service.serviceId);
+                }
+                if (els.selectedServicesJson) els.selectedServicesJson.value = JSON.stringify(state.services);
+                updateSummary();
+                saveState();
+            }
+
+            function updateSummary() {
+                if (els.summaryHotel && els.summaryHotelSub) {
+                    if (state.company) {
+                        els.summaryHotel.textContent = state.company.name;
+                        els.summaryHotelSub.textContent = state.company.address || '';
+                    } else {
+                        els.summaryHotel.textContent = 'Select a hotel';
+                        els.summaryHotelSub.textContent = '';
+                    }
+                }
+
+                if (els.summaryRoom && els.summaryRoomSub) {
+                    if (state.roomNumber) {
+                        els.summaryRoom.textContent = 'Room ' + state.roomNumber;
+                        els.summaryRoomSub.textContent = state.roomTypeName + ' · ' + peso(state.roomPrice) + ' / night';
+                    } else {
+                        els.summaryRoom.textContent = 'Select a room';
+                        els.summaryRoomSub.textContent = '';
+                    }
+                }
+
+                if (els.summaryServices) {
+                    if (state.services.length > 0) {
+                        els.summaryServices.textContent = state.services.map(s => s.name).join(', ');
+                    } else {
+                        els.summaryServices.textContent = 'None';
+                    }
+                }
+
+                if (els.summaryDates) {
+                    const ci = els.checkIn?.value;
+                    const co = els.checkOut?.value;
+                    els.summaryDates.textContent = (ci && co) ? `${ci} → ${co}` : 'Select dates';
+                }
+
+                if (els.summaryTotal && els.summaryTotalNote) {
+                    const totals = total();
+                    els.summaryTotal.textContent = peso(totals.grandTotal);
+                    if (totals.nights > 0 && state.roomTypeName) {
+                        els.summaryTotalNote.textContent = `${totals.nights} night(s) · Room ${peso(totals.roomTotal)} + Services ${peso(totals.servicesTotal)}`;
+                    } else {
+                        els.summaryTotalNote.textContent = '';
+                    }
+                }
+            }
+
+            function validateDates() {
+                if (els.availError) {
+                    els.availError.classList.add('vr-hidden');
+                    els.availError.textContent = '';
+                }
+
+                if (!els.checkIn?.value || !els.checkOut?.value) return true;
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const ci = new Date(els.checkIn.value);
+                ci.setHours(0, 0, 0, 0);
+
+                if (ci < today) {
+                    if (els.availError) {
+                        els.availError.textContent = 'Check-in date cannot be in the past.';
+                        els.availError.classList.remove('vr-hidden');
+                    }
+                    return false;
+                }
+
+                const n = nights();
+                if (n <= 0) {
+                    if (els.availError) {
+                        els.availError.textContent = 'Check-out must be after check-in.';
+                        els.availError.classList.remove('vr-hidden');
+                    }
+                    return false;
+                }
+                return true;
+            }
+
+            async function loadAvailability() {
+                if (!els.checkIn?.value || !els.checkOut?.value) return;
+                if (!validateDates()) return;
+
+                if (els.availError) {
+                    els.availError.classList.add('vr-hidden');
+                    els.availError.textContent = '';
+                }
+                if (els.availHint) {
+                    els.availHint.textContent = 'Loading availability...';
+                }
+
+                try {
+                    const url = '@Url.Action("Availability","Reservation")' + `?checkInDate=${encodeURIComponent(els.checkIn.value)}&checkOutDate=${encodeURIComponent(els.checkOut.value)}`;
+                    const resp = await fetch(url, { method: 'GET' });
+                    const data = await resp.json();
+                    if (!resp.ok) throw new Error(data?.message || 'Failed to load availability.');
+
+                    state.availability = data;
+                    state.companyId = null;
+                    state.company = null;
+                    state.roomTypeId = null;
+                    state.roomId = null;
+                    state.roomTypeName = null;
+                    state.roomNumber = null;
+                    state.roomPrice = 0;
+                    state.services = [];
+                    if (els.companyId) els.companyId.value = '';
+                    if (els.selectedRoomId) els.selectedRoomId.value = '';
+                    if (els.selectedRoomTypeId) els.selectedRoomTypeId.value = '';
+                    if (els.selectedRoomTypePrice) els.selectedRoomTypePrice.value = '';
+                    if (els.selectedServicesJson) els.selectedServicesJson.value = '[]';
+
+                    renderHotels();
+                    updateSummary();
+                    saveState();
+
+                    if (els.availHint) {
+                        const count = (data.companies || []).length;
+                        els.availHint.textContent = count > 0 ? `Showing ${count} hotel(s).` : 'No hotels found.';
+                    }
+                } catch (e) {
+                    if (els.availHint) els.availHint.textContent = 'Select dates to load availability.';
+                    if (els.availError) {
+                        els.availError.textContent = e?.message || 'Failed to load availability.';
+                        els.availError.classList.remove('vr-hidden');
+                    }
+                    state.availability = { companies: [], roomTypes: [], roomAvailability: [], services: [] };
+                    renderHotels();
+                    saveState();
+                }
+            }
+
+            function fillReview() {
+                if (state.company) {
+                    els.reviewHotel.textContent = state.company.name;
+                    els.reviewHotelAddress.textContent = state.company.address || '';
+                }
+
+                els.reviewRoom.textContent = state.roomNumber ? `Room ${state.roomNumber}` : '';
+                const totals = total();
+                els.reviewRoomMeta.textContent = `${state.roomTypeName} · ${peso(state.roomPrice)} / night · ${totals.nights} night(s)`;
+
+                const ci = els.checkIn?.value;
+                const co = els.checkOut?.value;
+                els.reviewDates.textContent = (ci && co) ? `${ci} → ${co}` : '';
+
+                els.reviewServices.textContent = state.services.length > 0
+                    ? state.services.map(s => `${s.name} (${peso(s.price)})`).join(', ')
+                    : 'None';
+
+                // Billing breakdown
+                document.getElementById('bkReviewRoomTotal').textContent = peso(totals.roomTotal);
+                document.getElementById('bkReviewServicesTotal').textContent = peso(totals.servicesTotal);
+                document.getElementById('bkReviewSubtotal').textContent = peso(totals.subtotal);
+                document.getElementById('bkReviewServiceCharge').textContent = peso(totals.serviceCharge);
+                document.getElementById('bkReviewTax').textContent = peso(totals.taxAmount);
+                document.getElementById('bkReviewGrandTotal').textContent = peso(totals.grandTotal);
+            }
+
+            function fillStep5() {
+                const hotelEl = document.getElementById('bkStep5Hotel');
+                const hotelAddrEl = document.getElementById('bkStep5HotelAddress');
+                const roomEl = document.getElementById('bkStep5Room');
+                const roomMetaEl = document.getElementById('bkStep5RoomMeta');
+                const datesEl = document.getElementById('bkStep5Dates');
+                const nightsEl = document.getElementById('bkStep5Nights');
+                const servicesEl = document.getElementById('bkStep5Services');
+                const guestNameEl = document.getElementById('bkStep5GuestName');
+                const guestEmailEl = document.getElementById('bkStep5GuestEmail');
+                const guestPhoneEl = document.getElementById('bkStep5GuestPhone');
+                const roomTotalEl = document.getElementById('bkStep5RoomTotal');
+                const servicesTotalEl = document.getElementById('bkStep5ServicesTotal');
+                const subtotalEl = document.getElementById('bkStep5Subtotal');
+                const serviceChargeEl = document.getElementById('bkStep5ServiceCharge');
+                const taxEl = document.getElementById('bkStep5Tax');
+                const grandTotalEl = document.getElementById('bkStep5GrandTotal');
+                const totalNoteEl = document.getElementById('bkStep5TotalNote');
+
+                if (hotelEl) hotelEl.textContent = state.company?.name || '';
+                if (hotelAddrEl) hotelAddrEl.textContent = state.company?.address || '';
+
+                const totals = total();
+                if (roomEl) roomEl.textContent = state.roomNumber ? `Room ${state.roomNumber}` : '';
+                if (roomMetaEl) roomMetaEl.textContent = state.roomNumber
+                    ? `${state.roomTypeName} · ${peso(state.roomPrice)} / night · ${totals.nights} night(s)`
+                    : '';
+
+                const ci = els.checkIn?.value;
+                const co = els.checkOut?.value;
+                if (datesEl) datesEl.textContent = (ci && co) ? `${ci} → ${co}` : '';
+                if (nightsEl) nightsEl.textContent = totals.nights > 0 ? `${totals.nights} night(s)` : '';
+
+                if (servicesEl) {
+                    servicesEl.textContent = state.services.length > 0
+                        ? state.services.map(s => `${s.name} (${peso(s.price)})`).join(', ')
+                        : 'None';
+                }
+
+                const fullNameInput = document.querySelector('[name="FullName"]');
+                const emailInput = document.querySelector('[name="Email"]');
+                const phoneInput = document.querySelector('[name="Phone"]');
+                if (guestNameEl) guestNameEl.textContent = (fullNameInput?.value || '').trim();
+                if (guestEmailEl) guestEmailEl.textContent = (emailInput?.value || '').trim();
+                if (guestPhoneEl) guestPhoneEl.textContent = (phoneInput?.value || '').trim();
+
+                if (roomTotalEl) roomTotalEl.textContent = peso(totals.roomTotal);
+                if (servicesTotalEl) servicesTotalEl.textContent = peso(totals.servicesTotal);
+                if (subtotalEl) subtotalEl.textContent = peso(totals.subtotal);
+                if (serviceChargeEl) serviceChargeEl.textContent = peso(totals.serviceCharge);
+                if (taxEl) taxEl.textContent = peso(totals.taxAmount);
+                if (grandTotalEl) grandTotalEl.textContent = peso(totals.grandTotal);
+                if (totalNoteEl) {
+                    totalNoteEl.textContent = totals.nights > 0
+                        ? `${totals.nights} night(s) · Room ${peso(state.roomPrice)} / night + Services ${peso(totals.servicesTotal)}`
+                        : '';
+                }
+            }
+
+            function wireNav() {
+                const backHotels = document.getElementById('bkBackToHotels');
+                const backRooms = document.getElementById('bkBackToRooms');
+                const backServices = document.getElementById('bkBackToServices');
+                const backGuest = document.getElementById('bkBackToGuest');
+                const backDates = document.getElementById('bkBackToDates');
+                const toGuest = document.getElementById('bkToGuest');
+                const toDates = document.getElementById('bkToDates');
+                const toReview = document.getElementById('bkToReview');
+
+                backHotels?.addEventListener('click', function () {
+                    setStep(1);
+                });
+
+                backRooms?.addEventListener('click', function () {
+                    setStep(2);
+                });
+
+                backServices?.addEventListener('click', function () {
+                    setStep(3);
+                });
+
+                backGuest?.addEventListener('click', function () {
+                    setStep(4);
+                });
+
+                backDates?.addEventListener('click', function () {
+                    setStep(5);
+                });
+
+                toGuest?.addEventListener('click', function () {
+                    setStep(4);
+                });
+
+                toDates?.addEventListener('click', function () {
+                    // Validate Step 4: Guest information
+                    let isValid = true;
+                    
+                    const fullNameInput = document.querySelector('[name="FullName"]');
+                    const emailInput = document.querySelector('[name="Email"]');
+                    const phoneInput = document.querySelector('[name="Phone"]');
+                    const passwordInput = document.querySelector('[name="Password"]');
+                    
+                    const setError = (input, msg) => {
+                        const errorSpan = input.parentNode.querySelector('.text-danger') || input.nextElementSibling;
+                        if (errorSpan) errorSpan.textContent = msg;
+                        input.style.borderColor = msg ? '#e11d48' : '';
+                        if (msg) isValid = false;
+                    };
+
+                    // Full Name
+                    const name = fullNameInput.value.trim();
+                    if (!name) setError(fullNameInput, 'Full Name is required.');
+                    else if (name.length < 3) setError(fullNameInput, 'Name is too short.');
+                    else setError(fullNameInput, '');
+
+                    // Email
+                    const email = emailInput.value.trim();
+                    const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+                    if (!email) setError(emailInput, 'Email is required.');
+                    else if (!emailRegex.test(email)) setError(emailInput, 'Please enter a valid email address.');
+                    else setError(emailInput, '');
+
+                    // Phone (Strict 11 digits numeric)
+                    const phone = phoneInput.value.trim();
+                    const phoneRegex = /^[0-9]{11}$/;
+                    if (!phone) setError(phoneInput, 'Phone Number is required.');
+                    else if (!phoneRegex.test(phone)) setError(phoneInput, 'Phone number must be exactly 11 digits.');
+                    else setError(phoneInput, '');
+                    
+                    // Password
+                    if (!isAuthenticated) {
+                        const pass = passwordInput.value.trim();
+                        if (!pass) setError(passwordInput, 'Password is required.');
+                        else if (pass.length < 11) setError(passwordInput, 'Password must be at least 11 characters.');
+                        else setError(passwordInput, '');
+                    } else {
+                        setError(passwordInput, '');
+                    }
+
+                    if (isValid) {
+                        setStep(5);
+                    }
+                });
+
+                toReview?.addEventListener('click', function () {
+                    if (!validateDates()) {
+                        updateSummary();
+                        return;
+                    }
+                    fillReview();
+                    setStep(6);
+                    ensureStripeMounted();
+                });
+
+                const changeHotel = document.getElementById('bkChangeHotel');
+                const changeRoom = document.getElementById('bkChangeRoom');
+                const changeServices = document.getElementById('bkChangeServices');
+                const changeDates = document.getElementById('bkChangeDates');
+
+                changeHotel?.addEventListener('click', () => setStep(1));
+                changeRoom?.addEventListener('click', () => setStep(2));
+                changeServices?.addEventListener('click', () => setStep(3));
+                changeDates?.addEventListener('click', () => setStep(1));
+
+                for (let i = 1; i <= 6; i++) {
+                    const pill = document.getElementById('bkStepPill' + i);
+                    if (!pill) continue;
+                    const go = () => {
+                        if (i <= state.step) setStep(i);
+                    };
+                    pill.addEventListener('click', go);
+                    pill.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            go();
+                        }
+                    });
+                }
+
+                els.checkIn?.addEventListener('change', function () {
+                    validateDates();
+                    updateSummary();
+                    loadAvailability();
+                    setStep(1);
+                });
+
+                els.checkOut?.addEventListener('change', function () {
+                    validateDates();
+                    updateSummary();
+                    loadAvailability();
+                    setStep(1);
+                });
+
+                const inputs = document.querySelectorAll('input');
+                inputs.forEach(input => {
+                    input.addEventListener('input', saveState);
+                    
+                    // Special filter for Phone input
+                    if (input.name === 'Phone') {
+                        input.addEventListener('input', function(e) {
+                            this.value = this.value.replace(/[^0-9]/g, '').substring(0, 11);
+                        });
+                    }
+                });
+            }
+
+            // Initialization.
+            const now = new Date();
+            const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+            if (els.checkIn) els.checkIn.setAttribute('min', todayStr);
+            if (els.checkOut) els.checkOut.setAttribute('min', todayStr);
+
+            loadState(); // Restore from session storage
+            renderHotels();
+            updateSummary();
+            wireNav();
+            setStep(state.step); // This also triggers initial saveState and render correct sections
+
+            // Initial availability load if dates are set but no availability data (or first run).
+            if (els.checkIn?.value && els.checkOut?.value && (!state.availability || !state.availability.companies)) {
+                loadAvailability();
+            }
+
+            let stripe = null;
+            let card = null;
+            let stripeMounted = false;
+
+            function ensureStripeMounted() {
+                if (stripeMounted) return;
+                if (!stripePublishableKey) return;
+                stripe = Stripe(stripePublishableKey);
+                const elements = stripe.elements();
+                card = elements.create('card', { hidePostalCode: true });
+                card.mount('#bkCardElement');
+                stripeMounted = true;
+            }
+
+            async function createPaymentIntent() {
+                const payload = {
+                    companyId: Number(state.companyId),
+                    selectedRoomTypeId: Number(state.roomTypeId),
+                    selectedRoomTypePrice: Number(state.roomPrice),
+                    selectedServicesJson: els.selectedServicesJson?.value || '[]',
+                    checkInDate: els.checkIn?.value,
+                    checkOutDate: els.checkOut?.value,
+                    email: (document.querySelector('[name="Email"]')?.value || '').trim()
+                };
+
+                const resp = await fetch('@Url.Action("CreatePaymentIntent", "Reservation")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data?.message || 'Failed to initialize payment.');
+                return data;
+            }
+
+            function showPaymentError(message) {
+                if (!els.paymentError) return;
+                els.paymentError.textContent = message || 'Payment failed.';
+                els.paymentError.classList.remove('vr-hidden');
+            }
+
+            function clearPaymentError() {
+                if (!els.paymentError) return;
+                els.paymentError.textContent = '';
+                els.paymentError.classList.add('vr-hidden');
+            }
+
+            els.payAndConfirm?.addEventListener('click', async function () {
+                clearPaymentError();
+
+                if (!validateDates()) {
+                    updateSummary();
+                    showPaymentError('Please fix the date range before confirming.');
+                    return;
+                }
+
+                if (!state.companyId || !state.roomTypeId) {
+                    showPaymentError('Please select a hotel and room first.');
+                    return;
+                }
+
+                const email = (document.querySelector('[name="Email"]')?.value || '').trim();
+                const password = (document.querySelector('[name="Password"]')?.value || '').trim();
+                const fullName = (document.querySelector('[name="FullName"]')?.value || '').trim();
+
+                if (!fullName || !email || (!isAuthenticated && !password)) {
+                    showPaymentError(!isAuthenticated
+                        ? 'Please complete guest information (including password) before confirming.'
+                        : 'Please complete guest information before confirming.');
+                    return;
+                }
+
+                if (!stripePublishableKey) {
+                    if (els.paymentOk) els.paymentOk.classList.remove('vr-hidden');
+                    if (els.payAndConfirm) {
+                        els.payAndConfirm.disabled = true;
+                        els.payAndConfirm.textContent = 'Confirming booking...';
+                    }
+
+                    const demo = document.getElementById('bkDemoPayment');
+                    if (demo) demo.value = 'true';
+                    if (els.stripePaymentIntentId && !els.stripePaymentIntentId.value) {
+                        els.stripePaymentIntentId.value = `DEMO-${Date.now()}`;
+                    }
+
+                    sessionStorage.removeItem(STORAGE_KEY); // Clear state on success
+                    document.getElementById('bkForm').submit();
+                    return;
+                }
+
+                ensureStripeMounted();
+                if (!stripe || !card) {
+                    showPaymentError('Unable to initialize payment form.');
+                    return;
+                }
+
+                els.payAndConfirm.disabled = true;
+                els.payAndConfirm.textContent = 'Processing payment...';
+
+                try {
+                    const intent = await createPaymentIntent();
+
+                    const result = await stripe.confirmCardPayment(intent.clientSecret, {
+                        payment_method: {
+                            card: card,
+                            billing_details: {
+                                name: fullName,
+                                email: email
+                            }
+                        }
+                    });
+
+                    if (result.error) {
+                        throw new Error(result.error.message || 'Payment failed.');
+                    }
+
+                    const paymentIntentId = result.paymentIntent?.id;
+                    if (!paymentIntentId) {
+                        throw new Error('Payment was not confirmed.');
+                    }
+
+                    if (els.stripePaymentIntentId) els.stripePaymentIntentId.value = paymentIntentId;
+                    if (els.paymentOk) els.paymentOk.classList.remove('vr-hidden');
+
+                    sessionStorage.removeItem(STORAGE_KEY); // Clear state on success
+                    document.getElementById('bkForm').submit();
+                } catch (e) {
+                    showPaymentError(e?.message || 'Payment failed.');
+                    els.payAndConfirm.disabled = false;
+                    els.payAndConfirm.textContent = 'Pay & Confirm booking';
+                }
+            });
+        })();
+    </script>
+}

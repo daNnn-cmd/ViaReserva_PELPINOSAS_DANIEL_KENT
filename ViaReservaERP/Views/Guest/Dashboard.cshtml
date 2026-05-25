@@ -1,0 +1,299 @@
+@model ViaReservaERP.Models.GuestPortal.GuestDashboardViewModel
+@{
+    ViewData["Title"] = "Guest Dashboard";
+    ViewData["PageSubtitle"] = "Overview of your stay";
+    Layout = "~/Views/Shared/_GuestLayout.cshtml";
+
+    string StatusBadge(string status)
+    {
+        var s = (status ?? "").Trim().ToLowerInvariant();
+        if (s.Contains("confirm") || s.Contains("active") || s.Contains("check")) return "vr-gp-badge vr-gp-badge-confirmed";
+        if (s.Contains("pend")) return "vr-gp-badge vr-gp-badge-pending";
+        if (s.Contains("cancel")) return "vr-gp-badge vr-gp-badge-cancelled";
+        if (s.Contains("complete") || s.Contains("done")) return "vr-gp-badge vr-gp-badge-completed";
+        return "vr-gp-badge vr-gp-badge-default";
+    }
+}
+
+<!-- Welcome banner -->
+<div class="vr-gp-welcome">
+    <div class="vr-gp-welcome-greeting">Welcome back</div>
+    <div class="vr-gp-welcome-name">@Model.GuestName</div>
+    <div class="vr-gp-welcome-hotel">
+        <i class="fa-solid fa-location-dot" style="margin-right:4px;"></i> @Model.CompanyName
+    </div>
+    <div class="vr-gp-welcome-actions">
+        <a href="@Url.Action("Book","Reservation")" class="vr-gp-btn vr-gp-btn-gold">
+            <i class="fa-solid fa-plus"></i> New Booking
+        </a>
+        <a href="@Url.Action("Reservations","Guest")" class="vr-gp-btn" style="background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.20);color:#fff;">
+            <i class="fa-regular fa-calendar-check"></i> My Reservations
+        </a>
+        <a href="@Url.Action("Services","Guest")" class="vr-gp-btn" style="background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.20);color:#fff;">
+            <i class="fa-solid fa-concierge-bell"></i> Request Service
+        </a>
+    </div>
+</div>
+
+<!-- Booking confirmation banner (shown when coming from checkout) -->
+@if (Model.HighlightReservation != null)
+{
+    <div class="vr-gp-confirm-banner" style="margin-top:16px;">
+        <div class="vr-gp-confirm-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div style="flex:1;">
+            <div class="vr-gp-confirm-title">Booking Confirmed</div>
+            <div class="vr-gp-confirm-sub">Your reservation has been confirmed and payment has been recorded successfully.</div>
+            <div class="vr-gp-confirm-cards">
+                <div class="vr-gp-confirm-card">
+                    <div class="vr-gp-confirm-card-label">Reservation</div>
+                    <div class="vr-gp-confirm-card-value">#@Model.HighlightReservation.ReservationId</div>
+                </div>
+                <div class="vr-gp-confirm-card">
+                    <div class="vr-gp-confirm-card-label">Status</div>
+                    <div class="vr-gp-confirm-card-value">@Model.HighlightReservation.Status</div>
+                </div>
+                <div class="vr-gp-confirm-card">
+                    <div class="vr-gp-confirm-card-label">Check-in</div>
+                    <div class="vr-gp-confirm-card-value">@(Model.HighlightReservation.CheckInDate?.ToString("MMM dd, yyyy") ?? "—")</div>
+                </div>
+                <div class="vr-gp-confirm-card">
+                    <div class="vr-gp-confirm-card-label">Total</div>
+                    <div class="vr-gp-confirm-card-value">₱ @Model.HighlightReservation.TotalAmount.ToString("N2")</div>
+                </div>
+            </div>
+            <div style="margin-top:12px;">
+                <a class="vr-gp-link" href="@Url.Action("Tracking","Guest", new { reservationId = Model.HighlightReservation.ReservationId })">
+                    <i class="fa-solid fa-route" style="margin-right:4px;"></i> Track workflow status
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Stats cards -->
+<div class="vr-gp-stats" style="margin-top:20px;">
+    <div class="vr-gp-card vr-gp-card-interactive">
+        <div class="vr-gp-stat">
+            <div class="vr-gp-stat-icon vr-gp-stat-icon-teal"><i class="fa-regular fa-calendar-check"></i></div>
+            <div class="vr-gp-stat-body">
+                <div class="vr-gp-stat-label">Upcoming</div>
+                <div class="vr-gp-stat-value" id="vrDashUpcoming">@Model.UpcomingBookings</div>
+                <div class="vr-gp-stat-sub">Future reservations</div>
+            </div>
+        </div>
+    </div>
+    <div class="vr-gp-card vr-gp-card-interactive">
+        <div class="vr-gp-stat">
+            <div class="vr-gp-stat-icon vr-gp-stat-icon-blue"><i class="fa-solid fa-door-open"></i></div>
+            <div class="vr-gp-stat-body">
+                <div class="vr-gp-stat-label">Active Stays</div>
+                <div class="vr-gp-stat-value" id="vrDashActive">@Model.ActiveStays</div>
+                <div class="vr-gp-stat-sub">Currently checked in</div>
+            </div>
+        </div>
+    </div>
+    <div class="vr-gp-card vr-gp-card-interactive">
+        <div class="vr-gp-stat">
+            <div class="vr-gp-stat-icon vr-gp-stat-icon-green"><i class="fa-solid fa-flag-checkered"></i></div>
+            <div class="vr-gp-stat-body">
+                <div class="vr-gp-stat-label">Completed</div>
+                <div class="vr-gp-stat-value" id="vrDashCompleted">@Model.CompletedStays</div>
+                <div class="vr-gp-stat-sub">Past stays</div>
+            </div>
+        </div>
+    </div>
+    <div class="vr-gp-card vr-gp-card-interactive">
+        <div class="vr-gp-stat">
+            <div class="vr-gp-stat-icon vr-gp-stat-icon-amber"><i class="fa-solid fa-bell-concierge"></i></div>
+            <div class="vr-gp-stat-body">
+                <div class="vr-gp-stat-label">Pending Services</div>
+                <div class="vr-gp-stat-value" id="vrDashPending">@Model.PendingServices</div>
+                <div class="vr-gp-stat-sub">Awaiting action</div>
+            </div>
+        </div>
+    </div>
+    <div class="vr-gp-card vr-gp-card-interactive">
+        <div class="vr-gp-stat">
+            <div class="vr-gp-stat-icon vr-gp-stat-icon-gold"><i class="fa-solid fa-coins"></i></div>
+            <div class="vr-gp-stat-body">
+                <div class="vr-gp-stat-label">Total Paid</div>
+                <div class="vr-gp-stat-value" id="vrDashTotalPaid" style="font-size:1.3rem;">₱ @Model.TotalPaid.ToString("N2")</div>
+                <div class="vr-gp-stat-sub">Lifetime payments</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Reservations + Service Requests -->
+<div class="vr-gp-grid-2" style="margin-top:20px;">
+    <div class="vr-gp-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div>
+                <div class="vr-gp-section-title">Recent Reservations</div>
+                <div class="vr-gp-section-sub">Your latest bookings</div>
+            </div>
+            <a href="@Url.Action("Reservations","Guest")" class="vr-gp-link">View all <i class="fa-solid fa-arrow-right" style="font-size:0.7rem;"></i></a>
+        </div>
+
+        @if (Model.RecentReservations.Count == 0)
+        {
+            <div class="vr-gp-empty">
+                <div class="vr-gp-empty-icon"><i class="fa-regular fa-calendar"></i></div>
+                No reservations yet. <a href="@Url.Action("Book","Reservation")" class="vr-gp-link">Book your first stay</a>
+            </div>
+        }
+        else
+        {
+            <div class="vr-gp-table-wrap">
+                <table class="vr-gp-table">
+                    <thead>
+                        <tr>
+                            <th>Dates</th>
+                            <th>Room</th>
+                            <th>Status</th>
+                            <th style="text-align:right;">Total</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="vrDashRecentReservations">
+                        <partial name="_DashboardRecentReservations" model="Model.RecentReservations" />
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <div class="vr-gp-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div>
+                <div class="vr-gp-section-title">Service Requests</div>
+                <div class="vr-gp-section-sub">Recent service activity</div>
+            </div>
+            <a href="@Url.Action("Services","Guest")" class="vr-gp-link">View all <i class="fa-solid fa-arrow-right" style="font-size:0.7rem;"></i></a>
+        </div>
+
+        @if (Model.RecentServiceRequests.Count == 0)
+        {
+            <div class="vr-gp-empty">
+                <div class="vr-gp-empty-icon"><i class="fa-solid fa-concierge-bell"></i></div>
+                No service requests yet. <a href="@Url.Action("Services","Guest")" class="vr-gp-link">Browse services</a>
+            </div>
+        }
+        else
+        {
+            <div class="vr-gp-table-wrap">
+                <table class="vr-gp-table">
+                    <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Requested</th>
+                    </tr>
+                    </thead>
+                    <tbody id="vrDashServiceRequests">
+                        <partial name="_DashboardServiceRequests" model="Model.RecentServiceRequests" />
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Recent Payments -->
+@if (Model.RecentPayments.Count > 0)
+{
+    <div class="vr-gp-card" style="margin-top:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div>
+                <div class="vr-gp-section-title">Recent Payments</div>
+                <div class="vr-gp-section-sub">Your payment history</div>
+            </div>
+            <a href="@Url.Action("Payments","Guest")" class="vr-gp-link">View all <i class="fa-solid fa-arrow-right" style="font-size:0.7rem;"></i></a>
+        </div>
+        <div class="vr-gp-table-wrap">
+            <table class="vr-gp-table">
+                <thead>
+                <tr>
+                    <th>Payment</th>
+                    <th>Reservation</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Amount</th>
+                    <th>Date</th>
+                </tr>
+                </thead>
+                <tbody id="vrDashRecentPayments">
+                    <partial name="_DashboardRecentPayments" model="Model.RecentPayments" />
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        (function() {
+            const elUpcoming = document.getElementById('vrDashUpcoming');
+            const elActive = document.getElementById('vrDashActive');
+            const elCompleted = document.getElementById('vrDashCompleted');
+            const elPending = document.getElementById('vrDashPending');
+            const elTotal = document.getElementById('vrDashTotalPaid');
+            const elPaymentsTable = document.getElementById('vrDashRecentPayments');
+            const elRequestsTable = document.getElementById('vrDashServiceRequests');
+            const elReservationsTable = document.getElementById('vrDashRecentReservations');
+
+            async function refreshDashboardStats() {
+                try {
+                    const resp = await fetch('@Url.Action("DashboardStats", "Guest")');
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (elUpcoming) elUpcoming.textContent = data.upcoming;
+                        if (elActive) elActive.textContent = data.active;
+                        if (elCompleted) elCompleted.textContent = data.completed;
+                        if (elPending) elPending.textContent = data.pendingServices;
+                        if (elTotal) elTotal.textContent = '₱ ' + data.totalPaid;
+                    }
+                } catch(e) {}
+            }
+
+            async function refreshDashboardPayments() {
+                try {
+                    const resp = await fetch('@Url.Action("DashboardRecentPaymentsPartial", "Guest")');
+                    if (resp.ok) {
+                        const html = await resp.text();
+                        if (elPaymentsTable) elPaymentsTable.innerHTML = html;
+                    }
+                } catch(e) {}
+            }
+
+            async function refreshDashboardRequests() {
+                try {
+                    const resp = await fetch('@Url.Action("DashboardServiceRequestsPartial", "Guest")');
+                    if (resp.ok) {
+                        const html = await resp.text();
+                        if (elRequestsTable) elRequestsTable.innerHTML = html;
+                    }
+                } catch(e) {}
+            }
+
+            async function refreshDashboardReservations() {
+                try {
+                    const resp = await fetch('@Url.Action("DashboardRecentReservationsPartial", "Guest")');
+                    if (resp.ok) {
+                        const html = await resp.text();
+                        if (elReservationsTable) elReservationsTable.innerHTML = html;
+                    }
+                } catch(e) {}
+            }
+
+            // Poll every 10 seconds
+            setInterval(() => {
+                refreshDashboardStats();
+                refreshDashboardPayments();
+                refreshDashboardRequests();
+                refreshDashboardReservations();
+            }, 10000);
+        })();
+    </script>
+}

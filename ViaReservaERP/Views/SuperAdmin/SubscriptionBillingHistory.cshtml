@@ -1,0 +1,124 @@
+@model ViaReservaERP.Models.SuperAdmin.SubscriptionBillingHistoryViewModel
+@using System.Linq
+@{
+    ViewData["Title"] = "Billing History";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Subscription ID</div>
+                    <div class="vr-sa-report-stat-value">#@Model.SubscriptionId</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-hashtag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Linked subscription</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Payments</div>
+                    <div class="vr-sa-report-stat-value">@Model.Rows.Count</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-list-check"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Recorded billing entries</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Company</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.CompanyName) ? "—" : Model.CompanyName)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-hotel"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Tenant scope</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Last Payment</div>
+                    <div class="vr-sa-report-stat-value">@(Model.Rows.OrderByDescending(r => r.CreatedAtUtc).FirstOrDefault()?.CreatedAtUtc.ToString("MM-dd HH:mm") ?? "—")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-clock"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">UTC timeline</div>
+        </div>
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Subscription drill-down</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" href="@Url.Action("SubscriptionDetails", "SuperAdmin", new { id = Model.SubscriptionId })" title="Subscription Details">Details</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("SubscriptionUsageReport", "SuperAdmin", new { id = Model.SubscriptionId })" title="Usage Report">Usage</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("SubscriptionAuditLogs", "SuperAdmin", new { id = Model.SubscriptionId })" title="Audit Logs">Audit</a>
+                <a class="vr-sa-btn" href="@Url.Action("Subscriptions", "SuperAdmin")"><i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Billing Overview</div>
+                <div class="vr-sa-panel-sub">Latest billing attempts and receipts for subscription #@Model.SubscriptionId.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Payments</div>
+                <div class="vr-sa-panel-sub">Method, status, Stripe reference, and amount (UTC).</div>
+            </div>
+        </div>
+
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="vr-sa-alert" style="margin-top:12px;">
+                <div class="vr-sa-alert-title">No billing records found</div>
+                <div class="vr-sa-alert-sub">No payment rows are associated with this subscription yet.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th>Stripe PaymentIntent</th>
+                            <th class="text-end">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Rows)
+                        {
+                            var st = (r.Status ?? "").ToLower();
+                            var stClass = st.Contains("succeed") || st.Contains("paid") ? "vr-sa-status-success" :
+                                          st.Contains("fail") ? "vr-sa-status-danger" :
+                                          st.Contains("pending") ? "vr-sa-status-warning" : "vr-sa-status-neutral";
+
+                            <tr>
+                                <td class="vr-sa-cell-muted">@r.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@(string.IsNullOrWhiteSpace(r.PaymentMethod) ? "—" : r.PaymentMethod)</td>
+                                <td><span class="vr-sa-status-pill @stClass" style="font-size: 0.7rem; padding: 2px 8px;">@(string.IsNullOrWhiteSpace(r.Status) ? "—" : r.Status)</span></td>
+                                <td><code style="font-size: 0.85rem; color: #64748b;">@(string.IsNullOrWhiteSpace(r.StripePaymentIntentId) ? "—" : r.StripePaymentIntentId)</code></td>
+                                <td class="text-end">₱ @r.Amount.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>

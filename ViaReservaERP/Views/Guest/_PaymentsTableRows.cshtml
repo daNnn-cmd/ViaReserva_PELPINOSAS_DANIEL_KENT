@@ -1,0 +1,19 @@
+@model List<ViaReservaERP.Models.GuestPortal.PaymentRow>
+
+@foreach (var p in Model)
+{
+    <tr>
+        <td>@p.PaymentMethod</td>
+        <td>@p.Status</td>
+        <td style="text-align:right;font-weight:600;">₱ @p.Amount.ToString("N2")</td>
+        <td class="vr-gp-cell-muted" style="font-size:0.78rem;">@(string.IsNullOrWhiteSpace(p.StripePaymentIntentId) ? "—" : p.StripePaymentIntentId)</td>
+        <td class="vr-gp-cell-muted">@p.CreatedAtUtc.ToString("MMM dd, yyyy HH:mm")</td>
+        <td style="text-align:right;">
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <a href="@Url.Action("DownloadInvoicePdf", "Guest", new { paymentId = p.PaymentId, inline = true })" target="_blank" class="vr-sa-iconbtn" title="View Receipt" style="color:#3b82f6;"><i class="fa-solid fa-eye"></i></a>
+                <a href="@Url.Action("DownloadInvoicePdf", "Guest", new { paymentId = p.PaymentId })" class="vr-sa-iconbtn" title="Download PDF" style="color:#ef4444;"><i class="fa-solid fa-file-pdf"></i></a>
+                <a href="@Url.Action("DownloadInvoiceExcel", "Guest", new { paymentId = p.PaymentId })" class="vr-sa-iconbtn" title="Download Excel" style="color:#22c55e;"><i class="fa-solid fa-file-excel"></i></a>
+            </div>
+        </td>
+    </tr>
+}

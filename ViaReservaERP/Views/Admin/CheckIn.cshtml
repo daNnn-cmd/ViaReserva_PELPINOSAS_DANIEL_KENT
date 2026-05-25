@@ -1,0 +1,117 @@
+@model ViaReservaERP.Models.Admin.CheckInViewModel
+@{
+    ViewData["Title"] = "Guest Arrival (Check-In)";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-panel" style="max-width: 800px; margin: 0 auto;">
+    <div class="vr-sa-panel-head" style="margin-bottom: 30px;">
+        <div>
+            <div class="vr-sa-panel-title">Verify Guest Arrival</div>
+            <div class="vr-sa-panel-sub">Reservation #@Model.Reservation.ReservationId — @Model.Reservation.Guest?.FullName</div>
+        </div>
+        <a href="@Url.Action("Details", "Admin", new { id = Model.Reservation.ReservationId })" class="vr-sa-btn">
+            <i class="fa-solid fa-times me-2"></i> Cancel
+        </a>
+    </div>
+
+    <div class="vr-sa-alert vr-sa-alert-info mb-4">
+        <div class="vr-sa-alert-title">Arrival Checklist</div>
+        <div class="vr-sa-alert-sub">Please verify the following before handing over the room keys.</div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Verification Steps -->
+        <div class="col-md-7">
+            <div class="vr-sa-timeline">
+                <div class="vr-sa-tl-item">
+                    <div class="vr-sa-tl-dot @(Model.Reservation.Status == "Confirmed" ? "vr-sa-tl-insert" : "vr-sa-tl-delete")"></div>
+                    <div class="vr-sa-tl-body">
+                        <div class="vr-sa-tl-title">Reservation Verification</div>
+                        <div class="vr-sa-tl-meta">
+                            Status: <strong>@Model.Reservation.Status</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="vr-sa-tl-item">
+                    <div class="vr-sa-tl-dot @(Model.IsRoomAssigned ? "vr-sa-tl-insert" : "vr-sa-tl-delete")"></div>
+                    <div class="vr-sa-tl-body">
+                        <div class="vr-sa-tl-title">Room Assignment</div>
+                        <div class="vr-sa-tl-meta">
+                            @if (Model.IsRoomAssigned) {
+                                <span>Assigned to <strong>Room @Model.AssignedRoomNumber</strong></span>
+                            } else {
+                                <span class="text-danger">No room assigned. Please assign a room first.</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="vr-sa-tl-item">
+                    <div class="vr-sa-tl-dot @(Model.IsPaymentVerified ? "vr-sa-tl-insert" : "vr-sa-tl-delete")"></div>
+                    <div class="vr-sa-tl-body">
+                        <div class="vr-sa-tl-title">Financial Status</div>
+                        <div class="vr-sa-tl-meta">
+                            Paid: ₱ @Model.TotalPaid.ToString("N2") / Total: ₱ @Model.TotalAmount.ToString("N2")
+                            @if (!Model.IsPaymentVerified) {
+                                <br /><span class="text-warning"><i class="fa-solid fa-warning me-1"></i> Outstanding Balance: ₱ @Model.Balance.ToString("N2")</span>
+                            } else {
+                                <br /><span class="text-success"><i class="fa-solid fa-check me-1"></i> Fully Paid</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Panel -->
+        <div class="col-md-5">
+            <div class="vr-sa-panel" style="background: rgba(15, 23, 42, 0.02); height: 100%;">
+                <h5 style="font-weight: 700; color: #0b122d; margin-bottom: 20px;">Finalize Check-In</h5>
+                
+                @if (Model.CanCheckIn)
+                {
+                    <div class="mb-4">
+                        <div class="vr-sa-label">Stay Duration</div>
+                        <div style="font-weight: 600; color: #1a2a6c;">
+                            @Model.Reservation.CheckInDate?.ToShortDateString() — @Model.Reservation.CheckOutDate?.ToShortDateString()
+                        </div>
+                    </div>
+
+                    <form action="@Url.Action("ProcessCheckIn", "Admin")" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Reservation.ReservationId" />
+                        
+                        <div class="d-grid gap-3">
+                            <button type="submit" class="vr-sa-btn vr-sa-btn-primary" style="height: 60px; font-size: 1.1rem;">
+                                <i class="fa-solid fa-key me-2"></i> Confirm Arrival
+                            </button>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <div class="vr-sa-alert vr-sa-alert-danger">
+                        <div class="vr-sa-alert-title">Cannot Check-In</div>
+                        <div class="vr-sa-alert-sub">
+                            @if (!Model.IsRoomAssigned) {
+                                <span>A room must be assigned before checking in.</span>
+                            } else {
+                                <span>Only 'Confirmed' reservations can be checked in. Current status: @Model.Reservation.Status</span>
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        @if (!Model.IsRoomAssigned) {
+                            <a href="@Url.Action("AssignRoom", "Admin", new { id = Model.Reservation.ReservationId })" class="vr-sa-btn w-100" style="justify-content: center;">
+                                <i class="fa-solid fa-bed me-2"></i> Go to Room Assignment
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

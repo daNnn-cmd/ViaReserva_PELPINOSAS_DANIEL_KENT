@@ -1,0 +1,412 @@
+@model ViaReservaERP.Models.SuperAdmin.SuperAdminDashboardViewModel
+@{
+    ViewData["Title"] = "Super Admin Dashboard";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+@functions {
+    string DeltaClass(double? pct)
+    {
+        if (!pct.HasValue) return "vr-sa-kpi-delta vr-sa-kpi-delta-na";
+        if (pct.Value > 0.0001) return "vr-sa-kpi-delta vr-sa-kpi-delta-up";
+        if (pct.Value < -0.0001) return "vr-sa-kpi-delta vr-sa-kpi-delta-down";
+        return "vr-sa-kpi-delta";
+    }
+
+    string DeltaText(double? pct)
+    {
+        if (!pct.HasValue) return "—";
+        var sign = pct.Value > 0 ? "+" : "";
+        return $"{sign}{pct.Value:0.0}%";
+    }
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-grid vr-sa-grid-4" style="margin-bottom: 20px;">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">TOTAL HOTEL COMPANIES</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalHotelCompanies</div>
+                    <div class="@DeltaClass(Model.TotalHotelCompaniesDeltaPct)">@DeltaText(Model.TotalHotelCompaniesDeltaPct) vs previous period</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-hotel"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Multi-tenant properties onboarded</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">TOTAL ACTIVE USERS</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalActiveUsers</div>
+                    <div class="@DeltaClass(Model.TotalActiveUsersDeltaPct)">@DeltaText(Model.TotalActiveUsersDeltaPct) vs previous period</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-users"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Across all companies</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">TOTAL RESERVATIONS</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalReservations</div>
+                    <div class="@DeltaClass(Model.TotalReservationsDeltaPct)">@DeltaText(Model.TotalReservationsDeltaPct) vs previous period</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-calendar-check"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">@Model.SelectedRangeLabel</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">TOTAL REVENUE</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.TotalRevenue.ToString("N0")</div>
+                    <div class="@DeltaClass(Model.TotalRevenueDeltaPct)">@DeltaText(Model.TotalRevenueDeltaPct) vs previous period</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #c9a227; background: rgba(201, 162, 39, 0.08);"><i class="fa-solid fa-peso-sign"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Payments captured via Stripe + local</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">ACTIVE SUBSCRIPTIONS</div>
+                    <div class="vr-sa-report-stat-value">@Model.ActiveSubscriptions</div>
+                    <div class="@DeltaClass(Model.ActiveSubscriptionsDeltaPct)">@DeltaText(Model.ActiveSubscriptionsDeltaPct) vs previous period</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.08);"><i class="fa-solid fa-credit-card"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Renewals due in the next 14 days</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">PENDING SERVICE REQUESTS</div>
+                    <div class="vr-sa-report-stat-value">@Model.PendingServiceRequests</div>
+                    <div class="@DeltaClass(Model.PendingServiceRequestsDeltaPct)">@DeltaText(Model.PendingServiceRequestsDeltaPct) vs previous period</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-bell-concierge"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Across all properties</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">WORKFLOW PENDING APPROVALS</div>
+                    <div class="vr-sa-report-stat-value">@Model.WorkflowPendingApprovals</div>
+                    <div class="@DeltaClass(Model.WorkflowPendingApprovalsDeltaPct)">@DeltaText(Model.WorkflowPendingApprovalsDeltaPct) vs previous period</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #64748b; background: rgba(100, 116, 139, 0.08);"><i class="fa-solid fa-network-wired"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Escalations in the last 24 hours</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">SYSTEM ALERTS</div>
+                    <div class="vr-sa-report-stat-value">@Model.SystemAlerts</div>
+                    <div class="vr-sa-kpi-delta vr-sa-kpi-delta-na">— vs previous period</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.08);"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Critical infrastructure health</div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters" style="margin-bottom:24px;">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Analytics Time Range</div>
+                <div class="vr-sa-panel-sub">Selected: <span style="font-weight:500; color:#0b122d;">@Model.SelectedRangeLabel</span></div>
+            </div>
+        </div>
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">View by</div>
+                <select class="vr-sa-filter-input" name="granularity" onchange="this.form.submit()">
+                    <option value="day" selected="@(Model.Granularity == "day")">Day</option>
+                    <option value="month" selected="@(Model.Granularity == "month")">Month</option>
+                    <option value="year" selected="@(Model.Granularity == "year")">Year</option>
+                </select>
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Start</div>
+                <input class="vr-sa-filter-input" type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">End</div>
+                <input class="vr-sa-filter-input" type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="vr-sa-filter" style="grid-column: 1 / -1;">
+                <div class="vr-sa-report-card-actions">
+                    <button type="submit" class="vr-sa-btn">Apply Filters</button>
+                    <a class="vr-sa-btn" href="@Url.Action("Dashboard", "SuperAdmin", new { granularity = Model.Granularity })">Reset</a>
+                </div>
+            </div>
+        </form>
+    </section>
+</div>
+
+
+
+<div class="vr-sa-panels">
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Revenue Analytics</div>
+                <div class="vr-sa-panel-sub">Subscription revenue vs reservation revenue</div>
+            </div>
+            <div class="vr-sa-pill">@Model.SelectedRangeLabel</div>
+        </div>
+
+        <div class="vr-sa-chart vr-sa-chart-compact">
+            <div id="vrSaRevenueChart" class="vr-sa-apex"></div>
+        </div>
+    </section>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Reservation Analytics</div>
+                <div class="vr-sa-panel-sub">Bookings, check-ins, check-outs, cancellations</div>
+            </div>
+            <div class="vr-sa-pill">@Model.SelectedRangeLabel</div>
+        </div>
+
+        <div class="vr-sa-chart vr-sa-chart-compact">
+            <div id="vrSaReservationChart" class="vr-sa-apex"></div>
+        </div>
+    </section>
+</div>
+
+<div class="vr-sa-panels">
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Service Analytics</div>
+                <div class="vr-sa-panel-sub">Most requested services and request completion</div>
+            </div>
+            <div class="vr-sa-pill">Operations</div>
+        </div>
+
+        <div class="vr-sa-chart vr-sa-chart-compact">
+            <div class="vr-sa-chart-split">
+                <div>
+                    <div class="vr-sa-mini-title">Top Services</div>
+                    <div id="vrSaServiceTopChart" class="vr-sa-apex"></div>
+                </div>
+                <div>
+                    <div class="vr-sa-mini-title">Pending vs Completed</div>
+                    <div id="vrSaServiceStatusChart" class="vr-sa-apex"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Company Growth Analytics</div>
+                <div class="vr-sa-panel-sub">New companies registered and active vs inactive</div>
+            </div>
+            <div class="vr-sa-pill">@Model.SelectedRangeLabel</div>
+        </div>
+
+        <div class="vr-sa-chart vr-sa-chart-compact">
+            <div id="vrSaCompanyChart" class="vr-sa-apex"></div>
+        </div>
+    </section>
+</div>
+
+<div class="vr-sa-panels">
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Workflow Analytics</div>
+                <div class="vr-sa-panel-sub">Pending approvals, completed, escalations</div>
+            </div>
+            <div class="vr-sa-pill">Governance</div>
+        </div>
+
+        <div class="vr-sa-chart vr-sa-chart-compact">
+            <div id="vrSaWorkflowChart" class="vr-sa-apex"></div>
+        </div>
+    </section>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Financial Reports</div>
+                <div class="vr-sa-panel-sub">Income vs expenses and monthly profit overview</div>
+            </div>
+            <div class="vr-sa-pill">@Model.SelectedRangeLabel</div>
+        </div>
+
+        <div class="vr-sa-chart vr-sa-chart-compact">
+            <div id="vrSaFinancialChart" class="vr-sa-apex"></div>
+        </div>
+    </section>
+</div>
+
+
+
+@section Scripts {
+    @{
+        var jsonOpts = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+    }
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.1"></script>
+    <script>
+        (function () {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+            const palette = {
+                blue: '#1a2a6c',
+                burgundy: '#b21f1f',
+                text: isDark ? '#e2e8f0' : '#1e293b',
+                grid: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(30, 41, 59, 0.10)',
+                muted: isDark ? '#94a3b8' : 'rgba(30, 41, 59, 0.62)'
+            };
+
+            function baseOptions() {
+                return {
+                    chart: {
+                        toolbar: { show: false },
+                        foreColor: palette.muted,
+                        fontFamily: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial'
+                    },
+                    grid: { borderColor: palette.grid, strokeDashArray: 4, padding: { left: 6, right: 6 } },
+                    legend: { position: 'bottom', fontWeight: 400, markers: { width: 8, height: 8, radius: 8 }, labels: { colors: palette.muted } },
+                    tooltip: { theme: isDark ? 'dark' : 'light' },
+                    dataLabels: { enabled: false }
+                };
+            }
+
+            const revenue = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueAnalytics, jsonOpts));
+            const reservations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ReservationAnalytics, jsonOpts));
+            const services = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ServiceAnalytics, jsonOpts));
+            const companies = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CompanyGrowthAnalytics, jsonOpts));
+            const workflows = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.WorkflowAnalytics, jsonOpts));
+            const financial = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.FinancialAnalytics, jsonOpts));
+
+            const revenueEl = document.querySelector('#vrSaRevenueChart');
+            const reservationEl = document.querySelector('#vrSaReservationChart');
+            const serviceTopEl = document.querySelector('#vrSaServiceTopChart');
+            const serviceStatusEl = document.querySelector('#vrSaServiceStatusChart');
+            const companyEl = document.querySelector('#vrSaCompanyChart');
+            const workflowEl = document.querySelector('#vrSaWorkflowChart');
+            const financialEl = document.querySelector('#vrSaFinancialChart');
+
+            if (revenueEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'line';
+                opt.chart.height = 210;
+                opt.stroke = { curve: 'smooth', width: 2, dashArray: [0, 0, 6, 6] };
+                opt.colors = [palette.blue, palette.burgundy];
+                opt.series = [
+                    { name: 'Subscription Revenue', data: revenue.datasets['Subscription Revenue'] || [] },
+                    { name: 'Reservation Revenue', data: revenue.datasets['Reservation Revenue'] || [] },
+                    { name: 'Subscription Revenue (Prev)', data: revenue.datasets['Subscription Revenue (Prev)'] || [] },
+                    { name: 'Reservation Revenue (Prev)', data: revenue.datasets['Reservation Revenue (Prev)'] || [] }
+                ];
+                opt.xaxis = { categories: revenue.labels || [], labels: { style: { colors: palette.muted } } };
+                opt.yaxis = { labels: { style: { colors: palette.muted } } };
+                new ApexCharts(revenueEl, opt).render();
+            }
+
+            if (reservationEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'bar';
+                opt.chart.height = 210;
+                opt.plotOptions = { bar: { borderRadius: 8, columnWidth: '58%' } };
+                opt.series = [
+                    { name: 'Bookings', data: reservations.datasets['Bookings'] || [] },
+                    { name: 'Check-ins', data: reservations.datasets['Check-ins'] || [] },
+                    { name: 'Check-outs', data: reservations.datasets['Check-outs'] || [] },
+                    { name: 'Cancellations', data: reservations.datasets['Cancellations'] || [] }
+                ];
+                opt.colors = [palette.blue, '#0ea5e9', '#64748b', palette.burgundy];
+                opt.xaxis = { categories: reservations.labels || [] };
+                opt.yaxis = { labels: { style: { colors: palette.muted } } };
+                opt.chart.stacked = true;
+                new ApexCharts(reservationEl, opt).render();
+            }
+
+            if (serviceTopEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'donut';
+                opt.chart.height = 190;
+                opt.labels = services.labels || [];
+                opt.series = (services.datasets['Most Requested'] || []).map(x => Number(x));
+                opt.colors = [palette.blue, palette.burgundy, '#0ea5e9', '#22c55e', '#f59e0b', '#64748b'];
+                opt.legend = { position: 'bottom' };
+                new ApexCharts(serviceTopEl, opt).render();
+            }
+
+            if (serviceStatusEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'donut';
+                opt.chart.height = 190;
+                opt.labels = ['Pending', 'Completed'];
+                opt.series = (services.datasets['Pending vs Completed'] || []).map(x => Number(x));
+                opt.colors = ['#f59e0b', '#22c55e'];
+                opt.legend = { position: 'bottom' };
+                new ApexCharts(serviceStatusEl, opt).render();
+            }
+
+            if (companyEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'area';
+                opt.chart.height = 210;
+                opt.stroke = { curve: 'smooth', width: 2 };
+                opt.fill = { type: 'solid', opacity: 0.08 };
+                opt.colors = [palette.blue, '#0ea5e9', palette.burgundy];
+                opt.series = [
+                    { name: 'New Companies', data: companies.datasets['New Companies'] || [] },
+                    { name: 'Active', data: companies.datasets['Active'] || [] },
+                    { name: 'Inactive', data: companies.datasets['Inactive'] || [] }
+                ];
+                opt.xaxis = { categories: companies.labels || [] };
+                new ApexCharts(companyEl, opt).render();
+            }
+
+            if (workflowEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'bar';
+                opt.chart.height = 210;
+                opt.plotOptions = { bar: { horizontal: true, borderRadius: 8, barHeight: '58%' } };
+                opt.series = [
+                    { name: 'Count', data: [
+                        (workflows.datasets['Pending'] || []).slice(-1)[0] || 0,
+                        (workflows.datasets['Completed'] || []).slice(-1)[0] || 0,
+                        (workflows.datasets['Escalated'] || []).slice(-1)[0] || 0
+                    ] }
+                ];
+                opt.colors = [palette.blue];
+                opt.xaxis = { categories: ['Pending', 'Completed', 'Escalated'], labels: { style: { colors: palette.muted } } };
+                new ApexCharts(workflowEl, opt).render();
+            }
+
+            if (financialEl) {
+                const opt = baseOptions();
+                opt.chart.type = 'line';
+                opt.chart.height = 210;
+                opt.stroke = { curve: 'smooth', width: 2 };
+                opt.colors = ['#0ea5e9', palette.burgundy, palette.blue];
+                opt.series = [
+                    { name: 'Income', data: financial.datasets['Income'] || [] },
+                    { name: 'Expenses', data: financial.datasets['Expenses'] || [] },
+                    { name: 'Profit', data: financial.datasets['Profit'] || [] }
+                ];
+                opt.xaxis = { categories: financial.labels || [] };
+                new ApexCharts(financialEl, opt).render();
+            }
+        })();
+    </script>
+}

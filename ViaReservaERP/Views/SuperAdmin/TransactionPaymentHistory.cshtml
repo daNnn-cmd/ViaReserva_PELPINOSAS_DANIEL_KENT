@@ -1,0 +1,116 @@
+@model ViaReservaERP.Models.SuperAdmin.TransactionPaymentHistoryViewModel
+@{
+    ViewData["Title"] = "Payment History";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Transaction ID</div>
+                    <div class="vr-sa-report-stat-value">#@Model.Id</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-hashtag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">@Model.Source reference</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Total Amount</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.Rows.Sum(x => x.Amount).ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-wallet"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Sum of records</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Property</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.CompanyName) ? "—" : Model.CompanyName)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-hotel"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Tenant scope</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Records</div>
+                    <div class="vr-sa-report-stat-value">@Model.Rows.Count</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-list"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Linked payments</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Related monitoring contexts</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" href="@Url.Action("TransactionDetails", "SuperAdmin", new { source = Model.Source, id = Model.Id })" title="Transaction Details">Details</a>
+                <a class="vr-sa-btn" href="@Url.Action("Accounting", "SuperAdmin")"><i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Payment Breakdown Overview</div>
+                <div class="vr-sa-panel-sub">History of all payment attempts and records tied to @Model.Source #@Model.Id.</div>
+            </div>
+        </div>
+    </section>
+
+
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="vr-sa-alert" style="margin-top:12px;">
+                <div class="vr-sa-alert-title">No payment history found</div>
+                <div class="vr-sa-alert-sub">No payment records were matched for this transaction context.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>Created At</th>
+                            <th>Method</th>
+                            <th class="text-end">Amount</th>
+                            <th>Status</th>
+                            <th>Stripe Ref</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Rows)
+                        {
+                            <tr>
+                                <td>@r.PaymentId</td>
+                                <td>@r.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@(string.IsNullOrWhiteSpace(r.PaymentMethod) ? "—" : r.PaymentMethod)</td>
+                                <td class="text-end">₱ @r.Amount.ToString("N2")</td>
+                                <td>@(string.IsNullOrWhiteSpace(r.Status) ? "—" : r.Status)</td>
+                                <td>@(string.IsNullOrWhiteSpace(r.StripePaymentIntentId) ? "—" : r.StripePaymentIntentId)</td>
+                                <td>
+                                    <a class="vr-sa-iconbtn" href="@Url.Action("TransactionDetails", "SuperAdmin", new { source = "payment", id = r.PaymentId })" title="View"><i class="fa-solid fa-eye"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>

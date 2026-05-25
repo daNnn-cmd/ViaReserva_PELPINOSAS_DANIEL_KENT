@@ -1,0 +1,121 @@
+@model ViaReservaERP.Models.SuperAdmin.SubscriptionUsageReportViewModel
+@{
+    ViewData["Title"] = "Usage Report";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Subscription ID</div>
+                    <div class="vr-sa-report-stat-value">#@Model.SubscriptionId</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-hashtag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">System reference</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Company</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.CompanyName) ? "—" : Model.CompanyName)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-hotel"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Tenant scope</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Reservations</div>
+                    <div class="vr-sa-report-stat-value">@Model.Reservations</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-calendar-check"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Operational volume</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Service Requests</div>
+                    <div class="vr-sa-report-stat-value">@Model.ServiceRequests</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-bell-concierge"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Workload activity</div>
+        </div>
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Subscription drill-down</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" href="@Url.Action("SubscriptionDetails", "SuperAdmin", new { id = Model.SubscriptionId })" title="Details">Details</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("SubscriptionBillingHistory", "SuperAdmin", new { id = Model.SubscriptionId })" title="Billing History">Billing</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("SubscriptionAuditLogs", "SuperAdmin", new { id = Model.SubscriptionId })" title="Audit Logs">Audit</a>
+                <a class="vr-sa-btn" href="@Url.Action("Subscriptions", "SuperAdmin")"><i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Usage Analytics</div>
+                <div class="vr-sa-panel-sub">Read-only company usage signals for subscription #@Model.SubscriptionId.</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="vr-sa-panels">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Usage Summary</div>
+                    <div class="vr-sa-panel-sub">Tenant volume metrics.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-report-grid" style="margin-top:12px;">
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Active Users</div><div class="vr-sa-report-sub">Accounts in tenant</div></div><div class="vr-sa-report-stat-value">@Model.Users</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Total Reservations</div><div class="vr-sa-report-sub">Booking volume</div></div><div class="vr-sa-report-stat-value">@Model.Reservations</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Workflow Instances</div><div class="vr-sa-report-sub">Automation executions</div></div><div class="vr-sa-report-stat-value">@Model.WorkflowInstances</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Service Requests</div><div class="vr-sa-report-sub">Guest service workload</div></div><div class="vr-sa-report-stat-value">@Model.ServiceRequests</div></div>
+                <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Audit Logs</div><div class="vr-sa-report-sub">Governance activity</div></div><div class="vr-sa-report-stat-value">@Model.AuditLogs</div></div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Module Distribution</div>
+                    <div class="vr-sa-panel-sub">Volume by system module.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Module</th>
+                            <th class="text-end">Volume</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in Model.Modules)
+                        {
+                            <tr>
+                                <td style="font-weight: 500; color: #0b122d;">@m.Module</td>
+                                <td class="text-end" style="font-weight: 600;">@m.Volume.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>

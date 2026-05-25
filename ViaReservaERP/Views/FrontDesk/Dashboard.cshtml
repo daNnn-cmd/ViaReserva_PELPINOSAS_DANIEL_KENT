@@ -1,0 +1,108 @@
+@model ViaReservaERP.Models.FrontDesk.FrontDeskDashboardViewModel
+@{
+    ViewData["Title"] = "Front Desk Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Reservations Today</div>
+                    <div class="vr-sa-report-stat-value">@Model.ReservationsToday</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-calendar-day"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Arrivals + departures today</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Check-ins Today</div>
+                    <div class="vr-sa-report-stat-value">@Model.CheckInsToday</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-right-to-bracket"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Guests arriving today</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Check-outs Today</div>
+                    <div class="vr-sa-report-stat-value">@Model.CheckOutsToday</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #6366f1; background: rgba(99, 102, 241, 0.08);"><i class="fa-solid fa-right-from-bracket"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Guests departing today</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">In-House</div>
+                    <div class="vr-sa-report-stat-value">@Model.InHouseGuests</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-hotel"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Currently checked-in stays</div>
+        </div>
+
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-12">
+            <section class="vr-sa-panel">
+                <div class="vr-sa-panel-head">
+                    <div>
+                        <div class="vr-sa-panel-title">Recent Reservations</div>
+                        <div class="vr-sa-panel-sub">Latest bookings for your company</div>
+                    </div>
+                    <a class="vr-sa-link" style="font-weight: 700;" href="@Url.Action("Reservations", "FrontDesk")">Manage All</a>
+                </div>
+
+                <div class="vr-sa-table-wrap vr-sa-table-modern">
+                    <table class="vr-sa-table">
+                        <thead>
+                            <tr>
+                                <th>Guest & Reservation</th>
+                                <th>Timestamp</th>
+                                <th class="vr-sa-cell-center">Status</th>
+                                <th class="vr-sa-cell-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var res in Model.RecentReservations)
+                            {
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 700; color: #0f172a;">@res.GuestName</div>
+                                        <div class="vr-sa-cell-muted" style="font-size: 0.82rem;">Reservation #@res.ReservationId</div>
+                                    </td>
+                                    <td class="vr-sa-cell-muted">
+                                        <div style="font-weight: 600; color: #475569;">@res.Date.ToString("HH:mm")</div>
+                                        <div style="font-size: 0.75rem;">@res.Date.ToString("MMM dd")</div>
+                                    </td>
+                                    <td class="vr-sa-cell-center">
+                                        <div style="font-weight: 500; color: @(res.Status == "Confirmed" ? "#22c55e" : res.Status == "Cancelled" ? "#ef4444" : "#f59e0b");">
+                                            @res.Status
+                                        </div>
+                                    </td>
+                                    <td class="vr-sa-cell-right" style="font-weight: 800; color: #0b122d;">₱ @res.Amount.ToString("N2")</td>
+                                </tr>
+                            }
+                            @if (!Model.RecentReservations.Any())
+                            {
+                                <tr>
+                                    <td colspan="4" class="vr-sa-cell-muted" style="text-align:center; padding: 28px;">No reservations found.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,185 @@
+@model ViaReservaERP.Models.Admin.ReservationDetailsViewModel
+@{
+    ViewData["Title"] = $"Reservation #{Model.Reservation.ReservationId}";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row g-4">
+    <!-- Left Column: Reservation Info -->
+    <div class="col-lg-8">
+        <div class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Reservation Details</div>
+                    <div class="vr-sa-panel-sub">Stay and Guest information for #@Model.Reservation.ReservationId</div>
+                </div>
+                <div>
+                    @{
+                        var statusClass = Model.Reservation.Status?.ToLower() switch {
+                            "confirmed" => "vr-sa-badge-active",
+                            "checked in" => "vr-sa-badge-active",
+                            "cancelled" => "vr-sa-badge-suspended",
+                            _ => "vr-sa-badge-pending"
+                        };
+                    }
+                    <span class="vr-sa-badge @statusClass" style="font-size: 0.9rem; padding: 6px 16px;">@Model.Reservation.Status</span>
+                </div>
+            </div>
+
+            <div class="row g-4 mt-2">
+                <div class="col-md-6">
+                    <div class="vr-sa-label">Guest Name</div>
+                    <div style="font-weight: 600; font-size: 1.1rem; color: #0b122d;">@Model.Reservation.Guest?.FullName</div>
+                    <div class="vr-sa-cell-muted">@Model.Reservation.Guest?.Email</div>
+                    <div class="vr-sa-cell-muted">@Model.Reservation.Guest?.Phone</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="vr-sa-label">Stay Period</div>
+                    <div style="font-weight: 600; font-size: 1.1rem; color: #0b122d;">
+                        @Model.Reservation.CheckInDate?.ToLongDateString() — @Model.Reservation.CheckOutDate?.ToLongDateString()
+                    </div>
+                    <div class="vr-sa-cell-muted">
+                        @{
+                            var nights = (Model.Reservation.CheckOutDate?.ToDateTime(TimeOnly.MinValue) - Model.Reservation.CheckInDate?.ToDateTime(TimeOnly.MinValue))?.Days ?? 0;
+                        }
+                        Total Stay: @nights Night(s)
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="vr-sa-label">Assigned Room(s)</div>
+                    <div style="font-weight: 600; font-size: 1.1rem; color: #0b122d;">
+                        @if (Model.Reservation.ReservationRooms.Any())
+                        {
+                            @string.Join(", ", Model.Reservation.ReservationRooms.Select(rr => $"Room {rr.Room?.RoomNumber} ({rr.Room?.RoomType?.TypeName})"))
+                        }
+                        else
+                        {
+                            <span class="text-danger">No room assigned</span>
+                        }
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="vr-sa-label">Total Amount</div>
+                    <div style="font-weight: 800; font-size: 1.5rem; color: #1a2a6c;">₱ @(Model.Reservation.TotalAmount?.ToString("N2") ?? "0.00")</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="vr-sa-panel mt-4">
+            <div class="vr-sa-panel-head">
+                <div class="vr-sa-panel-title">Workflow Audit Trail</div>
+            </div>
+            <div class="vr-sa-timeline">
+                @foreach (var log in Model.WorkflowHistory)
+                {
+                    <div class="vr-sa-tl-item">
+                        <div class="vr-sa-tl-dot @(log.ActionTaken == "Approved" ? "vr-sa-tl-insert" : "vr-sa-tl-delete")"></div>
+                        <div class="vr-sa-tl-body">
+                            <div class="vr-sa-tl-title">@log.ActionTaken</div>
+                            <div class="vr-sa-tl-meta">
+                                <span>By @(log.PerformedByUser?.FullName ?? "System")</span>
+                                <span class="vr-sa-dot-sep">•</span>
+                                <span class="vr-sa-cell-muted">@log.PerformedAt.ToString("g")</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if (!Model.WorkflowHistory.Any())
+                {
+                    <div class="text-center py-4 text-muted">No workflow history recorded yet.</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Approval Actions -->
+    <div class="col-lg-4">
+        <div class="vr-sa-panel" style="background: rgba(15, 23, 42, 0.02); border: 1px solid rgba(15, 23, 42, 0.08);">
+            <div class="vr-sa-panel-title" style="margin-bottom: 20px;">Approval Action</div>
+            
+            @if (Model.CanApprove)
+            {
+                <div class="vr-sa-alert vr-sa-alert-info" style="margin-bottom: 24px;">
+                    <div class="vr-sa-alert-title">Pending Manager Review</div>
+                    <div class="vr-sa-alert-sub">This reservation requires your validation before the room is officially locked.</div>
+                </div>
+
+                <form method="post" id="approvalForm">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-4">
+                        <label class="vr-sa-label">Reviewer Notes (Optional)</label>
+                        <textarea name="notes" class="vr-sa-input" rows="4" placeholder="Add comments for the audit trail..."></textarea>
+                    </div>
+
+                    <div class="d-grid gap-3">
+                        <button type="submit" asp-action="Approve" asp-route-id="@Model.Reservation.ReservationId" class="vr-sa-btn vr-sa-btn-primary" style="height: 50px;">
+                            <i class="fa-solid fa-check-circle me-2"></i> Approve Reservation
+                        </button>
+                        <button type="submit" asp-action="Reject" asp-route-id="@Model.Reservation.ReservationId" class="vr-sa-btn vr-sa-btn-danger" style="height: 50px;">
+                            <i class="fa-solid fa-times-circle me-2"></i> Reject & Cancel
+                        </button>
+                    </div>
+                </form>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    @{
+                        var terminalIcon = Model.WorkflowInstance?.Status?.ToLower() switch {
+                            "completed" => "fa-circle-check",
+                            "cancelled" => "fa-ban",
+                            _ => "fa-shield-halved"
+                        };
+                        var terminalColor = Model.WorkflowInstance?.Status?.ToLower() switch {
+                            "completed" => "#22c55e",
+                            "cancelled" => "#ef4444",
+                            _ => "#64748b"
+                        };
+                    }
+                    <div class="vr-sa-card-icon" style="margin: 0 auto 16px; width: 64px; height: 64px; font-size: 1.5rem; color: @terminalColor; background: rgba(15, 23, 42, 0.04);">
+                        <i class="fa-solid @terminalIcon"></i>
+                    </div>
+                    <div style="font-weight: 700; color: #0b122d;">Workflow Terminal</div>
+                    <div class="vr-sa-cell-muted mt-2">
+                        Status: <strong style="color: @terminalColor;">@Model.WorkflowInstance?.Status</strong><br />
+                        No pending actions required.
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="vr-sa-panel mt-4">
+            <div class="vr-sa-panel-head">
+                <div class="vr-sa-panel-title">Payment Information</div>
+            </div>
+            <div class="p-3">
+                @if (Model.Payment != null)
+                {
+                    <div class="mb-3">
+                        <div class="vr-sa-label">Method</div>
+                        <div style="font-weight:600;">@Model.Payment.PaymentMethod</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="vr-sa-label">Stripe Reference</div>
+                        <div class="vr-sa-cell-muted" style="font-family: monospace; font-size: 0.85rem;">@(string.IsNullOrWhiteSpace(Model.Payment.StripePaymentIntentId) ? "—" : Model.Payment.StripePaymentIntentId)</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="vr-sa-label">Payment Status</div>
+                        <div style="font-weight: 500; color: #475569;">@Model.Payment.Status</div>
+                    </div>
+
+                }
+                else
+                {
+                    <div class="text-center py-3 text-muted">No payment record found.</div>
+                }
+            </div>
+        </div>
+
+        <div class="mt-4 px-2">
+            <a href="@Url.Action("Reservations", "Admin")" class="vr-sa-btn w-100" style="justify-content: center;">
+                <i class="fa-solid fa-arrow-left me-2"></i> Return to Reservations
+            </a>
+        </div>
+    </div>
+</div>

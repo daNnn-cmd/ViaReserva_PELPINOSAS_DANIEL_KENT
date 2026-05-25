@@ -1,0 +1,426 @@
+@model ViaReservaERP.Models.Admin.ServiceManagementViewModel
+@{
+    ViewData["Title"] = "Service Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <!-- Operational Stats -->
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Catalog Items</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalCatalogItems</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #6366f1; background: rgba(99, 102, 241, 0.08);"><i class="fa-solid fa-list-check"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Configured services</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Pending Requests</div>
+                    <div class="vr-sa-report-stat-value">@Model.PendingRequests</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-clock"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Awaiting assignment</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Overdue SLA</div>
+                    <div class="vr-sa-report-stat-value">@Model.OverdueRequests</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.08);"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Delayed (> 60m)</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Completed Today</div>
+                    <div class="vr-sa-report-stat-value">@Model.CompletedToday</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-check-double"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Success rate monitor</div>
+        </div>
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Quick Actions</div>
+            <div class="vr-sa-reports-summary-sub">Management & data export</div>
+            <div class="vr-sa-reports-summary-actions">
+                <button type="button" class="vr-sa-btn vr-sa-btn-primary" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add New</span>
+                </button>
+                <a class="vr-sa-btn" href="@Url.Action("ArchivedServices", "Admin")" title="View Archives">
+                    <i class="fa-solid fa-box-archive"></i>
+                    <span>Archives</span>
+                </a>
+
+                <div style="width: 1px; height: 28px; background: rgba(15, 23, 42, 0.08); margin: 0 4px;"></div>
+
+                <div class="vr-sa-export-pill">
+                    <a class="vr-sa-export-link" title="Export PDF" href="@Url.Action("ExportServices", "AdminReports", new { format = "pdf" })">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </a>
+                    <a class="vr-sa-export-link" title="Export CSV" href="@Url.Action("ExportServices", "AdminReports", new { format = "csv" })">
+                        <i class="fa-solid fa-file-csv"></i>
+                    </a>
+                    <a class="vr-sa-export-link" title="Export Excel" href="@Url.Action("ExportServices", "AdminReports", new { format = "xlsx" })">
+                        <i class="fa-solid fa-file-excel"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <section class="vr-sa-panel vr-sa-reports-filters mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Filters</div>
+                <div class="vr-sa-panel-sub">Search services or requests by name or guest.</div>
+            </div>
+        </div>
+
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Search</div>
+                <input class="vr-sa-filter-input" name="search" value="@Model.Search" placeholder="Service name or guest" />
+            </div>
+
+            <input type="hidden" name="statusFilter" value="@Model.StatusFilter" />
+            <input type="hidden" name="cPage" value="1" />
+            <input type="hidden" name="rPage" value="1" />
+
+            <div class="vr-sa-filter" style="grid-column: 1 / -1;">
+                <div class="vr-sa-report-card-actions">
+                    <button type="submit" class="vr-sa-btn">Apply Filters</button>
+                    <a class="vr-sa-btn" href="@Url.Action("Services", "Admin")">Reset</a>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <!-- 1. Service Catalog Table -->
+    <section class="vr-sa-panel mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Service Catalog</div>
+                <div class="vr-sa-panel-sub">Configure guest offerings and base pricing</div>
+            </div>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>Service Name</th>
+                        <th class="vr-sa-cell-center">Base Price</th>
+                        <th style="width: 150px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model.CatalogRows)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-weight: 700; color: #0f172a;">@s.ServiceName</div>
+                            </td>
+                            <td class="vr-sa-cell-center">
+                                <div style="font-weight: 600; color: #0b122d;">₱ @((s.Price ?? 0m).ToString("N2"))</div>
+                            </td>
+                            <td>
+                                <div class="vr-sa-actions">
+                                    <button type="button" class="vr-sa-iconbtn" title="Edit" data-bs-toggle="modal" data-bs-target="#editServiceModal"
+                                            data-service-id="@s.ServiceId" data-service-name="@s.ServiceName" data-service-price="@(s.Price ?? 0m)">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button type="button" class="vr-sa-iconbtn" style="color: #f59e0b;" title="Archive" 
+                                            data-bs-toggle="modal" data-bs-target="#archiveServiceModal" 
+                                            data-service-id="@s.ServiceId" data-service-name="@s.ServiceName">
+                                        <i class="fa-solid fa-box-archive"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="vr-sa-pagination">
+            <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.CatalogPage - 1) * 10 + 1, Model.CatalogTotalRows))–@(Math.Min(Model.CatalogPage * 10, Model.CatalogTotalRows)) of @Model.CatalogTotalRows</div>
+            <div class="vr-sa-pagination-actions">
+                <a class="vr-sa-pagebtn" href="@Url.Action("Services", "Admin", new { search = Model.Search, statusFilter = Model.StatusFilter, cPage = Model.CatalogPage - 1, rPage = Model.RequestPage })" aria-disabled="@(Model.CatalogPage <= 1)">Previous</a>
+                @for (var i = 1; i <= Model.CatalogTotalPages; i++)
+                {
+                    <a class="vr-sa-pagebtn @(i == Model.CatalogPage ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("Services", "Admin", new { search = Model.Search, statusFilter = Model.StatusFilter, cPage = i, rPage = Model.RequestPage })">@i</a>
+                }
+                <a class="vr-sa-pagebtn" href="@Url.Action("Services", "Admin", new { search = Model.Search, statusFilter = Model.StatusFilter, cPage = Model.CatalogPage + 1, rPage = Model.RequestPage })" aria-disabled="@(Model.CatalogPage >= Model.CatalogTotalPages)">Next</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Service Requests Workflow Table -->
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div style="flex: 1;">
+                <div class="vr-sa-panel-title">Service Requests Workflow</div>
+                <div class="vr-sa-panel-sub">Real-time guest task management and assignment</div>
+            </div>
+            <form method="get" action="@Url.Action("Services", "Admin")" class="d-flex gap-2">
+                <input type="hidden" name="search" value="@Model.Search" />
+                <input type="hidden" name="cPage" value="@Model.CatalogPage" />
+                <select class="vr-sa-input" name="statusFilter" style="min-width: 150px; height: 38px; font-size: 0.85rem;">
+                    <option value="">All Statuses</option>
+                    <option value="Pending" selected="@(Model.StatusFilter == "Pending")">Pending</option>
+                    <option value="Assigned" selected="@(Model.StatusFilter == "Assigned")">Assigned</option>
+                    <option value="In Progress" selected="@(Model.StatusFilter == "In Progress")">In Progress</option>
+                    <option value="Completed" selected="@(Model.StatusFilter == "Completed")">Completed</option>
+                    <option value="Escalated" selected="@(Model.StatusFilter == "Escalated")">Escalated</option>
+                </select>
+                <button type="submit" class="vr-sa-btn vr-sa-btn-primary" style="height: 38px; padding: 0 15px;">Filter</button>
+            </form>
+        </div>
+
+        <div class="vr-sa-table-wrap vr-sa-table-modern">
+            <table class="vr-sa-table">
+                <thead>
+                    <tr>
+                        <th>Guest & Service</th>
+                        <th>Room</th>
+                        <th>Timestamp</th>
+                        <th>SLA Age</th>
+                        <th>Assignment</th>
+                        <th class="vr-sa-cell-center">Status</th>
+                        <th style="width: 240px;">Control</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.RequestRows)
+                    {
+                        var nowUtc = ViaReservaERP.AppTime.Now;
+                        var age = nowUtc - r.RequestDate.ToUniversalTime();
+                        var isOverdue = !string.Equals(r.Status, "Completed", StringComparison.OrdinalIgnoreCase) && age.TotalMinutes > 60;
+
+                        var room = "";
+                        if (r.GuestId.HasValue)
+                            Model.CurrentRoomByGuestId.TryGetValue(r.GuestId.Value, out room);
+
+                        <tr>
+                            <td>
+                                <div style="font-weight: 700; color: #0f172a;">@r.Service?.ServiceName</div>
+                                <div class="vr-sa-cell-muted" style="font-size: 0.82rem;">Guest: @r.Guest?.FullName</div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 700; color: #0b122d;">@(string.IsNullOrWhiteSpace(room) ? "—" : room)</div>
+                            </td>
+                            <td class="vr-sa-cell-muted">
+                                <div style="font-weight: 600; color: #475569;">@r.RequestDate.ToString("HH:mm")</div>
+                                <div style="font-size: 0.75rem;">@r.RequestDate.ToString("MMM dd")</div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 700; color: @(isOverdue ? "#ef4444" : "#475569");">
+                                    @((int)Math.Floor(age.TotalMinutes))m
+                                    @if(isOverdue) { <i class="fa-solid fa-circle-exclamation ms-1" style="font-size: 0.75rem;"></i> }
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="vr-sa-card-icon" style="width: 24px; height: 24px; font-size: 0.7rem; background: #f1f5f9; color: #64748b;">
+                                        <i class="fa-solid fa-user-tag"></i>
+                                    </div>
+                                    <span class="vr-sa-cell-muted" style="font-size: 0.85rem;">@(r.AssignedToUser?.FullName ?? "Unassigned")</span>
+                                </div>
+                            </td>
+                            <td class="vr-sa-cell-center">
+                                <div style="font-weight: 500; color: @(r.Status == "Completed" ? "#22c55e" : r.Status == "Escalated" ? "#ef4444" : "#f59e0b");">
+                                    @(r.Status ?? "Pending")
+                                </div>
+                            </td>
+                            <td>
+                                <div class="vr-sa-actions" style="justify-content: flex-end;">
+                                    <form method="post" action="@Url.Action("AssignServiceRequest", "Admin")" class="d-flex gap-1">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@r.RequestId" />
+                                        <select name="assignedToUserId" class="vr-sa-input py-1" style="font-size: 0.8rem; height: 32px; width: 130px;">
+                                            <option value="">Assign To...</option>
+                                            @foreach (var opt in Model.StaffOptions)
+                                            {
+                                                <option value="@opt.Value" selected="@(opt.Value == (r.AssignedTo?.ToString() ?? ""))">@opt.Text</option>
+                                            }
+                                        </select>
+                                        <button type="submit" class="vr-sa-iconbtn" style="width: 32px; height: 32px;"><i class="fa-solid fa-check"></i></button>
+                                    </form>
+
+                                    <div class="dropdown">
+                                        <button class="vr-sa-iconbtn" type="button" data-bs-toggle="dropdown">
+                                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="border-radius: 12px; font-size: 0.85rem;">
+                                            <li><h6 class="dropdown-header">Update Status</h6></li>
+                                            @foreach(var st in new[] { "Pending", "Assigned", "In Progress", "Completed", "Escalated" }) {
+                                                <li>
+                                                    <form method="post" action="@Url.Action("UpdateServiceRequestStatus", "Admin")">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@r.RequestId" />
+                                                        <input type="hidden" name="status" value="@st" />
+                                                        <button type="submit" class="dropdown-item py-2 @(r.Status == st ? "active" : "")">@st</button>
+                                                    </form>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="vr-sa-pagination">
+            <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.RequestPage - 1) * 10 + 1, Model.RequestTotalRows))–@(Math.Min(Model.RequestPage * 10, Model.RequestTotalRows)) of @Model.RequestTotalRows</div>
+            <div class="vr-sa-pagination-actions">
+                <a class="vr-sa-pagebtn" href="@Url.Action("Services", "Admin", new { search = Model.Search, statusFilter = Model.StatusFilter, cPage = Model.CatalogPage, rPage = Model.RequestPage - 1 })" aria-disabled="@(Model.RequestPage <= 1)">Previous</a>
+                @for (var i = 1; i <= Model.RequestTotalPages; i++)
+                {
+                    if (Model.RequestTotalPages > 8 && i > 3 && i < Model.RequestTotalPages - 2 && Math.Abs(i - Model.RequestPage) > 1)
+                    {
+                        if (i == 4 || i == Model.RequestTotalPages - 3) { <span class="vr-sa-cell-muted px-2">...</span> }
+                        continue;
+                    }
+                    <a class="vr-sa-pagebtn @(i == Model.RequestPage ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("Services", "Admin", new { search = Model.Search, statusFilter = Model.StatusFilter, cPage = Model.CatalogPage, rPage = i })">@i</a>
+                }
+                <a class="vr-sa-pagebtn" href="@Url.Action("Services", "Admin", new { search = Model.Search, statusFilter = Model.StatusFilter, cPage = Model.CatalogPage, rPage = Model.RequestPage + 1 })" aria-disabled="@(Model.RequestPage >= Model.RequestTotalPages)">Next</a>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade vr-sa-modal" id="addServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="@Url.Action("CreateService", "Admin")">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="vr-sa-label">Service Name</label>
+                            <input type="text" name="ServiceName" class="vr-sa-input" required maxlength="150" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="vr-sa-label">Price</label>
+                            <input type="number" name="Price" step="0.01" min="0" class="vr-sa-input" value="0" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="vr-sa-btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="vr-sa-btn vr-sa-btn-primary">Create Service</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade vr-sa-modal" id="editServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Service Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="@Url.Action("UpdateService", "Admin")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ServiceId" id="vrEditServiceId" />
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="vr-sa-label">Service Name</label>
+                            <input type="text" name="ServiceName" id="vrEditServiceName" class="vr-sa-input" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="vr-sa-label">Price</label>
+                            <input type="number" name="Price" id="vrEditServicePrice" step="0.01" class="vr-sa-input" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="vr-sa-btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="vr-sa-btn vr-sa-btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade vr-sa-modal" id="archiveServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Archive Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="@Url.Action("DeleteService", "Admin")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="vrArchiveServiceId" />
+                <div class="modal-body">
+                    <div class="text-center p-4">
+                        <div style="width: 64px; height: 64px; background: rgba(245, 158, 11, 0.08); color: #f59e0b; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.5rem;">
+                            <i class="fa-solid fa-box-archive"></i>
+                        </div>
+                        <h4 style="font-weight: 700; color: #0b122d; margin-bottom: 8px;">Archive this service?</h4>
+                        <p style="color: #64748b; font-size: 0.95rem; line-height: 1.5;">You are about to archive <strong id="vrArchiveServiceName" style="color: #0b122d;">this service</strong>. It will no longer be available for new guest requests.</p>
+                    </div>
+                </div>
+                <div class="modal-footer" style="justify-content: center; border-top: none; padding-bottom: 30px;">
+                    <button type="button" class="vr-sa-btn" data-bs-dismiss="modal" style="min-width: 120px;">Cancel</button>
+                    <button type="submit" class="vr-sa-btn vr-sa-btn-primary" style="background: #f59e0b; border-color: #f59e0b; min-width: 120px;">Confirm Archive</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const editModal = document.getElementById('editServiceModal');
+            if (!editModal) return;
+
+            editModal.addEventListener('show.bs.modal', function (event) {
+                const btn = event.relatedTarget;
+                if (!btn) return;
+
+                document.getElementById('vrEditServiceId').value = btn.getAttribute('data-service-id') || '';
+                document.getElementById('vrEditServiceName').value = btn.getAttribute('data-service-name') || '';
+                document.getElementById('vrEditServicePrice').value = btn.getAttribute('data-service-price') || '0';
+            });
+
+            const archiveModal = document.getElementById('archiveServiceModal');
+            if (archiveModal) {
+                archiveModal.addEventListener('show.bs.modal', function (event) {
+                    const btn = event.relatedTarget;
+                    if (!btn) return;
+                    document.getElementById('vrArchiveServiceId').value = btn.getAttribute('data-service-id') || '';
+                    document.getElementById('vrArchiveServiceName').textContent = btn.getAttribute('data-service-name') || 'this service';
+                });
+            }
+        })();
+    </script>
+}

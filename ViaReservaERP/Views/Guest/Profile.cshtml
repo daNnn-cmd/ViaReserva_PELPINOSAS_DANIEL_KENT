@@ -1,0 +1,80 @@
+@model ViaReservaERP.Models.GuestPortal.GuestProfileViewModel
+@{
+    ViewData["Title"] = "Profile";
+    ViewData["PageSubtitle"] = "Manage your personal information";
+    Layout = "~/Views/Shared/_GuestLayout.cshtml";
+}
+
+<!-- Page header -->
+<div style="margin-bottom:24px;">
+    <h1 class="vr-gp-section-title" style="font-size:1.3rem;">My Profile</h1>
+    <div class="vr-gp-section-sub">View and manage your account information</div>
+</div>
+
+<!-- Profile card -->
+<div style="max-width:640px;">
+    <div class="vr-gp-card">
+        <!-- Avatar + name header -->
+        <div style="display:flex;align-items:center;gap:20px;padding-bottom:24px;border-bottom:1px solid var(--gp-navy-06);">
+            <div id="avatarPreview" style="width:100px;height:100px;border-radius:999px;background:linear-gradient(135deg,var(--gp-gold),#d4a72c);display:flex;align-items:center;justify-content:center;color:#fff;font-size:2.5rem;font-weight:700;flex-shrink:0;overflow:hidden;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                {
+                    <img src="@Model.AvatarUrl" style="width:100%;height:100%;object-fit:cover;" />
+                }
+                else
+                {
+                    @(Model.FullName.Length > 0 ? Model.FullName[0].ToString().ToUpper() : "G")
+                }
+            </div>
+            <div style="flex-grow:1;">
+                <div style="font-size:1.4rem;font-weight:700;color:var(--gp-navy);">@Model.FullName</div>
+                <div style="font-size:0.9rem;color:var(--gp-navy-40);margin-top:2px;">Verified Guest · Account #@Model.GuestId</div>
+                
+                <form id="avatarForm" action="@Url.Action("UpdateAvatar", "Guest")" method="post" enctype="multipart/form-data" style="margin-top:12px;">
+                    @Html.AntiForgeryToken()
+                    <input type="file" name="avatar" id="avatarInput" hidden accept="image/*" onchange="document.getElementById('avatarForm').submit()" />
+                    <button type="button" class="vr-gp-btn" style="padding:6px 16px;font-size:0.8rem;background:rgba(var(--gp-gold-rgb),0.1);color:var(--gp-gold);border:1px solid var(--gp-gold);" onclick="document.getElementById('avatarInput').click()">
+                        <i class="fa-solid fa-camera me-2"></i> Update Photo
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div style="margin-top:20px;padding:12px 16px;border-radius:var(--gp-radius-xs);background:#ecfdf5;color:#065f46;font-size:0.85rem;display:flex;align-items:center;gap:10px;">
+                <i class="fa-solid fa-circle-check"></i> @TempData["SuccessMessage"]
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div style="margin-top:20px;padding:12px 16px;border-radius:var(--gp-radius-xs);background:#fef2f2;color:#991b1b;font-size:0.85rem;display:flex;align-items:center;gap:10px;">
+                <i class="fa-solid fa-circle-exclamation"></i> @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <!-- Info fields -->
+        <div style="margin-top:24px;display:grid;gap:18px;">
+            <div class="vr-gp-field">
+                <label class="vr-gp-field-label"><i class="fa-regular fa-user" style="margin-right:6px;"></i> Full Name</label>
+                <div class="vr-gp-field-value">@Model.FullName</div>
+            </div>
+            <div class="vr-gp-field">
+                <label class="vr-gp-field-label"><i class="fa-regular fa-envelope" style="margin-right:6px;"></i> Email Address</label>
+                <div class="vr-gp-field-value">@Model.Email</div>
+            </div>
+            <div class="vr-gp-field">
+                <label class="vr-gp-field-label"><i class="fa-solid fa-phone" style="margin-right:6px;"></i> Phone Number</label>
+                <div class="vr-gp-field-value">@(string.IsNullOrWhiteSpace(Model.Phone) ? "Not provided" : Model.Phone)</div>
+            </div>
+        </div>
+
+        <!-- Security note -->
+        <div style="margin-top:28px;padding:16px;border-radius:var(--gp-radius-xs);background:var(--gp-navy-03);border:1px solid var(--gp-navy-06);">
+            <div style="display:flex;align-items:center;gap:10px;font-size:0.82rem;color:var(--gp-navy-60);line-height:1.4;">
+                <i class="fa-solid fa-shield-halved" style="color:var(--gp-teal);font-size:1rem;"></i>
+                <span>For security reasons, please contact hotel front desk or support if you need to update your registered email or phone number.</span>
+            </div>
+        </div>
+    </div>
+</div>

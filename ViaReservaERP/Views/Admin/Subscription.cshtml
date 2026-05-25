@@ -1,0 +1,141 @@
+@model ViaReservaERP.Models.Admin.SubscriptionViewModel
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <section class="vr-sa-panel h-100">
+                <div class="vr-sa-panel-head">
+                    <div>
+                        <div class="vr-sa-panel-title">Current Plan</div>
+                        <div class="vr-sa-panel-sub">Details of your active VíaReserva ERP license</div>
+                    </div>
+                    @if (Model.Subscription != null)
+                    {
+                        <div class="vr-sa-status-success" style="display: inline-block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; padding: 4px 12px; border-radius: 6px;">
+                            @Model.Subscription.Status
+                        </div>
+                    }
+                </div>
+
+                <div class="p-4">
+                    @if (Model.Subscription != null)
+                    {
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="vr-sa-ico vr-sa-ico-indigo me-3" style="width: 56px; height: 56px; font-size: 1.5rem;">
+                                <i class="fa-solid fa-crown"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 1.25rem; font-weight: 800; color: #0b122d;">@Model.Subscription.Plan?.PlanName Plan</div>
+                                <div class="vr-sa-cell-muted">Subscribed since @(Model.Subscription.StartDate?.ToString("MMM dd, yyyy") ?? "N/A")</div>
+                            </div>
+                        </div>
+
+                        <div class="vr-sa-filter-grid mb-4">
+                            <div class="vr-sa-filter">
+                                <div class="vr-sa-filter-label">Monthly Rate</div>
+                                <div style="font-weight: 700; color: #0b122d; font-size: 1.1rem;">₱ @(Model.Subscription.Plan?.Price?.ToString("N2") ?? "0.00")</div>
+                            </div>
+                            <div class="vr-sa-filter">
+                                <div class="vr-sa-filter-label">Billing Cycle</div>
+                                <div style="font-weight: 600; color: #0b122d;">Monthly</div>
+                            </div>
+                            <div class="vr-sa-filter">
+                                <div class="vr-sa-filter-label">Renewal Date</div>
+                                <div style="font-weight: 600; color: #0b122d;">@(Model.Subscription.EndDate?.ToString("MMM dd, yyyy") ?? "N/A")</div>
+                            </div>
+                        </div>
+
+                        <div class="vr-sa-muted" style="font-size: 0.9rem; line-height: 1.6; border-left: 3px solid #6366f1; padding-left: 16px;">
+                            Your subscription is managed via Stripe. You can update your payment method, download invoices, or change your plan using the secure billing portal.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <div class="vr-sa-ico vr-sa-ico-slate mx-auto mb-3" style="width: 64px; height: 64px; font-size: 1.75rem;">
+                                <i class="fa-solid fa-ghost"></i>
+                            </div>
+                            <h4 style="font-weight: 700; color: #0b122d;">No active subscription</h4>
+                            <p class="vr-sa-cell-muted">Please contact support or sign up for a plan to continue using all features.</p>
+                        </div>
+                    }
+                </div>
+
+                @if (Model.HasStripeCustomer)
+                {
+                    <div class="p-4 border-top">
+                        <form asp-action="ManageSubscription" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="vr-sa-btn vr-sa-btn-primary w-100" style="justify-content: center; height: 52px; font-size: 1rem;">
+                                <i class="fa-solid fa-external-link me-2"></i> Manage Billing in Stripe
+                            </button>
+                        </form>
+                        <div class="text-center mt-3 vr-sa-muted" style="font-size: 0.8rem;">
+                            Redirects to Stripe's secure customer portal
+                        </div>
+                    </div>
+                }
+            </section>
+        </div>
+
+        <div class="col-lg-5">
+            <section class="vr-sa-panel">
+                <div class="vr-sa-panel-head">
+                    <div>
+                        <div class="vr-sa-panel-title">Invoices & Payment</div>
+                        <div class="vr-sa-panel-sub">Recent billing history</div>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="text-center py-4">
+                        <div class="mb-3" style="color: #64748b; font-size: 2.5rem;">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                        </div>
+                        <p class="vr-sa-cell-muted">Invoice history is available within the Stripe Customer Portal.</p>
+                        @if (Model.HasStripeCustomer)
+                        {
+                            <form asp-action="ManageSubscription" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="vr-sa-link" style="background: none; border: none; font-weight: 700; text-decoration: underline;">
+                                    View Invoices
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </section>
+
+            <section class="vr-sa-panel mt-4">
+                <div class="vr-sa-panel-head">
+                    <div>
+                        <div class="vr-sa-panel-title">Need Help?</div>
+                        <div class="vr-sa-panel-sub">Billing support</div>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="vr-sa-ico vr-sa-ico-teal me-3" style="width: 40px; height: 40px;">
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; color: #0b122d;">Email Support</div>
+                            <div class="vr-sa-cell-muted" style="font-size: 0.85rem;">billing@viareserva.com</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="vr-sa-ico vr-sa-ico-orange me-3" style="width: 40px; height: 40px;">
+                            <i class="fa-solid fa-phone"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; color: #0b122d;">Phone Support</div>
+                            <div class="vr-sa-cell-muted" style="font-size: 0.85rem;">+63 2 8123 4567</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>

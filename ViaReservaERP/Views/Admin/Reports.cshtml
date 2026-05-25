@@ -1,0 +1,291 @@
+@model ViaReservaERP.Models.Admin.ReportsViewModel
+@{
+    ViewData["Title"] = "Financial Reports";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <!-- Date Filtering Panel -->
+    <div class="vr-sa-panel mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Reports Overview</div>
+                <div class="vr-sa-panel-sub">Analyze property performance and financial summaries</div>
+            </div>
+        </div>
+
+        <form method="get" class="p-4 pt-0">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <div class="vr-sa-filter-label" style="font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Start Date</div>
+                    <input class="vr-sa-input" type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" style="height: 42px;" />
+                </div>
+                <div class="col-md-4">
+                    <div class="vr-sa-filter-label" style="font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">End Date</div>
+                    <input class="vr-sa-input" type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" style="height: 42px;" />
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="vr-sa-btn vr-sa-btn-primary flex-fill" style="height: 42px;">Apply Filter</button>
+                    <a class="vr-sa-btn flex-fill d-flex align-items-center justify-content-center" href="@Url.Action("Reports", "Admin")" style="height: 42px;">Reset</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Financial Performance Stats -->
+    <div class="vr-sa-reports-stats mb-4">
+        <div class="vr-sa-report-stat" style="border-bottom: 3px solid #10b981;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Revenue</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.Revenue.ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.08);"><i class="fa-solid fa-vault"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Total payments processed</div>
+        </div>
+
+        <div class="vr-sa-report-stat" style="border-bottom: 3px solid #3b82f6;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Gross Income</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.Income.ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-arrow-trend-up"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Operational inflows</div>
+        </div>
+
+        <div class="vr-sa-report-stat" style="border-bottom: 3px solid #ef4444;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Operational Expense</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.Expense.ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.08);"><i class="fa-solid fa-arrow-trend-down"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Property expenditures</div>
+        </div>
+
+        <div class="vr-sa-report-stat" style="border-bottom: 3px solid #c9a227;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Net Result</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.NetProfit.ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #c9a227; background: rgba(201, 162, 39, 0.08);"><i class="fa-solid fa-scale-balanced"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Bottom line performance</div>
+        </div>
+    </div>
+
+    <!-- Analytics Trends -->
+    <section class="vr-sa-panel mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Business Intelligence Trends</div>
+                <div class="vr-sa-panel-sub">Visualizing revenue and operational volume over the selected period</div>
+            </div>
+        </div>
+        <div class="p-4 pt-0">
+            <div class="vr-sa-chart-split">
+                <div class="vr-sa-chart">
+                    <div class="vr-sa-mini-title">Revenue Growth</div>
+                    <div id="vrAdminRptRevenue" class="vr-sa-apex"></div>
+                </div>
+                <div class="vr-sa-chart">
+                    <div class="vr-sa-mini-title">Booking Volume</div>
+                    <div id="vrAdminRptBookings" class="vr-sa-apex"></div>
+                </div>
+                <div class="vr-sa-chart">
+                    <div class="vr-sa-mini-title">Service Requests</div>
+                    <div id="vrAdminRptServices" class="vr-sa-apex"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Forecasting -->
+    <section class="vr-sa-panel mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Performance Forecasting</div>
+                <div class="vr-sa-panel-sub">Estimated projections based on current period velocity</div>
+            </div>
+        </div>
+        <div class="p-4 pt-0">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="vr-sa-card">
+                        <div class="vr-sa-card-top">
+                            <div>
+                                <div class="vr-sa-card-kicker">Projected Monthly Revenue</div>
+                                <div class="vr-sa-card-value">₱ @Model.Forecast.ProjectedRevenue.ToString("N2")</div>
+                            </div>
+                            <div class="vr-sa-card-icon" style="color: #10b981;"><i class="fa-solid fa-chart-line"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="vr-sa-card">
+                        <div class="vr-sa-card-top">
+                            <div>
+                                <div class="vr-sa-card-kicker">Projected Reservations</div>
+                                <div class="vr-sa-card-value">@Model.Forecast.ProjectedReservations</div>
+                            </div>
+                            <div class="vr-sa-card-icon" style="color: #3b82f6;"><i class="fa-solid fa-calendar-check"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="vr-sa-card">
+                        <div class="vr-sa-card-top">
+                            <div>
+                                <div class="vr-sa-card-kicker">Estimated Growth Velocity</div>
+                                <div class="vr-sa-card-value">@((Model.Forecast.GrowthRate * 100m).ToString("0.0"))%</div>
+                            </div>
+                            <div class="vr-sa-card-icon" style="color: #f59e0b;"><i class="fa-solid fa-gauge-high"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Operations Snapshot & Audit -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="vr-sa-panel h-100">
+                <div class="vr-sa-panel-head">
+                    <div>
+                        <div class="vr-sa-panel-title">Operations Snapshot</div>
+                        <div class="vr-sa-panel-sub">Operational volume and guest demand tracking</div>
+                    </div>
+                </div>
+                <div class="p-4 pt-0">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="p-4 h-100" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px;">
+                                <div class="d-flex align-items-center gap-3 mb-4">
+                                    <div class="vr-sa-card-icon" style="width: 46px; height: 46px; background: #fff; border: 1px solid #e2e8f0; color: #4f46e5; font-size: 1.1rem;">
+                                        <i class="fa-solid fa-calendar-check"></i>
+                                    </div>
+                                    <div style="font-weight: 800; font-size: 0.85rem; color: #475569; letter-spacing: 0.5px; text-transform: uppercase;">Check-Ins</div>
+                                </div>
+                                <div style="font-size: 2.25rem; font-weight: 900; color: #0f172a; line-height: 1;">@Model.TotalReservations</div>
+                                <div class="vr-sa-cell-muted mt-2" style="font-size: 0.9rem;">Successful property arrivals</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-4 h-100" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px;">
+                                <div class="d-flex align-items-center gap-3 mb-4">
+                                    <div class="vr-sa-card-icon" style="width: 46px; height: 46px; background: #fff; border: 1px solid #e2e8f0; color: #8b5cf6; font-size: 1.1rem;">
+                                        <i class="fa-solid fa-bell-concierge"></i>
+                                    </div>
+                                    <div style="font-weight: 800; font-size: 0.85rem; color: #475569; letter-spacing: 0.5px; text-transform: uppercase;">Service Volume</div>
+                                </div>
+                                <div style="font-size: 2.25rem; font-weight: 900; color: #0f172a; line-height: 1;">@Model.TotalServiceRequests</div>
+                                <div class="vr-sa-cell-muted mt-2" style="font-size: 0.9rem;">Total guest tasks fulfilled</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="vr-sa-panel h-100">
+                <div class="vr-sa-panel-head">
+                    <div>
+                        <div class="vr-sa-panel-title">Audit Log Trail</div>
+                        <div class="vr-sa-panel-sub">Governance and security monitoring</div>
+                    </div>
+                </div>
+                <div class="p-4 pt-0 mt-2">
+                    <div class="p-4 mb-4" style="background: #eff6ff; border-radius: 16px; border: 1px solid #bfdbfe;">
+                        <div class="d-flex gap-3">
+                            <i class="fa-solid fa-shield-halved mt-1" style="color: #2563eb; font-size: 1.25rem;"></i>
+                            <div style="font-size: 0.85rem; color: #1e3a8a; line-height: 1.6;">
+                                <strong style="display: block; margin-bottom: 4px;">Compliance Control</strong>
+                                Review detailed audit trails to monitor system overrides, high-value transactions, and workflow authorizations.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <a class="vr-sa-btn vr-sa-btn-primary d-flex align-items-center justify-content-center py-3" href="@Url.Action("AuditLogs", "Admin")" style="gap: 12px; font-weight: 700;">
+                            <i class="fa-solid fa-magnifying-glass-chart"></i> View Detailed Audit
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@section Scripts {
+@{
+    var jsonOpts = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.1"></script>
+<script>
+    (function () {
+        if (!window.ApexCharts) return;
+
+        const palette = {
+            blue: '#1e1b4b',
+            gold: '#c9a227',
+            emerald: '#10b981',
+            grid: 'rgba(30, 41, 59, 0.05)',
+            muted: '#64748b'
+        };
+
+        function baseOptions() {
+            return {
+                chart: {
+                    toolbar: { show: false },
+                    foreColor: palette.muted,
+                    fontFamily: 'Inter, system-ui, sans-serif'
+                },
+                grid: { borderColor: palette.grid, strokeDashArray: 4 },
+                legend: { position: 'bottom' },
+                tooltip: { theme: 'light' },
+                dataLabels: { enabled: false }
+            };
+        }
+
+        const rev = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueAnalytics, jsonOpts));
+        const res = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ReservationAnalytics, jsonOpts));
+        const svc = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ServiceAnalytics, jsonOpts));
+
+        function renderArea(el, cs, name, color) {
+            if (!document.querySelector(el)) return;
+            const opt = baseOptions();
+            opt.chart.type = 'area';
+            opt.chart.height = 240;
+            opt.stroke = { curve: 'smooth', width: 2.5 };
+            opt.fill = { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.05 } };
+            opt.series = [{ name: name, data: cs.datasets[Object.keys(cs.datasets)[0]] }];
+            opt.colors = [color];
+            opt.xaxis = { categories: cs.labels || [] };
+            new ApexCharts(document.querySelector(el), opt).render();
+        }
+
+        function renderBar(el, cs, name, color) {
+            if (!document.querySelector(el)) return;
+            const opt = baseOptions();
+            opt.chart.type = 'bar';
+            opt.chart.height = 240;
+            opt.plotOptions = { bar: { borderRadius: 6, columnWidth: '60%' } };
+            opt.series = [{ name: name, data: cs.datasets[Object.keys(cs.datasets)[0]] }];
+            opt.colors = [color];
+            opt.xaxis = { categories: cs.labels || [] };
+            new ApexCharts(document.querySelector(el), opt).render();
+        }
+
+        renderArea('#vrAdminRptRevenue', rev, 'Revenue (₱)', palette.emerald);
+        renderBar('#vrAdminRptBookings', res, 'Bookings', palette.blue);
+        renderBar('#vrAdminRptServices', svc, 'Service Requests', palette.gold);
+    })();
+</script>
+}

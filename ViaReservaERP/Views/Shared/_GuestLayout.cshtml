@@ -1,0 +1,211 @@
+@inject ViaReservaERP.Data.ViaReservaDbContext db
+@using Microsoft.EntityFrameworkCore
+@using ViaReservaERP.Security
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ViaReservaERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/guest-portal.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ViaReservaERP.styles.css" asp-append-version="true" />
+</head>
+<body class="vr-gp-body">
+    <div class="vr-gp-shell">
+        <partial name="_GuestSidebar" />
+
+        <main class="vr-gp-main" role="main">
+            <header class="vr-gp-topbar">
+                <div class="vr-gp-topbar-left">
+                    <button type="button" class="vr-gp-sidebar-toggle" id="vrGpSidebarToggle" aria-label="Toggle sidebar">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div>
+                        <div class="vr-gp-topbar-title">@ViewData["Title"]</div>
+                        <div class="vr-gp-topbar-sub">@(ViewData["PageSubtitle"] as string ?? "Manage your stay experience")</div>
+                    </div>
+                </div>
+
+                <div class="vr-gp-topbar-right">
+                    <a href="@Url.Action("Notifications","Guest")" class="vr-gp-iconbtn" aria-label="Notifications" style="position: relative;">
+                        <i class="fa-regular fa-bell"></i>
+                        <span id="vrGpNotifBadge" style="display:none; position:absolute; top:-6px; right:-6px; min-width:18px; height:18px; padding:0 6px; border-radius:999px; background: var(--gp-blue); color:#fff; font-size:0.72rem; font-weight:700; line-height:18px; text-align:center;"></span>
+                    </a>
+
+                    <div class="vr-gp-profile" id="vrGpProfile">
+                        @{
+                            var userId = User?.GetUserId();
+                            var avatarUrl = userId.HasValue ? db.Users.AsNoTracking().Where(u => u.UserId == userId.Value).Select(u => u.AvatarUrl).FirstOrDefault() : null;
+                        }
+                        <button type="button" class="vr-gp-userpill" id="vrGpProfileBtn" aria-haspopup="true" aria-expanded="false">
+                            <div class="vr-gp-avatar">
+                                @if (!string.IsNullOrEmpty(avatarUrl))
+                                {
+                                    <img src="@avatarUrl" alt="Avatar" />
+                                }
+                                else
+                                {
+                                    <i class="fa-solid fa-user"></i>
+                                }
+                            </div>
+                            <div class="vr-gp-userpill-info">
+                                <div class="vr-gp-userpill-name">@User?.Identity?.Name</div>
+                                <div class="vr-gp-userpill-role">Guest</div>
+                            </div>
+                        </button>
+
+                        <div class="vr-gp-dropdown vr-hidden" id="vrGpProfileMenu" role="menu">
+                            <a class="vr-gp-dd-item" role="menuitem" href="@Url.Action("Profile","Guest")">
+                                <i class="fa-regular fa-user"></i> <span>Profile</span>
+                            </a>
+                            <a class="vr-gp-dd-item" role="menuitem" href="@Url.Action("Notifications","Guest")">
+                                <i class="fa-regular fa-bell"></i> <span>Notifications</span>
+                            </a>
+                            <hr class="vr-gp-dd-sep" />
+                            <button type="button" class="vr-gp-dd-item vr-gp-dd-danger" id="vrGpLogoutBtnTop" role="menuitem" data-bs-toggle="modal" data-bs-target="#vrGpLogoutModal">
+                                <i class="fa-solid fa-right-from-bracket"></i> <span>Log Out</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <section class="vr-gp-content">
+                @RenderBody()
+            </section>
+        </main>
+    </div>
+
+    <!-- Sidebar overlay for mobile -->
+    <div class="vr-gp-overlay vr-hidden" id="vrGpOverlay"></div>
+
+    <!-- Logout confirmation modal -->
+    <div class="modal fade vr-sa-modal" id="vrGpLogoutModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+                <div class="modal-body p-5">
+                    <div class="text-center">
+                        <div class="mb-4 d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; border-radius: 50%; background: #fff1f2; color: #e11d48; font-size: 2rem;">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </div>
+                        <h3 class="mb-2" style="font-weight: 800; color: #0f172a; letter-spacing: -0.02em;">Log Out</h3>
+                        <p class="mb-0" style="color: #64748b; font-size: 1.05rem; line-height: 1.6;">Are you sure you want to log out of your <br/> guest account?</p>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0 gap-3 justify-content-center">
+                    <button type="button" class="vr-sa-btn" data-bs-dismiss="modal" style="min-width: 140px; height: 48px; border-radius: 12px; font-weight: 600;">Cancel</button>
+                    <form method="post" action="@Url.Action("Logout", "Account")">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="vr-sa-btn vr-sa-btn-danger" style="min-width: 140px; height: 48px; border-radius: 12px; font-weight: 600; background: #e11d48; border-color: #e11d48;">Log Out</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <!-- Premium Toast Notification -->
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 2000;">
+        <div id="vrGpSuccessToast" class="toast vr-sa-toast-premium" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex align-items-center p-2 pe-3">
+                <div class="vr-sa-toast-icon-v2 success">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <div class="ms-3">
+                    <div class="vr-sa-toast-msg-v2" id="vrGpToastMessage">Operation completed successfully.</div>
+                </div>
+                <button type="button" class="ms-auto btn-close-custom" data-bs-dismiss="toast" aria-label="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            // Profile dropdown
+            const wrap = document.getElementById('vrGpProfile');
+            const btn = document.getElementById('vrGpProfileBtn');
+            const menu = document.getElementById('vrGpProfileMenu');
+            if (wrap && btn && menu) {
+                btn.addEventListener('click', () => menu.classList.toggle('vr-hidden'));
+                document.addEventListener('click', e => { if (!wrap.contains(e.target)) menu.classList.add('vr-hidden'); });
+                document.addEventListener('keydown', e => { if (e.key === 'Escape') menu.classList.add('vr-hidden'); });
+            }
+
+            // Sidebar toggle (desktop & mobile)
+            const shell = document.querySelector('.vr-gp-shell');
+            const sidebar = document.querySelector('.vr-gp-sidebar');
+            const toggle = document.getElementById('vrGpSidebarToggle');
+            const overlay = document.getElementById('vrGpOverlay');
+            
+            if (shell && toggle) {
+                // Restore state
+                if (localStorage.getItem('vrGpSidebarCollapsed') === 'true' && window.innerWidth > 1024) {
+                    shell.classList.add('vr-gp-shell-collapsed');
+                }
+
+                function openMobile() { sidebar.classList.add('vr-gp-sidebar-open'); overlay.classList.remove('vr-hidden'); }
+                function closeMobile() { sidebar.classList.remove('vr-gp-sidebar-open'); overlay.classList.add('vr-hidden'); }
+
+                toggle.addEventListener('click', () => {
+                    if (window.innerWidth <= 1024) {
+                        sidebar.classList.contains('vr-gp-sidebar-open') ? closeMobile() : openMobile();
+                    } else {
+                        shell.classList.toggle('vr-gp-shell-collapsed');
+                        localStorage.setItem('vrGpSidebarCollapsed', shell.classList.contains('vr-gp-shell-collapsed'));
+                    }
+                });
+                
+                if (overlay) overlay.addEventListener('click', closeMobile);
+            }
+
+            // Success Toast Trigger
+            const successMsg = "@(TempData["SuccessMessage"]?.ToString() ?? "")";
+            if (successMsg) {
+                const toastEl = document.getElementById('vrGpSuccessToast');
+                const toastMsg = document.getElementById('vrGpToastMessage');
+                if (toastEl && toastMsg) {
+                    toastMsg.textContent = successMsg;
+                    const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+                    toast.show();
+                }
+            }
+
+            async function refreshGuestNotifBadge() {
+                try {
+                    const resp = await fetch('@Url.Action("NotificationsUnreadCount", "Guest")', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    if (!resp.ok) return;
+                    const data = await resp.json();
+                    const badge = document.getElementById('vrGpNotifBadge');
+                    if (!badge) return;
+                    const unread = (data && typeof data.unread === 'number') ? data.unread : 0;
+                    if (unread > 0) {
+                        badge.textContent = unread > 99 ? '99+' : String(unread);
+                        badge.style.display = '';
+                    } else {
+                        badge.textContent = '';
+                        badge.style.display = 'none';
+                    }
+                } catch (e) {
+                    // swallow
+                }
+            }
+
+            refreshGuestNotifBadge();
+            setInterval(refreshGuestNotifBadge, 15000);
+        })();
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

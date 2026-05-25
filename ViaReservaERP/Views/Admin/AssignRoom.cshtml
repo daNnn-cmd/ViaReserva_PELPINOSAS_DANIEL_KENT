@@ -1,0 +1,118 @@
+@model ViaReservaERP.Models.Admin.RoomAssignmentViewModel
+@{
+    ViewData["Title"] = "Room Assignment";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-panel" style="max-width: 900px; margin: 0 auto;">
+    <div class="vr-sa-panel-head" style="margin-bottom: 30px;">
+        <div>
+            <div class="vr-sa-panel-title">Room Assignment & Transfer</div>
+            <div class="vr-sa-panel-sub">Assign or change room for <strong>@Model.GuestName</strong> (Res #@Model.ReservationId)</div>
+        </div>
+        <a href="@Url.Action("Details", "Admin", new { id = Model.ReservationId })" class="vr-sa-btn">
+            <i class="fa-solid fa-arrow-left me-2"></i> Back to Details
+        </a>
+    </div>
+
+    <div class="vr-sa-alert vr-sa-alert-info mb-4">
+        <div class="vr-sa-alert-title">Stay Duration Validation</div>
+        <div class="vr-sa-alert-sub">
+            Dates: <strong>@Model.CheckInDate.ToLongDateString()</strong> to <strong>@Model.CheckOutDate.ToLongDateString()</strong>. 
+            Only rooms with no overlapping bookings for this period are shown below.
+        </div>
+    </div>
+
+    <form method="post" action="@Url.Action("ProcessRoomAssignment", "Admin")">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ReservationId" />
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-6">
+                <div class="vr-sa-panel" style="background: rgba(15, 23, 42, 0.02); border: 1px dashed rgba(15, 23, 42, 0.1);">
+                    <div class="vr-sa-label">Currently Assigned</div>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: #1a2a6c;">@Model.CurrentRoomNumber</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="vr-sa-panel" style="background: rgba(22, 163, 74, 0.05); border: 1px dashed rgba(22, 163, 74, 0.2);">
+                    <div class="vr-sa-label">Selected for Transfer</div>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: #16a34a;" id="displaySelectedRoom">None</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="vr-sa-form-section">
+            <h4 style="font-weight: 700; color: #0b122d; margin-bottom: 20px;">Available Inventory</h4>
+            
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="max-height: 400px; overflow-y: auto;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Select</th>
+                            <th>Room #</th>
+                            <th>Type</th>
+                            <th>Rate (Nightly)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var room in Model.AvailableRooms)
+                        {
+                            <tr class="@(room.RoomId == Model.CurrentRoomId ? "vr-sa-row-selected" : "")">
+                                <td>
+                                    <input type="radio" name="SelectedRoomId" value="@room.RoomId" 
+                                           data-number="@room.RoomNumber" 
+                                           class="room-radio" 
+                                           @(room.RoomId == Model.CurrentRoomId ? "checked" : "") required />
+                                </td>
+                                <td style="font-weight: 700;">@room.RoomNumber</td>
+                                <td class="vr-sa-cell-muted">
+                                    @room.TypeName
+                                    @if (room.IsUpgrade) { 
+                                        <span class="ms-2 badge bg-warning text-dark" style="font-size: 0.7rem;">UPGRADE</span> 
+                                    }
+                                </td>
+                                <td style="font-weight: 600;">₱ @room.Price.ToString("N2")</td>
+                                <td>
+                                    <span class="vr-sa-badge vr-sa-badge-active">Available</span>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.AvailableRooms.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="text-danger font-weight-bold">No available rooms found for these dates.</div>
+                                    <div class="text-muted mt-2">Consider adjusting stay dates or checking maintenance status.</div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-5 d-flex justify-content-end gap-3">
+            <button type="submit" class="vr-sa-btn vr-sa-btn-primary" style="height: 50px; min-width: 220px;">
+                <i class="fa-solid fa-exchange-alt me-2"></i> Confirm Assignment
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.room-radio').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.getElementById('displaySelectedRoom').textContent = 'Room ' + this.dataset.number;
+            });
+        });
+
+        // Initialize display if one is checked
+        const checked = document.querySelector('.room-radio:checked');
+        if (checked) {
+            document.getElementById('displaySelectedRoom').textContent = 'Room ' + checked.dataset.number;
+        }
+    </script>
+}

@@ -1,0 +1,101 @@
+@{
+    var isSuperAdmin = User?.Identity?.IsAuthenticated == true && User.HasRoleId(1);
+
+    var activeController = (ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty).ToLowerInvariant();
+    var activeAction = (ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty).ToLowerInvariant();
+
+    string Active(string controller, string action)
+    {
+        var isActive = activeController == controller.ToLowerInvariant() && activeAction == action.ToLowerInvariant();
+        return isActive ? "vr-sa-nav-item vr-sa-nav-item-active" : "vr-sa-nav-item";
+    }
+}
+
+@if (!isSuperAdmin)
+{
+    return;
+}
+
+<aside class="vr-sa-sidebar" aria-label="Super Admin navigation">
+    <div class="vr-sa-sidebar-top">
+        <div class="vr-sa-brand">
+            <img src="~/img/viareserva-logo.png" alt="VíaReserva" class="vr-sa-brand-logo" />
+            <div>
+                <div class="vr-sa-brand-name">VíaReserva</div>
+                <div class="vr-sa-brand-sub">Super Admin Console</div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="vr-sa-nav">
+        <a class="@Active("superadmin", "dashboard")" href="@Url.Action("Dashboard", "SuperAdmin")">
+            <span class="vr-sa-ico vr-sa-ico-indigo"><i class="fa-solid fa-table-columns"></i></span>
+            <span>Dashboard</span>
+        </a>
+
+        <div class="vr-sa-nav-section">Management</div>
+        <a class="@Active("superadmin", "companies")" href="@Url.Action("Companies", "SuperAdmin")">
+            <span class="vr-sa-ico vr-sa-ico-blue"><i class="fa-solid fa-hotel"></i></span>
+            <span>Companies Management</span>
+        </a>
+        <a class="@Active("superadmin", "users")" href="@Url.Action("Users", "SuperAdmin")">
+            <span class="vr-sa-ico vr-sa-ico-green"><i class="fa-solid fa-users"></i></span>
+            <span>User Management</span>
+        </a>
+        <a class="@Active("superadmin", "roles")" href="@Url.Action("Roles", "SuperAdmin")">
+            <span class="vr-sa-ico vr-sa-ico-purple"><i class="fa-solid fa-shield-halved"></i></span>
+            <span>Roles &amp; Permissions</span>
+        </a>
+
+        <div class="vr-sa-nav-section">Monitoring</div>
+        <a class="@Active("superadmin", "reservations")" href="@Url.Action("Reservations", "SuperAdmin")">
+            <span class="vr-sa-ico vr-sa-ico-indigo"><i class="fa-solid fa-calendar-days"></i></span>
+            <span>Reservation Monitoring</span>
+        </a>
+
+        <a class="@Active("superadmin", "guestservices")" href="@Url.Action("GuestServices", "SuperAdmin")">
+            <span class="vr-sa-ico vr-sa-ico-orange"><i class="fa-solid fa-bell-concierge"></i></span>
+            <span>Guest Service Monitoring</span>
+        </a>
+        <a class="@Active("superadmin", "workflowmanagement")" href="@Url.Action("WorkflowManagement", "SuperAdmin")">
+            <span class="vr-sa-ico vr-sa-ico-teal"><i class="fa-solid fa-diagram-project"></i></span>
+            <span>Workflow Management</span>
+        </a>
+        <a class="@Active("superadmin", "accounting")" href="@Url.Action("Accounting", "SuperAdmin")">
+            <span class="vr-sa-ico vr-sa-ico-gold"><i class="fa-solid fa-peso-sign"></i></span>
+            <span>Accounting Overview</span>
+        </a>
+
+        <div class="vr-sa-nav-section">SaaS</div>
+        <a class="@Active("superadmin", "subscriptions")" href="@Url.Action("Subscriptions", "SuperAdmin")">
+            <span class="vr-sa-ico vr-sa-ico-red"><i class="fa-solid fa-credit-card"></i></span>
+            <span>Subscription Management</span>
+        </a>
+
+        <a class="@Active("superadmin", "enterpriseinquiries")" href="@Url.Action("EnterpriseInquiries", "SuperAdmin")">
+            <span class="vr-sa-ico vr-sa-ico-orange"><i class="fa-solid fa-inbox"></i></span>
+            <span>Enterprise Inquiries</span>
+        </a>
+
+        <div class="vr-sa-nav-section">Governance</div>
+        <a class="@Active("superadmin", "auditlogs")" href="@Url.Action("AuditLogs", "SuperAdmin")">
+            <span class="vr-sa-ico vr-sa-ico-slate"><i class="fa-solid fa-file-invoice"></i></span>
+            <span>Audit Logs</span>
+        </a>
+        <a class="@Active("superadmin", "reports")" href="@Url.Action("Reports", "SuperAdmin")">
+            <span class="vr-sa-ico vr-sa-ico-cyan"><i class="fa-solid fa-chart-line"></i></span>
+            <span>Reports &amp; Analytics</span>
+        </a>
+        <a class="@Active("superadmin", "systemsettings")" href="@Url.Action("SystemSettings", "SuperAdmin")">
+            <span class="vr-sa-ico vr-sa-ico-slate"><i class="fa-solid fa-sliders"></i></span>
+            <span>System Settings</span>
+        </a>
+
+        <div class="vr-sa-nav-spacer"></div>
+
+        <button type="button" id="vrSaLogoutBtn" class="vr-sa-nav-item vr-sa-logout" data-bs-toggle="modal" data-bs-target="#vrSaLogoutConfirmModal">
+            <span class="vr-sa-ico"><i class="fa-solid fa-right-from-bracket"></i></span>
+            <span>Logout</span>
+        </button>
+    </nav>
+</aside>

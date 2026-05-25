@@ -1,0 +1,84 @@
+@model ViaReservaERP.Models.SuperAdmin.TransactionLinkedReservationViewModel
+@{
+    ViewData["Title"] = "Linked Reservation";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Reservation ID</div>
+                    <div class="vr-sa-report-stat-value">#@Model.ReservationId</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-hashtag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">System reference</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Total Amount</div>
+                    <div class="vr-sa-report-stat-value">₱ @Model.TotalAmount.ToString("N2")</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-money-check-dollar"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Reservation total</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Status</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.Status) ? "—" : Model.Status)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-spinner"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Reservation state</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Guest</div>
+                    <div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.GuestName) ? "—" : Model.GuestName)</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.08);"><i class="fa-solid fa-user-tag"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Primary contact</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Related monitoring contexts</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" href="@Url.Action("TransactionDetails", "SuperAdmin", new { source = Model.Source, id = Model.Id })" title="Transaction Details">Txn</a>
+                <a class="vr-sa-export-btn" href="@Url.Action("ReservationDetails", "SuperAdmin", new { id = Model.ReservationId })" title="Reservation Details">Res</a>
+                <a class="vr-sa-btn" href="@Url.Action("Accounting", "SuperAdmin")"><i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Linked Reservation Overview</div>
+                <div class="vr-sa-panel-sub">Booking context and stay details associated with the financial record.</div>
+            </div>
+        </div>
+    </section>
+
+
+        <div class="vr-sa-report-grid" style="margin-top:12px;">
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Company</div><div class="vr-sa-report-sub">Tenant scope</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.CompanyName) ? "—" : Model.CompanyName)</div></div>
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Guest</div><div class="vr-sa-report-sub">Guest record</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.GuestName) ? "—" : Model.GuestName)</div></div>
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Check-In</div><div class="vr-sa-report-sub">Date</div></div><div class="vr-sa-report-stat-value">@(Model.CheckIn.HasValue ? Model.CheckIn.Value.ToString("yyyy-MM-dd") : "—")</div></div>
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Check-Out</div><div class="vr-sa-report-sub">Date</div></div><div class="vr-sa-report-stat-value">@(Model.CheckOut.HasValue ? Model.CheckOut.Value.ToString("yyyy-MM-dd") : "—")</div></div>
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Status</div><div class="vr-sa-report-sub">Reservation state</div></div><div class="vr-sa-report-stat-value">@(string.IsNullOrWhiteSpace(Model.Status) ? "—" : Model.Status)</div></div>
+            <div class="vr-sa-report-row"><div><div class="vr-sa-report-title">Total Amount</div><div class="vr-sa-report-sub">Reservation total</div></div><div class="vr-sa-report-stat-value">₱ @Model.TotalAmount.ToString("N2")</div></div>
+        </div>
+    </section>
+</div>

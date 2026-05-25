@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.btn-tailwind {
+  @apply px-4 py-2 rounded font-semibold transition-all;
+}
+
+.btn-primary-custom {
+  @apply bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg;
+}

@@ -1,0 +1,576 @@
+@model ViaReservaERP.Models.SuperAdmin.SystemSettingsViewModel
+@{
+    ViewData["Title"] = "System Settings";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Active Companies</div>
+                    <div class="vr-sa-report-stat-value">@Model.ActiveCompanies</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-building"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Multi-tenant instances</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Active Users</div>
+                    <div class="vr-sa-report-stat-value">@Model.ActiveUsers</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #22c55e; background: rgba(34, 197, 94, 0.08);"><i class="fa-solid fa-users"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Across all hotel tenants</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Security Alerts</div>
+                    <div class="vr-sa-report-stat-value">@Model.SecurityAlertsLast7Days</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.08);"><i class="fa-solid fa-shield-halved"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Events in last 7 days</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Active Integrations</div>
+                    <div class="vr-sa-report-stat-value">@Model.ActiveIntegrations</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-plug"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Payment & mail connectors</div>
+        </div>
+
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Export Options</div>
+            <div class="vr-sa-reports-summary-sub">Download system configuration</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-export-btn" title="PDF" href="@Url.Action("SystemSettings", "SuperAdminReports", new { format = "pdf" })">PDF</a>
+                <a class="vr-sa-export-btn" title="CSV" href="@Url.Action("SystemSettings", "SuperAdminReports", new { format = "csv" })">CSV</a>
+                <a class="vr-sa-export-btn" title="Excel" href="@Url.Action("SystemSettings", "SuperAdminReports", new { format = "xlsx" })">XLSX</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Settings Search</div>
+                <div class="vr-sa-panel-sub">Search roles, policies, and configuration sections.</div>
+            </div>
+        </div>
+
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter" style="grid-column: span 4;">
+                <div class="vr-sa-filter-label">Search Settings</div>
+                <input class="vr-sa-filter-input" type="text" name="q" value="@Model.SearchQuery" placeholder="Search roles, integrations, or audit records..." />
+            </div>
+            <div class="vr-sa-filter" style="align-self:end;">
+                <button class="vr-sa-btn" type="submit">Apply Search</button>
+            </div>
+        </form>
+    </section>
+
+    <div class="vr-sa-report-grid" style="margin-top:14px;">
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Multi-Tenant Company Settings</div>
+                    <div class="vr-sa-panel-sub">Onboarding rules, activation status, tenant limits, and suspension controls.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-cards" style="margin-top:0;">
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Pending Activation</div>
+                            <div class="vr-sa-card-value">@Model.CompanyOnboarding.PendingActivationCompanies</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #f59e0b; font-size: 1.25rem;"><i class="fa-solid fa-hourglass-half"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Companies created but not active</div>
+                </div>
+
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Suspended / Past Due</div>
+                            <div class="vr-sa-card-value">@Model.CompanyOnboarding.SuspendedCompanies</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #ef4444; font-size: 1.25rem;"><i class="fa-solid fa-ban"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Based on subscription status signals</div>
+                </div>
+
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Tenant Max Users</div>
+                            <div class="vr-sa-card-value">@Model.CompanyOnboarding.TenantMaxUsers</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #22c55e; font-size: 1.25rem;"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Largest user count in a single company</div>
+                </div>
+
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Tenant Avg Users</div>
+                            <div class="vr-sa-card-value">@Model.CompanyOnboarding.TenantAverageUsers.ToString("0.0")</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #3b82f6; font-size: 1.25rem;"><i class="fa-solid fa-chart-simple"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Average users per company</div>
+                </div>
+
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Feature Access (Permissions)</div>
+                            <div class="vr-sa-card-value">@Model.CompanyOnboarding.PermissionsDefined</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #64748b; font-size: 1.25rem;"><i class="fa-solid fa-lock"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Total permissions available platform-wide</div>
+                </div>
+            </div>
+
+            <div style="margin-top:14px;" class="vr-sa-muted">
+                Company operational settings remain under Company Admin controls.
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Role & Permission Settings</div>
+                    <div class="vr-sa-panel-sub">Role access monitoring across the platform. Changes are tracked via audit logs.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Role Name</th>
+                            <th class="text-center">Active Users</th>
+                            <th class="text-center">Permissions</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.RoleAccess.Count == 0)
+                    {
+                        <tr><td colspan="4" class="vr-sa-cell-muted">No roles matched your search.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var r in Model.RoleAccess)
+                        {
+                            <tr>
+                                <td style="font-weight: 500; color: #0b122d;">@r.RoleName</td>
+                                <td class="text-center" style="font-weight: 500;">@r.Users</td>
+                                <td class="text-center">@r.Permissions</td>
+                                <td class="text-center" style="font-weight: 500; color: #475569;">
+                                    Monitored
+                                </td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Security Settings</div>
+                    <div class="vr-sa-panel-sub">Platform security posture and authentication policies.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-filter-grid" style="margin-top:12px;">
+                <div class="vr-sa-filter">
+                    <div class="vr-sa-filter-label">Password Policies</div>
+                    <input class="vr-sa-filter-input" type="text" value="Enforced (hash storage)" readonly />
+                </div>
+                <div class="vr-sa-filter">
+                    <div class="vr-sa-filter-label">Multi-Factor Authentication</div>
+                    <input class="vr-sa-filter-input" type="text" value="@(Model.Security.MfaConfigured ? "Configured" : "Not Configured")" readonly />
+                </div>
+                <div class="vr-sa-filter">
+                    <div class="vr-sa-filter-label">Session Timeout</div>
+                    <input class="vr-sa-filter-input" type="text" value="@Model.Security.CookieSessionHours hours" readonly />
+                </div>
+                <div class="vr-sa-filter">
+                    <div class="vr-sa-filter-label">IP Restrictions</div>
+                    <input class="vr-sa-filter-input" type="text" value="@Model.Security.IpRestrictionMode" readonly />
+                </div>
+                <div class="vr-sa-filter">
+                    <div class="vr-sa-filter-label">Encryption</div>
+                    <input class="vr-sa-filter-input" type="text" value="@Model.Security.EncryptionMode" readonly />
+                </div>
+                <div class="vr-sa-filter">
+                    <div class="vr-sa-filter-label">Login Attempt Limitations</div>
+                    <input class="vr-sa-filter-input" type="text" value="@Model.Security.LoginAttemptControls" readonly />
+                </div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Workflow Automation Settings</div>
+                    <div class="vr-sa-panel-sub">Approval routing, escalation thresholds, triggers, and SLA-related escalation rules.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-cards" style="margin-top:12px;">
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Workflows</div>
+                            <div class="vr-sa-card-value">@Model.Workflow.Workflows</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #8b5cf6; font-size: 1.25rem;"><i class="fa-solid fa-puzzle-piece"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Defined workflow templates</div>
+                </div>
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Workflow Steps</div>
+                            <div class="vr-sa-card-value">@Model.Workflow.WorkflowSteps</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #3b82f6; font-size: 1.25rem;"><i class="fa-solid fa-repeat"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Total steps across all workflows</div>
+                </div>
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Escalation Rules</div>
+                            <div class="vr-sa-card-value">@Model.Workflow.EscalationRules</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #ef4444; font-size: 1.25rem;"><i class="fa-solid fa-angles-up"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Rules for threshold-based escalation</div>
+                </div>
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Avg Escalation Threshold</div>
+                            <div class="vr-sa-card-value">@Model.Workflow.AverageEscalationMinutes.ToString("0") min</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #f59e0b; font-size: 1.25rem;"><i class="fa-solid fa-stopwatch"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Average configured escalation time</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Subscription Settings</div>
+                    <div class="vr-sa-panel-sub">Plans, trials, billing cycles, and payment configuration readiness.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-cards" style="margin-top:12px;">
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Plans</div>
+                            <div class="vr-sa-card-value">@Model.Subscription.Plans</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #64748b; font-size: 1.25rem;"><i class="fa-solid fa-box"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Configured subscription plan catalog</div>
+                </div>
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Active Subscriptions</div>
+                            <div class="vr-sa-card-value">@Model.Subscription.ActiveSubscriptions</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #22c55e; font-size: 1.25rem;"><i class="fa-solid fa-circle-check"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Status = Active</div>
+                </div>
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Trial Subscriptions</div>
+                            <div class="vr-sa-card-value">@Model.Subscription.TrialSubscriptions</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #3b82f6; font-size: 1.25rem;"><i class="fa-solid fa-flask"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Status contains Trial</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-table-wrap" style="margin-top:12px;">
+                <table class="vr-sa-table-modern">
+                    <thead>
+                        <tr>
+                            <th>Billing Cycle (Months)</th>
+                            <th style="width:160px;">Plans</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.Subscription.BillingCycles.Count == 0)
+                    {
+                        <tr><td colspan="2" class="vr-sa-cell-muted">No plans found.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var row in Model.Subscription.BillingCycles)
+                        {
+                            <tr>
+                                <td>@(row.DurationMonths?.ToString() ?? "N/A")</td>
+                                <td>@row.Plans</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Notification Settings</div>
+                    <div class="vr-sa-panel-sub">Email routing and operational alerting across the platform.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-filter-grid" style="margin-top:12px;">
+                <div class="vr-sa-filter">
+                    <div class="vr-sa-filter-label">Email Provider</div>
+                    <input class="vr-sa-filter-input" type="text" value="@Model.Notifications.EmailProvider" readonly />
+                </div>
+                <div class="vr-sa-filter">
+                    <div class="vr-sa-filter-label">Alert Signals (7 days)</div>
+                    <input class="vr-sa-filter-input" type="text" value="@Model.Notifications.AlertsLast7Days" readonly />
+                </div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">API & Integration Settings</div>
+                    <div class="vr-sa-panel-sub">API key management and integration status monitoring (configuration presence).</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Integration Service</th>
+                            <th class="text-center">Configuration</th>
+                            <th>Functional Area</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var i in Model.Integrations)
+                    {
+                        var isConfigured = i.IsConfigured;
+                        var statusClass = isConfigured ? "vr-sa-status-success" : "vr-sa-status-neutral";
+                        <tr>
+                            <td style="font-weight: 500; color: #0b122d;">@i.IntegrationName</td>
+                            <td class="text-center" style="font-weight: 500; color: #475569;">
+                                @(isConfigured ? "Connected" : "Inactive")
+                            </td>
+                            <td class="vr-sa-cell-muted">@i.StatusLabel</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+
+             <div class="mt-3 p-3" style="background: rgba(99, 102, 241, 0.05); border: 1px dashed #6366f1; border-radius: 8px;">
+                <div style="font-size: 0.8rem; font-weight: 700; color: #6366f1; text-transform: uppercase; margin-bottom: 4px;">Configuration Help</div>
+                <div class="vr-sa-cell-muted" style="font-size: 0.85rem;">
+                    Ensure your Stripe Dashboard has the following Webhook URL configured:
+                    <div class="mt-1" style="display: flex; gap: 8px; align-items: center;">
+                        <code style="background: #fff; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; color: #0f172a; font-weight: 600;">@Context.Request.Scheme://@Context.Request.Host/stripe/webhook</code>
+                        <span style="font-size: 0.75rem; color: #64748b;">(Listen for: payment_intent, checkout.session, customer.subscription events)</span>
+                    </div>
+                </div>
+             </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Audit & Compliance Settings</div>
+                    <div class="vr-sa-panel-sub">Retention policies, compliance monitoring rules, and data retention signals.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-filter-grid" style="margin-top:12px;">
+                <div class="vr-sa-filter">
+                    <div class="vr-sa-filter-label">Audit Retention</div>
+                    <input class="vr-sa-filter-input" type="text" value="@Model.Compliance.RetentionPolicyDays days" readonly />
+                </div>
+                <div class="vr-sa-filter">
+                    <div class="vr-sa-filter-label">Compliance Monitoring</div>
+                    <input class="vr-sa-filter-input" type="text" value="@Model.Compliance.ComplianceMonitoring" readonly />
+                </div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Backup & Recovery Settings</div>
+                    <div class="vr-sa-panel-sub">Database backup mode, recovery posture, and disaster recovery controls.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-filter-grid" style="margin-top:12px;">
+                <div class="vr-sa-filter">
+                    <div class="vr-sa-filter-label">Database Backups</div>
+                    <input class="vr-sa-filter-input" type="text" value="@Model.Backup.BackupMode" readonly />
+                </div>
+                <div class="vr-sa-filter">
+                    <div class="vr-sa-filter-label">Backup Scheduling</div>
+                    <input class="vr-sa-filter-input" type="text" value="@Model.Backup.Scheduling" readonly />
+                </div>
+                <div class="vr-sa-filter">
+                    <div class="vr-sa-filter-label">Disaster Recovery</div>
+                    <input class="vr-sa-filter-input" type="text" value="@Model.Backup.DisasterRecovery" readonly />
+                </div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel" style="grid-column: 1 / -1;">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">System Health Monitoring</div>
+                    <div class="vr-sa-panel-sub">Connectivity and error monitoring derived from live platform signals.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-cards" style="margin-top:12px;">
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Server Health</div>
+                            <div class="vr-sa-card-value">OK</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #22c55e; font-size: 1.25rem;"><i class="fa-solid fa-circle"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Application process is running</div>
+                </div>
+
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">API Uptime</div>
+                            <div class="vr-sa-card-value">@Model.Health.ApiUptime</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #3b82f6; font-size: 1.25rem;"><i class="fa-solid fa-satellite-dish"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Current service endpoint availability</div>
+                </div>
+
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Database Health</div>
+                            <div class="vr-sa-card-value">@Model.Health.DatabaseConnectivity</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #8b5cf6; font-size: 1.25rem;"><i class="fa-solid fa-server"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Connectivity check via EF Core</div>
+                </div>
+
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Errors (24h)</div>
+                            <div class="vr-sa-card-value">@Model.Health.ErrorsLast24Hours</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #f59e0b; font-size: 1.25rem;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Audit log fail/error signals</div>
+                </div>
+
+                <div class="vr-sa-card">
+                    <div class="vr-sa-card-top">
+                        <div>
+                            <div class="vr-sa-card-kicker">Failed Payments (24h)</div>
+                            <div class="vr-sa-card-value">@Model.Health.FailedPaymentsLast24Hours</div>
+                        </div>
+                        <div class="vr-sa-card-icon" style="color: #ef4444; font-size: 1.25rem;"><i class="fa-solid fa-burst"></i></div>
+                    </div>
+                    <div class="vr-sa-card-foot">Non-succeeded payment events</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="vr-sa-panel" style="grid-column: 1 / -1;">
+            <div class="vr-sa-panel-head">
+                <div>
+                    <div class="vr-sa-panel-title">Read-Only Settings Audit Trail</div>
+                    <div class="vr-sa-panel-sub">Track who changed platform controls, what changed, and when.</div>
+                </div>
+            </div>
+
+            <div class="vr-sa-table-wrap vr-sa-table-modern" style="margin-top:12px;">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Actor / Company</th>
+                            <th>Area / Action</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.AuditTrail.Count == 0)
+                    {
+                        <tr><td colspan="3" class="vr-sa-cell-muted">No settings-related audit activity found.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var a in Model.AuditTrail)
+                        {
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 500; color: #0b122d;">@a.Actor</div>
+                                    <div style="font-size: 0.8rem; color: #64748b;">@a.Company</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 500; color: #0b122d;">@a.Area</div>
+                                    <div style="font-size: 0.8rem; color: #64748b;">@a.Action</div>
+                                </td>
+                                <td>
+                                    <div style="font-size: 0.9rem; color: #0b122d;">@a.WhenUtc.ToString("MMM dd, HH:mm")</div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>

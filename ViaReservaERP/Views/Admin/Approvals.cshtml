@@ -1,0 +1,207 @@
+@model ViaReservaERP.Models.Admin.ApprovalCenterViewModel
+@{
+    ViewData["Title"] = "Approval Center";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="vr-sa-reports">
+    <!-- Operational Stats -->
+    <div class="vr-sa-reports-stats">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Pending Actions</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalPending</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #6366f1; background: rgba(99, 102, 241, 0.08);"><i class="fa-solid fa-file-signature"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Actionable tasks</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Overdue SLA</div>
+                    <div class="vr-sa-report-stat-value">@Model.OverdueApprovals</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.08);"><i class="fa-solid fa-hourglass-end"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Delayed (> 120m)</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">High Value</div>
+                    <div class="vr-sa-report-stat-value">@Model.HighValueRequests</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-shield-halved"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Audit required</div>
+        </div>
+
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Escalated</div>
+                    <div class="vr-sa-report-stat-value">@Model.EscalatedOperational</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #0ea5e9; background: rgba(14, 165, 233, 0.08);"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Operational alerts</div>
+        </div>
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Compliance</div>
+            <div class="vr-sa-reports-summary-actions">
+                <div class="p-2" style="background: #f0f9ff; border-radius: 10px; border: 1px solid #bae6fd; font-size: 0.75rem; color: #0369a1;">
+                    <strong>Notice:</strong> High-value overrides require double authorization per property policy.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. Pending Workflow Actions -->
+    <section class="vr-sa-panel mb-4">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Pending Workflow Actions</div>
+                <div class="vr-sa-panel-sub">Tasks requiring administrative authorization or review</div>
+            </div>
+        </div>
+
+        @if (!Model.Rows.Any())
+        {
+            <div class="text-center py-5">
+                <div class="vr-sa-card-icon mx-auto mb-4" style="width: 70px; height: 70px; font-size: 1.8rem; color: #22c55e; background: rgba(34, 197, 94, 0.08);">
+                    <i class="fa-solid fa-check-double"></i>
+                </div>
+                <h5 style="font-weight: 700; color: #0f172a;">All Caught Up!</h5>
+                <p class="text-muted">There are no pending workflow approvals requiring attention.</p>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Aging</th>
+                            <th>Request Details</th>
+                            <th>Reference</th>
+                            <th style="width: 200px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var app in Model.Rows)
+                        {
+                            var nowUtc = ViaReservaERP.AppTime.Now;
+                            var age = nowUtc - app.CreatedAt.ToUniversalTime();
+                            var isOverdue = age.TotalMinutes > 120;
+
+                            <tr>
+                                <td class="vr-sa-cell-muted">
+                                    <div style="font-weight: 600; color: #475569;">@app.CreatedAt.ToString("HH:mm")</div>
+                                    <div style="font-size: 0.75rem;">@app.CreatedAt.ToString("MMM dd")</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 700; color: @(isOverdue ? "#ef4444" : "#475569");">
+                                        @((int)Math.Floor(age.TotalMinutes))m
+                                        @if(isOverdue) { <i class="fa-solid fa-circle-exclamation ms-1" style="font-size: 0.75rem;"></i> }
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 700; color: #0f172a;">@(app.Workflow?.Name ?? "General Approval")</div>
+                                    <div class="vr-sa-cell-muted" style="font-size: 0.8rem;">Type: @app.ReferenceType</div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="px-2 py-0.5" style="background: #f1f5f9; border-radius: 4px; font-size: 0.75rem; font-weight: 600; color: #64748b;">Step @app.CurrentStep</div>
+                                        <a href="@Url.Action("Details", "Admin", new { id = app.ReferenceId })" class="text-decoration-none" style="font-weight: 600; color: #4f46e5;">
+                                            ID #@app.ReferenceId
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="vr-sa-actions">
+                                        <a href="@Url.Action("Details", "Admin", new { id = app.ReferenceId })" class="vr-sa-iconbtn" title="Review Request">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                        <form method="post" action="@Url.Action("ApproveWorkflowInstance", "Admin", new { instanceId = app.InstanceId })" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="vr-sa-iconbtn" title="Approve" style="color: #22c55e;">
+                                                <i class="fa-solid fa-circle-check"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post" action="@Url.Action("RejectWorkflowInstance", "Admin", new { instanceId = app.InstanceId })" class="d-inline" onsubmit="return confirm('Reject this request?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="vr-sa-iconbtn" title="Reject" style="color: #ef4444;">
+                                                <i class="fa-solid fa-circle-xmark"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="vr-sa-pagination">
+                <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.Page - 1) * Model.PageSize + 1, Model.TotalRows))–@(Math.Min(Model.Page * Model.PageSize, Model.TotalRows)) of @Model.TotalRows</div>
+                <div class="vr-sa-pagination-actions">
+                    <a class="vr-sa-pagebtn" href="@Url.Action("Approvals", "Admin", new { page = Model.Page - 1 })" aria-disabled="@(Model.Page <= 1)">Previous</a>
+                    @for (var i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <a class="vr-sa-pagebtn @(i == Model.Page ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("Approvals", "Admin", new { page = i })">@i</a>
+                    }
+                    <a class="vr-sa-pagebtn" href="@Url.Action("Approvals", "Admin", new { page = Model.Page + 1 })" aria-disabled="@(Model.Page >= Model.TotalPages)">Next</a>
+                </div>
+            </div>
+        }
+    </section>
+
+    <!-- 2. Operational Escalations -->
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title text-danger">Operational Escalations</div>
+                <div class="vr-sa-panel-sub">Critical service request delays requiring management intervention</div>
+            </div>
+        </div>
+
+        <div class="p-4 pt-0 mt-2">
+            @if (!Model.EscalatedRequests.Any())
+            {
+                <div class="text-center py-5" style="background: #f8fafc; border-radius: 12px; border: 1px dashed #e2e8f0;">
+                    <i class="fa-solid fa-circle-check mb-2" style="font-size: 2rem; color: #94a3b8;"></i>
+                    <div class="vr-sa-cell-muted">No active operational escalations found.</div>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var esc in Model.EscalatedRequests)
+                    {
+                        var escAge = ViaReservaERP.AppTime.Now - esc.RequestDate.ToUniversalTime();
+                        <div class="col-md-6 col-lg-4">
+                            <div class="p-4 h-100" style="background: #fff; border-radius: 16px; border: 1px solid #fee2e2; border-left: 5px solid #ef4444; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                                <div class="d-flex justify-content-between mb-3 align-items-center">
+                                    <span style="font-weight: 800; color: #b91c1c; font-size: 0.7rem; letter-spacing: 0.8px; text-transform: uppercase;">Urgent Escalation</span>
+                                    <span class="vr-sa-cell-muted" style="font-size: 0.75rem;">@esc.RequestDate.ToString("HH:mm")</span>
+                                </div>
+                                <div style="font-weight: 800; color: #0f172a; font-size: 1.1rem; margin-bottom: 6px;">@esc.Service?.ServiceName</div>
+                                <div class="vr-sa-cell-muted mb-4" style="font-size: 0.85rem;">Guest: <span style="font-weight: 600; color: #475569;">@esc.Guest?.FullName</span></div>
+                                <div class="d-flex justify-content-between align-items-center mt-auto">
+                                    <div style="font-weight: 800; color: #ef4444; font-size: 0.9rem;">@((int)Math.Floor(escAge.TotalMinutes))m Delay</div>
+                                    <a class="vr-sa-btn vr-sa-btn-primary py-1.5 px-4" style="font-size: 0.8rem;" href="@Url.Action("Services", "Admin", new { statusFilter = "Escalated" })">Handle</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+</div>

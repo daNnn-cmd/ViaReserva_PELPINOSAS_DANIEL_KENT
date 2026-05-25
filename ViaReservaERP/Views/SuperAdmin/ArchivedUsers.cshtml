@@ -1,0 +1,178 @@
+@model ViaReservaERP.Models.SuperAdmin.UsersManagementViewModel
+@{
+    ViewData["Title"] = "Archived Users";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+@functions {
+    private static readonly TimeZoneInfo PhTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
+
+    string PhTime(DateTime dt)
+    {
+        var utc = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+        return TimeZoneInfo.ConvertTimeFromUtc(utc, PhTimeZone).ToString("yyyy-MM-dd HH:mm");
+    }
+}
+
+<div class="vr-sa-reports">
+    <div class="vr-sa-reports-stats" style="display: grid; grid-template-columns: 1fr auto;">
+        <div class="vr-sa-report-stat">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="vr-sa-report-stat-kicker" style="font-weight: 800; color: #0b122d;">Archived Users</div>
+                    <div class="vr-sa-report-stat-value">@Model.TotalRows</div>
+                </div>
+                <div class="vr-sa-card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-box-archive"></i></div>
+            </div>
+            <div class="vr-sa-report-stat-sub" style="margin-top: 14px;">Suspended or soft-deleted accounts</div>
+        </div>
+
+        <div class="vr-sa-reports-summary">
+            <div class="vr-sa-reports-summary-title">Navigation</div>
+            <div class="vr-sa-reports-summary-sub">Return to user directory</div>
+            <div class="vr-sa-reports-summary-actions">
+                <a class="vr-sa-btn vr-sa-btn-primary" href="@Url.Action("Users", "SuperAdmin")"><i class="fa-solid fa-arrow-left me-1"></i> Back to Users</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="vr-sa-panel vr-sa-reports-filters">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Search Archived Users</div>
+                <div class="vr-sa-panel-sub">Locate archived accounts by name or email.</div>
+            </div>
+        </div>
+
+        <form method="get" class="vr-sa-filter-grid">
+            <div class="vr-sa-filter">
+                <div class="vr-sa-filter-label">Search</div>
+                <input class="vr-sa-filter-input" name="search" value="@Model.Search" placeholder="Name or email" />
+            </div>
+            <div class="vr-sa-filter" style="align-self: flex-end;">
+                <div class="vr-sa-report-card-actions">
+                    <button type="submit" class="vr-sa-btn">Apply Search</button>
+                    <a class="vr-sa-btn" href="@Url.Action("ArchivedUsers", "SuperAdmin")">Reset</a>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <section class="vr-sa-panel">
+        <div class="vr-sa-panel-head">
+            <div>
+                <div class="vr-sa-panel-title">Archived User Directory</div>
+                <div class="vr-sa-panel-sub">Accounts here cannot access the platform until restored.</div>
+            </div>
+            <div class="vr-sa-pill">Page @Model.Page of @Model.TotalPages</div>
+        </div>
+
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="vr-sa-alert">
+                <div class="vr-sa-alert-title">No archived users</div>
+                <div class="vr-sa-alert-sub">Archived user accounts will appear here for restoration.</div>
+            </div>
+        }
+        else
+        {
+            <div class="vr-sa-table-wrap vr-sa-table-modern">
+                <table class="vr-sa-table">
+                    <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Company</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Created Date</th>
+                            <th style="width: 100px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var u in Model.Rows)
+                        {
+                            <tr>
+                                <td>
+                                    <div style="font-weight:500; color:#0b122d;">@u.FullName</div>
+                                </td>
+                                <td class="vr-sa-cell-muted">@u.Email</td>
+                                <td class="vr-sa-cell-muted">@(u.Company != null ? u.Company.CompanyName : "")</td>
+                                <td class="vr-sa-cell-muted">@(u.Role != null ? u.Role.RoleName : "")</td>
+                                <td>
+                                    <div class="vr-sa-cell-muted">Archived</div>
+                                </td>
+                                <td class="vr-sa-cell-muted">@PhTime(u.CreatedAt)</td>
+                                <td>
+                                    <div class="vr-sa-actions">
+                                        <button type="button" class="vr-sa-iconbtn" style="color: #22c55e;" title="Restore" aria-label="Restore" data-bs-toggle="modal" data-bs-target="#vrSaUserRestoreModal" data-user-id="@u.UserId" data-user-fullname="@u.FullName"><i class="fa-solid fa-rotate-left"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="vr-sa-pagination">
+                <div class="vr-sa-cell-muted">Showing @(Math.Min((Model.Page - 1) * Model.PageSize + 1, Model.TotalRows))–@(Math.Min(Model.Page * Model.PageSize, Model.TotalRows)) of @Model.TotalRows</div>
+                <div class="vr-sa-pagination-actions">
+                    @{
+                        var prev = Model.Page - 1;
+                        var next = Model.Page + 1;
+                    }
+                    <a class="vr-sa-pagebtn" href="@Url.Action("ArchivedUsers", "SuperAdmin", new { search = Model.Search, page = prev })" aria-disabled="@(Model.Page <= 1)">Previous</a>
+                    @for (var i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <a class="vr-sa-pagebtn @(i == Model.Page ? "vr-sa-pagebtn-active" : "")" href="@Url.Action("ArchivedUsers", "SuperAdmin", new { search = Model.Search, page = i })">@i</a>
+                    }
+                    <a class="vr-sa-pagebtn" href="@Url.Action("ArchivedUsers", "SuperAdmin", new { search = Model.Search, page = next })" aria-disabled="@(Model.Page >= Model.TotalPages)">Next</a>
+                </div>
+            </div>
+        }
+    </section>
+</div>
+
+<div class="modal fade vr-sa-modal" id="vrSaUserRestoreModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Restore User Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="@Url.Action("RestoreUser", "SuperAdmin")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="userId" id="vrSaUserRestoreId" />
+                <div class="modal-body">
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="width: 64px; height: 64px; background: rgba(34, 197, 94, 0.08); color: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.5rem;">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </div>
+                        <h4 style="font-weight: 700; color: #0b122d; margin-bottom: 8px;">Restore User?</h4>
+                        <p style="color: #64748b; font-size: 0.95rem; line-height: 1.5;">You are about to restore the account for <strong id="vrSaUserRestoreName" style="color: #0b122d;">this user</strong>. This will re-enable their platform access.</p>
+                    </div>
+                </div>
+                <div class="modal-footer" style="justify-content: center; gap: 12px; border-top: none; padding-bottom: 30px;">
+                    <button type="button" class="vr-sa-btn" data-bs-dismiss="modal" style="min-width: 120px;">Cancel</button>
+                    <button type="submit" class="vr-sa-btn vr-sa-btn-primary" style="background: #22c55e; border-color: #22c55e; min-width: 120px;">Yes, Restore</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const restoreModal = document.getElementById('vrSaUserRestoreModal');
+            if (restoreModal) {
+                restoreModal.addEventListener('show.bs.modal', function (event) {
+                    const btn = event.relatedTarget;
+                    if (!btn) return;
+                    document.getElementById('vrSaUserRestoreId').value = btn.getAttribute('data-user-id') || '';
+                    document.getElementById('vrSaUserRestoreName').textContent = btn.getAttribute('data-user-fullname') || 'this user';
+                });
+            }
+        })();
+    </script>
+}

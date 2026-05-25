@@ -1,0 +1,349 @@
+@inject ViaReservaERP.Data.ViaReservaDbContext db
+@using Microsoft.EntityFrameworkCore
+@using ViaReservaERP.Security
+@{
+    var userId = User?.GetUserId();
+    var avatarUrl = userId.HasValue ? db.Users.AsNoTracking().Where(u => u.UserId == userId.Value).Select(u => u.AvatarUrl).FirstOrDefault() : null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ViaReserva Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/tailwind-output.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ViaReservaERP.styles.css" asp-append-version="true" />
+</head>
+<script>
+    // Apply theme early to prevent FOUC (flash of unstyled content)
+    (function() {
+        var t = localStorage.getItem('vrAdminTheme');
+        if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+</script>
+<body class="vr-sa-body">
+    @{
+        var roleId = User?.GetRoleId() ?? 0;
+        var isAdmin = roleId == 2;
+        var isAccountant = roleId == 3;
+        var isFrontDesk = roleId == 4;
+        var isServiceStaff = roleId == 5;
+        var portalController = isAdmin ? "Admin" : isFrontDesk ? "FrontDesk" : isServiceStaff ? "ServiceStaff" : isAccountant ? "Accounting" : "Admin";
+        var roleLabel = isAdmin ? "Company Admin" : isFrontDesk ? "Front Desk" : isServiceStaff ? "Service Staff" : isAccountant ? "Accountant" : "User";
+    }
+    <div class="vr-sa-shell">
+        <partial name="_AdminSidebar" />
+
+        <main class="vr-sa-main" role="main">
+            <header class="vr-sa-topbar">
+                <div class="vr-sa-topbar-left">
+                    <button type="button" class="vr-sa-iconbtn" id="vrSaSidebarToggle" aria-label="Toggle sidebar" style="margin-right: 12px; cursor: pointer;">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div>
+                        <div class="vr-sa-topbar-title">@ViewData["Title"]</div>
+                        <div class="vr-sa-topbar-sub">Hotel Management &amp; Automation Portal</div>
+                    </div>
+                </div>
+
+                <div class="vr-sa-topbar-right">
+                    <button type="button" class="vr-sa-iconbtn" id="vrDarkModeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <i class="fa-solid fa-moon" id="vrDarkModeIcon"></i>
+                    </button>
+                    <a href="@Url.Action("Notifications", portalController)" class="vr-sa-iconbtn" aria-label="Notifications">
+                        <i class="fa-regular fa-bell"></i>
+                        <span class="vr-sa-badge" id="vrAdminNotifBadge" style="display:none;"></span>
+                    </a>
+
+                    <div class="vr-sa-profile" id="vrSaProfile">
+                        <button type="button" class="vr-sa-userpill" id="vrSaProfileBtn" aria-haspopup="true" aria-expanded="false">
+                            <div class="vr-sa-avatar">
+                                @if (!string.IsNullOrEmpty(avatarUrl))
+                                {
+                                    <img src="@avatarUrl" alt="Avatar" />
+                                }
+                                else
+                                {
+                                    <i class="fa-solid fa-user-tie"></i>
+                                }
+                            </div>
+                            <div class="vr-sa-userpill-info">
+                                <div class="vr-sa-userpill-name">@User?.Identity?.Name</div>
+                                <div class="vr-sa-userpill-role">@roleLabel</div>
+                            </div>
+                        </button>
+
+                        <div class="vr-sa-dropdown vr-hidden" id="vrSaProfileMenu" role="menu">
+                            <a class="vr-sa-dd-item" role="menuitem" href="@Url.Action("Profile", portalController)">
+                                <i class="fa-regular fa-user"></i> <span>My Profile</span>
+                            </a>
+                            <hr class="vr-sa-dd-sep" />
+                            <button type="button" class="vr-sa-dd-item vr-sa-dd-danger" id="vrSaLogoutBtnTop" role="menuitem" data-bs-toggle="modal" data-bs-target="#vrSaLogoutConfirmModal">
+                                <i class="fa-solid fa-right-from-bracket"></i> <span>Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <section class="vr-sa-content">
+                @RenderBody()
+            </section>
+        </main>
+    </div>
+
+    <!-- Sidebar overlay for mobile -->
+    <div class="vr-sidebar-overlay vr-hidden" id="vrSaOverlay"></div>
+
+    <!-- Premium Toast Notification -->
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 2000;">
+        <div id="vrSaSuccessToast" class="toast vr-sa-toast-premium" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex align-items-center p-2 pe-3">
+                <div class="vr-sa-toast-icon-v2 success">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <div class="ms-3">
+                    <div class="vr-sa-toast-msg-v2" id="vrSaToastMessage">Operation completed successfully.</div>
+                </div>
+                <button type="button" class="ms-auto btn-close-custom" data-bs-dismiss="toast" aria-label="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Error Toast -->
+        <div id="vrSaErrorToast" class="toast vr-sa-toast-premium" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex align-items-center p-2 pe-3">
+                <div class="vr-sa-toast-icon-v2 danger" style="background: #fee2e2; color: #ef4444;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="ms-3">
+                    <div class="vr-sa-toast-msg-v2" id="vrSaErrorToastMessage" style="color: #0f172a;">An error occurred.</div>
+                </div>
+                <button type="button" class="ms-auto btn-close-custom" data-bs-dismiss="toast" aria-label="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade vr-sa-modal vr-sa-logout-modal" id="vrSaLogoutConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+                <div class="modal-body p-5">
+                    <div class="text-center">
+                        <div class="mb-4 d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; border-radius: 50%; background: #fff1f2; color: #e11d48; font-size: 2rem;">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </div>
+                        <h3 class="mb-2" style="font-weight: 800; color: #0f172a; letter-spacing: -0.02em;">Log Out</h3>
+                        <p class="mb-0" style="color: #64748b; font-size: 1.05rem; line-height: 1.6;">Are you sure you want to log out of your <br/> hotel admin account?</p>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0 gap-3 justify-content-center">
+                    <button type="button" class="vr-sa-btn" data-bs-dismiss="modal" style="min-width: 140px; height: 48px; border-radius: 12px; font-weight: 600;">Cancel</button>
+                    <form method="post" action="@Url.Action("Logout", "Account")">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="vr-sa-btn vr-sa-btn-danger" style="min-width: 140px; height: 48px; border-radius: 12px; font-weight: 600; background: #e11d48; border-color: #e11d48;">Log Out</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        (function () {
+            const shell = document.querySelector('.vr-sa-shell');
+            const toggle = document.getElementById('vrSaSidebarToggle');
+            const wrap = document.getElementById('vrSaProfile');
+            const btn = document.getElementById('vrSaProfileBtn');
+            const menu = document.getElementById('vrSaProfileMenu');
+
+            if (toggle && shell) {
+                const sidebar = document.querySelector('.vr-sa-sidebar');
+                const overlay = document.getElementById('vrSaOverlay');
+
+                // Restore desktop collapsed state
+                if (localStorage.getItem('vrAdminSidebarCollapsed') === 'true' && window.innerWidth >= 1024) {
+                    shell.classList.add('vr-sa-shell-collapsed');
+                }
+
+                function openMobileSidebar() {
+                    if (sidebar) sidebar.classList.add('vr-sidebar-open');
+                    if (overlay) overlay.classList.remove('vr-hidden');
+                }
+                function closeMobileSidebar() {
+                    if (sidebar) sidebar.classList.remove('vr-sidebar-open');
+                    if (overlay) overlay.classList.add('vr-hidden');
+                }
+
+                toggle.addEventListener('click', () => {
+                    if (window.innerWidth < 1024) {
+                        sidebar && sidebar.classList.contains('vr-sidebar-open') ? closeMobileSidebar() : openMobileSidebar();
+                    } else {
+                        shell.classList.toggle('vr-sa-shell-collapsed');
+                        localStorage.setItem('vrAdminSidebarCollapsed', shell.classList.contains('vr-sa-shell-collapsed'));
+                    }
+                });
+
+                if (overlay) overlay.addEventListener('click', closeMobileSidebar);
+            }
+
+            if (wrap && btn && menu) {
+                btn.addEventListener('click', () => menu.classList.toggle('vr-hidden'));
+                document.addEventListener('click', e => { if (!wrap.contains(e.target)) menu.classList.add('vr-hidden'); });
+                document.addEventListener('keydown', e => { if (e.key === 'Escape') menu.classList.add('vr-hidden'); });
+            }
+
+            // Dark mode toggle
+            const dmBtn = document.getElementById('vrDarkModeToggle');
+            const dmIcon = document.getElementById('vrDarkModeIcon');
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    if (dmIcon) { dmIcon.className = 'fa-solid fa-sun'; }
+                    if (dmBtn) { dmBtn.style.color = '#fbbf24'; }
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    if (dmIcon) { dmIcon.className = 'fa-solid fa-moon'; }
+                    if (dmBtn) { dmBtn.style.color = ''; }
+                }
+                // Sync profile toggle if present
+                const profileToggle = document.getElementById('vrDarkModeProfileToggle');
+                if (profileToggle) {
+                    profileToggle.classList.toggle('vr-dark-on', theme === 'dark');
+                }
+            }
+            applyTheme(localStorage.getItem('vrAdminTheme') || 'light');
+            if (dmBtn) {
+                dmBtn.addEventListener('click', () => {
+                    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                    localStorage.setItem('vrAdminTheme', next);
+                    applyTheme(next);
+                });
+            }
+
+            const successMsg = "@(TempData["SuccessMessage"]?.ToString() ?? "")";
+            if (successMsg) {
+                const toastEl = document.getElementById('vrSaSuccessToast');
+                const toastMsg = document.getElementById('vrSaToastMessage');
+                if (toastEl && toastMsg) {
+                    toastMsg.textContent = successMsg;
+                    const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+                    toast.show();
+                }
+            }
+
+            const errorMsg = "@(TempData["ErrorMessage"]?.ToString() ?? "")";
+            if (errorMsg) {
+                const toastEl = document.getElementById('vrSaErrorToast');
+                const toastMsg = document.getElementById('vrSaErrorToastMessage');
+                if (toastEl && toastMsg) {
+                    toastMsg.textContent = errorMsg;
+                    const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+                    toast.show();
+                }
+            }
+
+            const removeCancelledPill = () => {
+                const nodes = document.querySelectorAll('body *');
+                for (const el of nodes) {
+                    if (!(el instanceof HTMLElement)) continue;
+                    
+                    // Skip if it's a modal or part of one
+                    if (el.closest('.modal') || el.classList.contains('modal') || el.classList.contains('modal-backdrop')) continue;
+
+                    // Check text content or if it's a known watermark container
+                    const t = (el.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+                    const isTextMatch = (t === 'cancelled' || t === 'trial' || t === 'license' || t === 'refunded') || ((t.includes('cancelled') || t.includes('refunded')) && t.length < 20);
+                    
+                    const cs = window.getComputedStyle(el);
+                    if (!cs) continue;
+                    
+                    // We only remove FIXED overlays to avoid killing normal UI (e.g., notification badge which is often absolute).
+                    const isFixed = cs.position === 'fixed';
+
+                    // Some third-party overlays are fixed red pills in the top-right.
+                    // If it's fixed, in the top-right corner, and has a strong red-ish background, remove it even if text differs.
+                    const bg = (cs.backgroundColor || '').toLowerCase();
+                    const isRedBg = bg.includes('rgb(239, 68, 68)') || bg.includes('rgb(220, 38, 38)') || bg.includes('rgb(248, 113, 113)') || bg.includes('rgb(185, 28, 28)');
+
+                    const top = parseFloat(cs.top || '100');
+                    const right = parseFloat(cs.right || '100');
+                    
+                    // Check if it's in the top-right corner (common for watermarks)
+                    const isTopRight = (top < 50 && right < 50);
+
+                    const isOverlayMatch = isFixed && isTopRight && isRedBg;
+
+                    if (!isTextMatch && !isOverlayMatch) continue;
+
+                    if (!isFixed && !isTextMatch) continue;
+                    
+                    if (!isTopRight) continue;
+
+                    // It's a match, hide it aggressively
+                    el.style.setProperty('display', 'none', 'important');
+                    el.style.setProperty('opacity', '0', 'important');
+                    el.style.setProperty('visibility', 'hidden', 'important');
+                    
+                    // Also try to remove the parent if it's also a fixed container
+                    let victim = el;
+                    while (victim && victim.parentElement && victim.parentElement !== document.body) {
+                        const pcs = window.getComputedStyle(victim.parentElement);
+                        if (pcs && (pcs.position === 'fixed' || pcs.position === 'absolute')) {
+                            victim = victim.parentElement;
+                        } else {
+                            break;
+                        }
+                    }
+                    victim.remove();
+                }
+            };
+
+            removeCancelledPill();
+            // Run multiple times as some libraries re-inject
+            setTimeout(removeCancelledPill, 500);
+            setTimeout(removeCancelledPill, 1500);
+            setTimeout(removeCancelledPill, 3000);
+            
+            const obs = new MutationObserver(() => removeCancelledPill());
+            obs.observe(document.body, { childList: true, subtree: true });
+
+            async function refreshAdminNotifBadge() {
+                try {
+                    const resp = await fetch('@Url.Action("NotificationsUnreadCount", portalController)', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    if (!resp.ok) return;
+                    const data = await resp.json();
+                    const badge = document.getElementById('vrAdminNotifBadge');
+                    if (!badge) return;
+                    const unread = (data && typeof data.unread === 'number') ? data.unread : 0;
+                    if (unread > 0) {
+                        badge.textContent = unread > 99 ? '99+' : String(unread);
+                        badge.style.display = '';
+                    } else {
+                        badge.textContent = '';
+                        badge.style.display = 'none';
+                    }
+                } catch (e) {
+                    // swallow
+                }
+            }
+
+            refreshAdminNotifBadge();
+            setInterval(refreshAdminNotifBadge, 15000);
+        })();
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
